@@ -1,0 +1,28 @@
+# Go
+bin/
+*.test
+*.out
+
+# Node (console/)
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.log
+*.local
+
+# Generated code is committed; buf's cache is not
+.buf-cache/
+
+# Recorded episodes and media: large, local, never committed
+data/
+
+# Local settings and secrets
+.env
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store

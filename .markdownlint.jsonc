@@ -1,0 +1,6 @@
+{
+  // One line per paragraph; the editor wraps.
+  "MD013": false,
+  // The README may size an image with an <img>.
+  "MD033": { "allowed_elements": ["img"] },
+}
