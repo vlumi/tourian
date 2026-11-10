@@ -37,6 +37,9 @@ type Envelope struct {
 	//	*Envelope_SessionDescription
 	//	*Envelope_IceCandidate
 	//	*Envelope_VideoFrame
+	//	*Envelope_RecordRequest
+	//	*Envelope_EpisodeStatus
+	//	*Envelope_EpisodeFlag
 	Message       isEnvelope_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -178,6 +181,33 @@ func (x *Envelope) GetVideoFrame() *VideoFrame {
 	return nil
 }
 
+func (x *Envelope) GetRecordRequest() *RecordRequest {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_RecordRequest); ok {
+			return x.RecordRequest
+		}
+	}
+	return nil
+}
+
+func (x *Envelope) GetEpisodeStatus() *EpisodeStatus {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_EpisodeStatus); ok {
+			return x.EpisodeStatus
+		}
+	}
+	return nil
+}
+
+func (x *Envelope) GetEpisodeFlag() *EpisodeFlag {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_EpisodeFlag); ok {
+			return x.EpisodeFlag
+		}
+	}
+	return nil
+}
+
 type isEnvelope_Message interface {
 	isEnvelope_Message()
 }
@@ -226,6 +256,18 @@ type Envelope_VideoFrame struct {
 	VideoFrame *VideoFrame `protobuf:"bytes,11,opt,name=video_frame,json=videoFrame,proto3,oneof"`
 }
 
+type Envelope_RecordRequest struct {
+	RecordRequest *RecordRequest `protobuf:"bytes,12,opt,name=record_request,json=recordRequest,proto3,oneof"`
+}
+
+type Envelope_EpisodeStatus struct {
+	EpisodeStatus *EpisodeStatus `protobuf:"bytes,13,opt,name=episode_status,json=episodeStatus,proto3,oneof"`
+}
+
+type Envelope_EpisodeFlag struct {
+	EpisodeFlag *EpisodeFlag `protobuf:"bytes,14,opt,name=episode_flag,json=episodeFlag,proto3,oneof"`
+}
+
 func (*Envelope_Capabilities) isEnvelope_Message() {}
 
 func (*Envelope_VelocityCommand) isEnvelope_Message() {}
@@ -248,12 +290,18 @@ func (*Envelope_IceCandidate) isEnvelope_Message() {}
 
 func (*Envelope_VideoFrame) isEnvelope_Message() {}
 
+func (*Envelope_RecordRequest) isEnvelope_Message() {}
+
+func (*Envelope_EpisodeStatus) isEnvelope_Message() {}
+
+func (*Envelope_EpisodeFlag) isEnvelope_Message() {}
+
 var File_tourian_v1_transport_proto protoreflect.FileDescriptor
 
 const file_tourian_v1_transport_proto_rawDesc = "" +
 	"\n" +
 	"\x1atourian/v1/transport.proto\x12\n" +
-	"tourian.v1\x1a\x16tourian/v1/robot.proto\x1a\x16tourian/v1/video.proto\"\xcd\x05\n" +
+	"tourian.v1\x1a\x18tourian/v1/episode.proto\x1a\x16tourian/v1/robot.proto\x1a\x16tourian/v1/video.proto\"\x93\a\n" +
 	"\bEnvelope\x12>\n" +
 	"\fcapabilities\x18\x01 \x01(\v2\x18.tourian.v1.CapabilitiesH\x00R\fcapabilities\x12H\n" +
 	"\x10velocity_command\x18\x02 \x01(\v2\x1b.tourian.v1.VelocityCommandH\x00R\x0fvelocityCommand\x129\n" +
@@ -268,7 +316,10 @@ const file_tourian_v1_transport_proto_rawDesc = "" +
 	"\rice_candidate\x18\n" +
 	" \x01(\v2\x18.tourian.v1.IceCandidateH\x00R\ficeCandidate\x129\n" +
 	"\vvideo_frame\x18\v \x01(\v2\x16.tourian.v1.VideoFrameH\x00R\n" +
-	"videoFrameB\t\n" +
+	"videoFrame\x12B\n" +
+	"\x0erecord_request\x18\f \x01(\v2\x19.tourian.v1.RecordRequestH\x00R\rrecordRequest\x12B\n" +
+	"\x0eepisode_status\x18\r \x01(\v2\x19.tourian.v1.EpisodeStatusH\x00R\repisodeStatus\x12<\n" +
+	"\fepisode_flag\x18\x0e \x01(\v2\x17.tourian.v1.EpisodeFlagH\x00R\vepisodeFlagB\t\n" +
 	"\amessageB\x9f\x01\n" +
 	"\x0ecom.tourian.v1B\x0eTransportProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\n" +
 	"Tourian.V1\xca\x02\n" +
@@ -300,6 +351,9 @@ var file_tourian_v1_transport_proto_goTypes = []any{
 	(*SessionDescription)(nil), // 9: tourian.v1.SessionDescription
 	(*IceCandidate)(nil),       // 10: tourian.v1.IceCandidate
 	(*VideoFrame)(nil),         // 11: tourian.v1.VideoFrame
+	(*RecordRequest)(nil),      // 12: tourian.v1.RecordRequest
+	(*EpisodeStatus)(nil),      // 13: tourian.v1.EpisodeStatus
+	(*EpisodeFlag)(nil),        // 14: tourian.v1.EpisodeFlag
 }
 var file_tourian_v1_transport_proto_depIdxs = []int32{
 	1,  // 0: tourian.v1.Envelope.capabilities:type_name -> tourian.v1.Capabilities
@@ -313,11 +367,14 @@ var file_tourian_v1_transport_proto_depIdxs = []int32{
 	9,  // 8: tourian.v1.Envelope.session_description:type_name -> tourian.v1.SessionDescription
 	10, // 9: tourian.v1.Envelope.ice_candidate:type_name -> tourian.v1.IceCandidate
 	11, // 10: tourian.v1.Envelope.video_frame:type_name -> tourian.v1.VideoFrame
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	12, // 11: tourian.v1.Envelope.record_request:type_name -> tourian.v1.RecordRequest
+	13, // 12: tourian.v1.Envelope.episode_status:type_name -> tourian.v1.EpisodeStatus
+	14, // 13: tourian.v1.Envelope.episode_flag:type_name -> tourian.v1.EpisodeFlag
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_tourian_v1_transport_proto_init() }
@@ -325,6 +382,7 @@ func file_tourian_v1_transport_proto_init() {
 	if File_tourian_v1_transport_proto != nil {
 		return
 	}
+	file_tourian_v1_episode_proto_init()
 	file_tourian_v1_robot_proto_init()
 	file_tourian_v1_video_proto_init()
 	file_tourian_v1_transport_proto_msgTypes[0].OneofWrappers = []any{
@@ -339,6 +397,9 @@ func file_tourian_v1_transport_proto_init() {
 		(*Envelope_SessionDescription)(nil),
 		(*Envelope_IceCandidate)(nil),
 		(*Envelope_VideoFrame)(nil),
+		(*Envelope_RecordRequest)(nil),
+		(*Envelope_EpisodeStatus)(nil),
+		(*Envelope_EpisodeFlag)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

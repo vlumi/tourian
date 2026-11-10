@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package tourian.v1;
 
+import "tourian/v1/episode.proto";
 import "tourian/v1/robot.proto";
 import "tourian/v1/video.proto";
 
@@ -19,5 +20,8 @@ message Envelope {
     SessionDescription session_description = 9;
     IceCandidate ice_candidate = 10;
     VideoFrame video_frame = 11;
+    RecordRequest record_request = 12;
+    EpisodeStatus episode_status = 13;
+    EpisodeFlag episode_flag = 14;
   }
 }
