@@ -16,10 +16,10 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file tourian/v1/episode.proto.
  */
 export const file_tourian_v1_episode: GenFile = /*@__PURE__*/
-  fileDesc("Chh0b3VyaWFuL3YxL2VwaXNvZGUucHJvdG8SCnRvdXJpYW4udjEiPgoNUmVjb3JkUmVxdWVzdBIQCghyb2JvdF9pZBgBIAEoCRINCgVzdGFydBgCIAEoCBIMCgR0YXNrGAMgASgJIp4BCg1FcGlzb2RlU3RhdHVzEhAKCHJvYm90X2lkGAEgASgJEhIKCmVwaXNvZGVfaWQYAiABKAkSEQoJcmVjb3JkaW5nGAMgASgIEi4KCnN0YXJ0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg4KBmZyYW1lcxgFIAEoBBIUCgx2aWRlb19mcmFtZXMYBiABKAQiPAoLRXBpc29kZUZsYWcSEgoKZXBpc29kZV9pZBgBIAEoCRILCgNiYWQYAiABKAgSDAoEbm90ZRgDIAEoCSLnAQoMRXBpc29kZUZyYW1lEg0KBWluZGV4GAEgASgEEikKBm9mZnNldBgCIAEoCzIZLmdvb2dsZS5wcm90b2J1Zi5EdXJhdGlvbhIsCgtvYnNlcnZhdGlvbhgDIAEoCzIXLnRvdXJpYW4udjEuT2JzZXJ2YXRpb24SKwoGYWN0aW9uGAQgASgLMhsudG91cmlhbi52MS5WZWxvY2l0eUNvbW1hbmQSFgoOdmlkZW9fc2VxdWVuY2UYBSABKAQSKgoKY29udHJvbGxlchgGIAEoCzIWLnRvdXJpYW4udjEuQ29udHJvbGxlciJ4CgxFcGlzb2RlVmlkZW8SEAoIc2VxdWVuY2UYASABKAQSKQoGb2Zmc2V0GAIgASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uEgwKBGZpbGUYAyABKAkSDQoFd2lkdGgYBCABKA0SDgoGaGVpZ2h0GAUgASgNItQBCgdFcGlzb2RlEgoKAmlkGAEgASgJEhAKCHJvYm90X2lkGAIgASgJEgwKBHRhc2sYAyABKAkSLgoKc3RhcnRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLAoIZW5kZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg4KBmZyYW1lcxgGIAEoBBIUCgx2aWRlb19mcmFtZXMYByABKAQSCwoDYmFkGAggASgIEgwKBG5vdGUYCSABKAlCnQEKDmNvbS50b3VyaWFuLnYxQgxFcGlzb2RlUHJvdG9QAVo0Z2l0aHViLmNvbS92bHVtaS90b3VyaWFuL2dlbi9nby90b3VyaWFuL3YxO3RvdXJpYW52MaICA1RYWKoCClRvdXJpYW4uVjHKAgpUb3VyaWFuXFYx4gIWVG91cmlhblxWMVxHUEJNZXRhZGF0YeoCC1RvdXJpYW46OlYxYgZwcm90bzM", [file_google_protobuf_duration, file_google_protobuf_timestamp, file_tourian_v1_control, file_tourian_v1_robot]);
+  fileDesc("Chh0b3VyaWFuL3YxL2VwaXNvZGUucHJvdG8SCnRvdXJpYW4udjEiTwoNUmVjb3JkUmVxdWVzdBIQCghyb2JvdF9pZBgBIAEoCRINCgVzdGFydBgCIAEoCBIMCgR0YXNrGAMgASgJEg8KB3Rhc2tfaWQYBCABKAkingEKDUVwaXNvZGVTdGF0dXMSEAoIcm9ib3RfaWQYASABKAkSEgoKZXBpc29kZV9pZBgCIAEoCRIRCglyZWNvcmRpbmcYAyABKAgSLgoKc3RhcnRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASDgoGZnJhbWVzGAUgASgEEhQKDHZpZGVvX2ZyYW1lcxgGIAEoBCI8CgtFcGlzb2RlRmxhZxISCgplcGlzb2RlX2lkGAEgASgJEgsKA2JhZBgCIAEoCBIMCgRub3RlGAMgASgJIucBCgxFcGlzb2RlRnJhbWUSDQoFaW5kZXgYASABKAQSKQoGb2Zmc2V0GAIgASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uEiwKC29ic2VydmF0aW9uGAMgASgLMhcudG91cmlhbi52MS5PYnNlcnZhdGlvbhIrCgZhY3Rpb24YBCABKAsyGy50b3VyaWFuLnYxLlZlbG9jaXR5Q29tbWFuZBIWCg52aWRlb19zZXF1ZW5jZRgFIAEoBBIqCgpjb250cm9sbGVyGAYgASgLMhYudG91cmlhbi52MS5Db250cm9sbGVyIngKDEVwaXNvZGVWaWRlbxIQCghzZXF1ZW5jZRgBIAEoBBIpCgZvZmZzZXQYAiABKAsyGS5nb29nbGUucHJvdG9idWYuRHVyYXRpb24SDAoEZmlsZRgDIAEoCRINCgV3aWR0aBgEIAEoDRIOCgZoZWlnaHQYBSABKA0ioAIKB0VwaXNvZGUSCgoCaWQYASABKAkSEAoIcm9ib3RfaWQYAiABKAkSDAoEdGFzaxgDIAEoCRIuCgpzdGFydGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIsCghlbmRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASDgoGZnJhbWVzGAYgASgEEhQKDHZpZGVvX2ZyYW1lcxgHIAEoBBILCgNiYWQYCCABKAgSDAoEbm90ZRgJIAEoCRIcChRyb2JvdF9jb25maWdfdmVyc2lvbhgKIAEoDRIPCgd0YXNrX2lkGAsgASgJEhsKE3Rhc2tfY29uZmlnX3ZlcnNpb24YDCABKA1CnQEKDmNvbS50b3VyaWFuLnYxQgxFcGlzb2RlUHJvdG9QAVo0Z2l0aHViLmNvbS92bHVtaS90b3VyaWFuL2dlbi9nby90b3VyaWFuL3YxO3RvdXJpYW52MaICA1RYWKoCClRvdXJpYW4uVjHKAgpUb3VyaWFuXFYx4gIWVG91cmlhblxWMVxHUEJNZXRhZGF0YeoCC1RvdXJpYW46OlYxYgZwcm90bzM", [file_google_protobuf_duration, file_google_protobuf_timestamp, file_tourian_v1_control, file_tourian_v1_robot]);
 
 /**
- * A console asking the platform to start or stop recording a robot.
+ * A console asking the platform to start or stop recording a robot, for a configured task or a free-text one.
  *
  * @generated from message tourian.v1.RecordRequest
  */
@@ -38,6 +38,11 @@ export type RecordRequest = Message<"tourian.v1.RecordRequest"> & {
    * @generated from field: string task = 3;
    */
   task: string;
+
+  /**
+   * @generated from field: string task_id = 4;
+   */
+  taskId: string;
 };
 
 /**
@@ -253,6 +258,23 @@ export type Episode = Message<"tourian.v1.Episode"> & {
    * @generated from field: string note = 9;
    */
   note: string;
+
+  /**
+   * Which configurations the episode was recorded on and for; zero when none existed.
+   *
+   * @generated from field: uint32 robot_config_version = 10;
+   */
+  robotConfigVersion: number;
+
+  /**
+   * @generated from field: string task_id = 11;
+   */
+  taskId: string;
+
+  /**
+   * @generated from field: uint32 task_config_version = 12;
+   */
+  taskConfigVersion: number;
 };
 
 /**

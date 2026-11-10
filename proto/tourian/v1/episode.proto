@@ -7,11 +7,12 @@ import "google/protobuf/timestamp.proto";
 import "tourian/v1/control.proto";
 import "tourian/v1/robot.proto";
 
-// A console asking the platform to start or stop recording a robot.
+// A console asking the platform to start or stop recording a robot, for a configured task or a free-text one.
 message RecordRequest {
   string robot_id = 1;
   bool start = 2;
   string task = 3;
+  string task_id = 4;
 }
 
 // What the platform is recording for a robot, sent on every change and once a second while recording.
@@ -61,4 +62,8 @@ message Episode {
   uint64 video_frames = 7;
   bool bad = 8;
   string note = 9;
+  // Which configurations the episode was recorded on and for; zero when none existed.
+  uint32 robot_config_version = 10;
+  string task_id = 11;
+  uint32 task_config_version = 12;
 }

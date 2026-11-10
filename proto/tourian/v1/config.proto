@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package tourian.v1;
+
+import "google/protobuf/timestamp.proto";
+import "tourian/v1/robot.proto";
+
+// How a robot is set up for use, as the operators see it: a name of their own, limits under the robot's, and whatever parameters the task at hand needs. Every change is a new version; episodes say which they were recorded on.
+message RobotConfig {
+  string robot_id = 1;
+  uint32 version = 2;
+  string name = 3;
+  VelocityLimits limits = 4;
+  map<string, string> parameters = 5;
+  string note = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+// What a recording is for. Every change is a new version; episodes say which they were recorded for.
+message TaskConfig {
+  string task_id = 1;
+  uint32 version = 2;
+  string name = 3;
+  string description = 4;
+  string success = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}

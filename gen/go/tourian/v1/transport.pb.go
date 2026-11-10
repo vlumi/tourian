@@ -42,6 +42,7 @@ type Envelope struct {
 	//	*Envelope_EpisodeFlag
 	//	*Envelope_ControlState
 	//	*Envelope_ControlRequest
+	//	*Envelope_RobotConfig
 	Message       isEnvelope_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -228,6 +229,15 @@ func (x *Envelope) GetControlRequest() *ControlRequest {
 	return nil
 }
 
+func (x *Envelope) GetRobotConfig() *RobotConfig {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_RobotConfig); ok {
+			return x.RobotConfig
+		}
+	}
+	return nil
+}
+
 type isEnvelope_Message interface {
 	isEnvelope_Message()
 }
@@ -296,6 +306,10 @@ type Envelope_ControlRequest struct {
 	ControlRequest *ControlRequest `protobuf:"bytes,16,opt,name=control_request,json=controlRequest,proto3,oneof"`
 }
 
+type Envelope_RobotConfig struct {
+	RobotConfig *RobotConfig `protobuf:"bytes,17,opt,name=robot_config,json=robotConfig,proto3,oneof"`
+}
+
 func (*Envelope_Capabilities) isEnvelope_Message() {}
 
 func (*Envelope_VelocityCommand) isEnvelope_Message() {}
@@ -328,12 +342,14 @@ func (*Envelope_ControlState) isEnvelope_Message() {}
 
 func (*Envelope_ControlRequest) isEnvelope_Message() {}
 
+func (*Envelope_RobotConfig) isEnvelope_Message() {}
+
 var File_tourian_v1_transport_proto protoreflect.FileDescriptor
 
 const file_tourian_v1_transport_proto_rawDesc = "" +
 	"\n" +
 	"\x1atourian/v1/transport.proto\x12\n" +
-	"tourian.v1\x1a\x18tourian/v1/control.proto\x1a\x18tourian/v1/episode.proto\x1a\x16tourian/v1/robot.proto\x1a\x16tourian/v1/video.proto\"\x9b\b\n" +
+	"tourian.v1\x1a\x17tourian/v1/config.proto\x1a\x18tourian/v1/control.proto\x1a\x18tourian/v1/episode.proto\x1a\x16tourian/v1/robot.proto\x1a\x16tourian/v1/video.proto\"\xd9\b\n" +
 	"\bEnvelope\x12>\n" +
 	"\fcapabilities\x18\x01 \x01(\v2\x18.tourian.v1.CapabilitiesH\x00R\fcapabilities\x12H\n" +
 	"\x10velocity_command\x18\x02 \x01(\v2\x1b.tourian.v1.VelocityCommandH\x00R\x0fvelocityCommand\x129\n" +
@@ -353,7 +369,8 @@ const file_tourian_v1_transport_proto_rawDesc = "" +
 	"\x0eepisode_status\x18\r \x01(\v2\x19.tourian.v1.EpisodeStatusH\x00R\repisodeStatus\x12<\n" +
 	"\fepisode_flag\x18\x0e \x01(\v2\x17.tourian.v1.EpisodeFlagH\x00R\vepisodeFlag\x12?\n" +
 	"\rcontrol_state\x18\x0f \x01(\v2\x18.tourian.v1.ControlStateH\x00R\fcontrolState\x12E\n" +
-	"\x0fcontrol_request\x18\x10 \x01(\v2\x1a.tourian.v1.ControlRequestH\x00R\x0econtrolRequestB\t\n" +
+	"\x0fcontrol_request\x18\x10 \x01(\v2\x1a.tourian.v1.ControlRequestH\x00R\x0econtrolRequest\x12<\n" +
+	"\frobot_config\x18\x11 \x01(\v2\x17.tourian.v1.RobotConfigH\x00R\vrobotConfigB\t\n" +
 	"\amessageB\x9f\x01\n" +
 	"\x0ecom.tourian.v1B\x0eTransportProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\n" +
 	"Tourian.V1\xca\x02\n" +
@@ -390,6 +407,7 @@ var file_tourian_v1_transport_proto_goTypes = []any{
 	(*EpisodeFlag)(nil),        // 14: tourian.v1.EpisodeFlag
 	(*ControlState)(nil),       // 15: tourian.v1.ControlState
 	(*ControlRequest)(nil),     // 16: tourian.v1.ControlRequest
+	(*RobotConfig)(nil),        // 17: tourian.v1.RobotConfig
 }
 var file_tourian_v1_transport_proto_depIdxs = []int32{
 	1,  // 0: tourian.v1.Envelope.capabilities:type_name -> tourian.v1.Capabilities
@@ -408,11 +426,12 @@ var file_tourian_v1_transport_proto_depIdxs = []int32{
 	14, // 13: tourian.v1.Envelope.episode_flag:type_name -> tourian.v1.EpisodeFlag
 	15, // 14: tourian.v1.Envelope.control_state:type_name -> tourian.v1.ControlState
 	16, // 15: tourian.v1.Envelope.control_request:type_name -> tourian.v1.ControlRequest
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	17, // 16: tourian.v1.Envelope.robot_config:type_name -> tourian.v1.RobotConfig
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_tourian_v1_transport_proto_init() }
@@ -420,6 +439,7 @@ func file_tourian_v1_transport_proto_init() {
 	if File_tourian_v1_transport_proto != nil {
 		return
 	}
+	file_tourian_v1_config_proto_init()
 	file_tourian_v1_control_proto_init()
 	file_tourian_v1_episode_proto_init()
 	file_tourian_v1_robot_proto_init()
@@ -441,6 +461,7 @@ func file_tourian_v1_transport_proto_init() {
 		(*Envelope_EpisodeFlag)(nil),
 		(*Envelope_ControlState)(nil),
 		(*Envelope_ControlRequest)(nil),
+		(*Envelope_RobotConfig)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

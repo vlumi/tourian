@@ -23,12 +23,13 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// A console asking the platform to start or stop recording a robot.
+// A console asking the platform to start or stop recording a robot, for a configured task or a free-text one.
 type RecordRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RobotId       string                 `protobuf:"bytes,1,opt,name=robot_id,json=robotId,proto3" json:"robot_id,omitempty"`
 	Start         bool                   `protobuf:"varint,2,opt,name=start,proto3" json:"start,omitempty"`
 	Task          string                 `protobuf:"bytes,3,opt,name=task,proto3" json:"task,omitempty"`
+	TaskId        string                 `protobuf:"bytes,4,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -80,6 +81,13 @@ func (x *RecordRequest) GetStart() bool {
 func (x *RecordRequest) GetTask() string {
 	if x != nil {
 		return x.Task
+	}
+	return ""
+}
+
+func (x *RecordRequest) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
 	}
 	return ""
 }
@@ -394,18 +402,22 @@ func (x *EpisodeVideo) GetHeight() uint32 {
 
 // An episode's metadata, as every sink writes it.
 type Episode struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	RobotId       string                 `protobuf:"bytes,2,opt,name=robot_id,json=robotId,proto3" json:"robot_id,omitempty"`
-	Task          string                 `protobuf:"bytes,3,opt,name=task,proto3" json:"task,omitempty"`
-	StartedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
-	EndedAt       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=ended_at,json=endedAt,proto3" json:"ended_at,omitempty"`
-	Frames        uint64                 `protobuf:"varint,6,opt,name=frames,proto3" json:"frames,omitempty"`
-	VideoFrames   uint64                 `protobuf:"varint,7,opt,name=video_frames,json=videoFrames,proto3" json:"video_frames,omitempty"`
-	Bad           bool                   `protobuf:"varint,8,opt,name=bad,proto3" json:"bad,omitempty"`
-	Note          string                 `protobuf:"bytes,9,opt,name=note,proto3" json:"note,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	RobotId     string                 `protobuf:"bytes,2,opt,name=robot_id,json=robotId,proto3" json:"robot_id,omitempty"`
+	Task        string                 `protobuf:"bytes,3,opt,name=task,proto3" json:"task,omitempty"`
+	StartedAt   *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	EndedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=ended_at,json=endedAt,proto3" json:"ended_at,omitempty"`
+	Frames      uint64                 `protobuf:"varint,6,opt,name=frames,proto3" json:"frames,omitempty"`
+	VideoFrames uint64                 `protobuf:"varint,7,opt,name=video_frames,json=videoFrames,proto3" json:"video_frames,omitempty"`
+	Bad         bool                   `protobuf:"varint,8,opt,name=bad,proto3" json:"bad,omitempty"`
+	Note        string                 `protobuf:"bytes,9,opt,name=note,proto3" json:"note,omitempty"`
+	// Which configurations the episode was recorded on and for; zero when none existed.
+	RobotConfigVersion uint32 `protobuf:"varint,10,opt,name=robot_config_version,json=robotConfigVersion,proto3" json:"robot_config_version,omitempty"`
+	TaskId             string `protobuf:"bytes,11,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	TaskConfigVersion  uint32 `protobuf:"varint,12,opt,name=task_config_version,json=taskConfigVersion,proto3" json:"task_config_version,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Episode) Reset() {
@@ -501,16 +513,38 @@ func (x *Episode) GetNote() string {
 	return ""
 }
 
+func (x *Episode) GetRobotConfigVersion() uint32 {
+	if x != nil {
+		return x.RobotConfigVersion
+	}
+	return 0
+}
+
+func (x *Episode) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+func (x *Episode) GetTaskConfigVersion() uint32 {
+	if x != nil {
+		return x.TaskConfigVersion
+	}
+	return 0
+}
+
 var File_tourian_v1_episode_proto protoreflect.FileDescriptor
 
 const file_tourian_v1_episode_proto_rawDesc = "" +
 	"\n" +
 	"\x18tourian/v1/episode.proto\x12\n" +
-	"tourian.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18tourian/v1/control.proto\x1a\x16tourian/v1/robot.proto\"T\n" +
+	"tourian.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18tourian/v1/control.proto\x1a\x16tourian/v1/robot.proto\"m\n" +
 	"\rRecordRequest\x12\x19\n" +
 	"\brobot_id\x18\x01 \x01(\tR\arobotId\x12\x14\n" +
 	"\x05start\x18\x02 \x01(\bR\x05start\x12\x12\n" +
-	"\x04task\x18\x03 \x01(\tR\x04task\"\xdd\x01\n" +
+	"\x04task\x18\x03 \x01(\tR\x04task\x12\x17\n" +
+	"\atask_id\x18\x04 \x01(\tR\x06taskId\"\xdd\x01\n" +
 	"\rEpisodeStatus\x12\x19\n" +
 	"\brobot_id\x18\x01 \x01(\tR\arobotId\x12\x1d\n" +
 	"\n" +
@@ -539,7 +573,7 @@ const file_tourian_v1_episode_proto_rawDesc = "" +
 	"\x06offset\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x06offset\x12\x12\n" +
 	"\x04file\x18\x03 \x01(\tR\x04file\x12\x14\n" +
 	"\x05width\x18\x04 \x01(\rR\x05width\x12\x16\n" +
-	"\x06height\x18\x05 \x01(\rR\x06height\"\x9b\x02\n" +
+	"\x06height\x18\x05 \x01(\rR\x06height\"\x96\x03\n" +
 	"\aEpisode\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\brobot_id\x18\x02 \x01(\tR\arobotId\x12\x12\n" +
@@ -550,7 +584,11 @@ const file_tourian_v1_episode_proto_rawDesc = "" +
 	"\x06frames\x18\x06 \x01(\x04R\x06frames\x12!\n" +
 	"\fvideo_frames\x18\a \x01(\x04R\vvideoFrames\x12\x10\n" +
 	"\x03bad\x18\b \x01(\bR\x03bad\x12\x12\n" +
-	"\x04note\x18\t \x01(\tR\x04noteB\x9d\x01\n" +
+	"\x04note\x18\t \x01(\tR\x04note\x120\n" +
+	"\x14robot_config_version\x18\n" +
+	" \x01(\rR\x12robotConfigVersion\x12\x17\n" +
+	"\atask_id\x18\v \x01(\tR\x06taskId\x12.\n" +
+	"\x13task_config_version\x18\f \x01(\rR\x11taskConfigVersionB\x9d\x01\n" +
 	"\x0ecom.tourian.v1B\fEpisodeProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\n" +
 	"Tourian.V1\xca\x02\n" +
 	"Tourian\\V1\xe2\x02\x16Tourian\\V1\\GPBMetadata\xea\x02\vTourian::V1b\x06proto3"
