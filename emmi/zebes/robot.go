@@ -14,6 +14,8 @@ import (
 type Config struct {
 	RobotID           string
 	Name              string
+	StartX, StartY    float64
+	StartTheta        float64
 	MaxLinear         float64
 	MaxAngular        float64
 	WheelBase         float64
@@ -64,9 +66,9 @@ type Robot struct {
 	halt            tourianv1.HaltReason
 }
 
-// New places the robot at the origin, fully charged and held still until a heartbeat arrives.
+// New places the robot at its start pose, fully charged and held still until a heartbeat arrives.
 func New(cfg Config, now func() time.Time) *Robot {
-	return &Robot{cfg: cfg, now: now, battery: 1, halt: tourianv1.HaltReason_HALT_REASON_DEAD_MAN}
+	return &Robot{cfg: cfg, now: now, x: cfg.StartX, y: cfg.StartY, theta: cfg.StartTheta, battery: 1, halt: tourianv1.HaltReason_HALT_REASON_DEAD_MAN}
 }
 
 func (r *Robot) Capabilities() *tourianv1.Capabilities {

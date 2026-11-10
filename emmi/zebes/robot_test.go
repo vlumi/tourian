@@ -165,6 +165,16 @@ func TestBatteryDrains(t *testing.T) {
 	near(t, "battery after 1% of an hour at full speed", r.Observe().GetBattery().GetPercentage(), 1-(r.cfg.IdleDrainPerHour+r.cfg.DriveDrainPerHour)/100)
 }
 
+func TestStartsAtItsStartPose(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.StartX, cfg.StartY, cfg.StartTheta = 1, -2, math.Pi/2
+	r := New(cfg, time.Now)
+	obs := r.Observe()
+	near(t, "x", obs.GetPose().GetPosition().GetX(), 1)
+	near(t, "y", obs.GetPose().GetPosition().GetY(), -2)
+	near(t, "heading", 2*math.Atan2(obs.GetPose().GetOrientation().GetZ(), obs.GetPose().GetOrientation().GetW()), math.Pi/2)
+}
+
 func TestCapabilities(t *testing.T) {
 	r, _ := newTestRobot()
 	caps := r.Capabilities()

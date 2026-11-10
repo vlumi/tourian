@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -28,6 +29,7 @@ const observationsPerSecond = 20
 func main() {
 	addr := flag.String("addr", ":8080", "address the platform listens on")
 	sim := flag.Bool("sim", false, "also run the simulated robot in this process, connected to this platform")
+	sims := flag.Int("sims", 1, "how many simulated robots -sim runs, each with its own id and start pose")
 	data := flag.String("data", "data", "directory the episodes are recorded under")
 	dataset := flag.String("lerobot", "tourian", "name of the LeRobot dataset written under the data directory, empty for none")
 	policyURL := flag.String("policy", "", "URL of a policy server to offer as a controller, such as http://localhost:8091")
@@ -67,11 +69,19 @@ func main() {
 	}()
 
 	if *sim {
-		go func() {
-			if err := zebes.Run(ctx, robotURL(*addr), zebes.DefaultConfig()); err != nil && ctx.Err() == nil {
-				log.Printf("zebes: %v", err)
+		for i := range *sims {
+			cfg := zebes.DefaultConfig()
+			if *sims > 1 {
+				cfg.RobotID = fmt.Sprintf("zebes-%d", i+1)
+				cfg.Name = fmt.Sprintf("Zebes rover %d", i+1)
+				cfg.StartY = float64(*sims-1) - 2*float64(i)
 			}
-		}()
+			go func() {
+				if err := zebes.Run(ctx, robotURL(*addr), cfg); err != nil && ctx.Err() == nil {
+					log.Printf("zebes: %v", err)
+				}
+			}()
+		}
 	}
 
 	log.Printf("tourian listening on %s", *addr)
