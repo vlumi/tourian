@@ -2,6 +2,12 @@
 
 One capture per milestone, taken with `make screenshot` (which builds and serves the console and runs [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs) against it), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates.
 
+## 2026-11-10 · See
+
+![The camera on the console](002-see.png)
+
+The camera's picture above the world, over WebRTC, with the clock band across its top during a latency measurement; the fake camera of headless Chrome stands in for a phone. The path toggle sits in the bar above the picture with the frame rate at its right.
+
 ## 2026-11-10 · Drive
 
 ![Driving the simulated robot](001-drive.png)

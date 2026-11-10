@@ -8,7 +8,7 @@ It is an experiment for understanding the domain by building it, not a product. 
 
 **The name:** Tourian is the sector of planet Zebes where Mother Brain sits. The brain is the controller, whoever holds it; the sector is the platform. The components keep the theme: `motherbrain` for the controller that holds a robot, `emmi` for the robot adapters, `zebes` for the simulated world, `samus` for the operator. Named after locations and characters in Nintendo's Metroid series; not affiliated with or endorsed by Nintendo.
 
-**Status:** bootstrapped 2026-11-10; the simulated robot drives from the console over WebSocket, with the safety behaviors in the robot (M1). [SCOPE.md](SCOPE.md) is the plan, [ARCHITECTURE.md](ARCHITECTURE.md) will explain how it works as it gets built, [AGENTS.md](AGENTS.md) how to work on it.
+**Status:** bootstrapped 2026-11-10; the simulated robot drives from the console over WebSocket with the safety behaviors in the robot (M1), and a phone's camera shows on the console over WebRTC or MJPEG, both paths measured (M2). [SCOPE.md](SCOPE.md) is the plan, [ARCHITECTURE.md](ARCHITECTURE.md) will explain how it works as it gets built, [AGENTS.md](AGENTS.md) how to work on it.
 
 ## What it will do
 
@@ -27,6 +27,8 @@ It is an experiment for understanding the domain by building it, not a product. 
 ## Running it
 
 `make run` starts the platform on port 8080 with the simulated robot in-process; `make dev` serves the console on port 3000, which reaches the platform at the address in `.env` (see `.env.example`). Press Enter in the console to engage, drive with the keys or a gamepad, Space for the emergency stop. `go run ./cmd/zebes` runs the simulator as a separate process against a platform started without `-sim`.
+
+To lend a phone's camera to the robot, set `NEXT_PUBLIC_TOURIAN_URL` in `.env` to the laptop's address on the local network, start `make dev`, and open `http://<laptop>:3000/camera?robot=zebes-1` on the phone. Browsers hand out the camera only to secure origins, so on the phone's Chrome add that origin at `chrome://flags/#unsafely-treat-insecure-origin-as-secure` first; the platform is reachable from the laptop alone until authentication arrives, as noted in SCOPE.md. The console shows the picture over WebRTC or MJPEG, chosen above it; `make results-video` measures both paths with a fake camera and writes the figures under `docs/results/`.
 
 ## License
 

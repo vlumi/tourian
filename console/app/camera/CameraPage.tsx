@@ -3,26 +3,38 @@
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { serveCamera, type CameraState } from '@/video/camera'
+import { composeWithClock } from '@/video/compose'
 
-// The page a phone opens to lend its camera to a robot. Starting needs a tap, since browsers only hand out the camera on a gesture.
+// The page a phone opens to lend its camera to a robot. Starting needs a tap, since browsers only hand out the camera on a gesture. With ?clock=1 the frames carry a clock band for measuring latency.
 export function CameraPage() {
   const params = useSearchParams()
+  const clock = params.get('clock') === '1'
   const [robotId, setRobotId] = useState(params.get('robot') ?? 'zebes-1')
   const [stream, setStream] = useState<MediaStream>()
   const [error, setError] = useState<string>()
   const [state, setState] = useState<CameraState>()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const rawRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
     const video = videoRef.current
-    if (!stream || !video) return
-    video.srcObject = stream
-    const camera = serveCamera(robotId, stream, video, setState)
+    const raw = rawRef.current
+    if (!stream || !video || !raw) return
+    let composed: ReturnType<typeof composeWithClock> | undefined
+    if (clock) {
+      raw.srcObject = stream
+      composed = composeWithClock(raw)
+      video.srcObject = composed.stream
+    } else {
+      video.srcObject = stream
+    }
+    const camera = serveCamera(robotId, composed?.stream ?? stream, video, setState)
     return () => {
       camera.stop()
+      composed?.stop()
       setState(undefined)
     }
-  }, [stream, robotId])
+  }, [stream, robotId, clock])
 
   const start = async () => {
     try {
@@ -54,6 +66,7 @@ export function CameraPage() {
         </button>
       )}
       {error && <p className="error">{error}</p>}
+      <video ref={rawRef} autoPlay playsInline muted hidden />
       <video ref={videoRef} autoPlay playsInline muted hidden={!stream} />
       {state && (
         <dl>
