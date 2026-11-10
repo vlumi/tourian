@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package tourian.v1;
+
+import "google/protobuf/duration.proto";
+import "tourian/v1/geometry.proto";
+import "tourian/v1/header.proto";
+
+// What a robot is and can do, announced by its adapter when it connects.
+message Capabilities {
+  string robot_id = 1;
+  string name = 2;
+  repeated string joint_names = 3;
+  VelocityLimits velocity_limits = 4;
+  // How long the adapter drives on without a fresh command before it stops the robot.
+  google.protobuf.Duration command_timeout = 5;
+  bool has_camera = 6;
+}
+
+message VelocityLimits {
+  double max_linear = 1;
+  double max_angular = 2;
+}
+
+// The controller's intent for the robot's motion. The sequence comes back in observations so the round trip can be measured.
+message VelocityCommand {
+  Header header = 1;
+  string robot_id = 2;
+  uint64 sequence = 3;
+  Twist twist = 4;
+}
+
+// Everything the robot reports about itself at one instant.
+message Observation {
+  Header header = 1;
+  string robot_id = 2;
+  Pose pose = 3;
+  Twist velocity = 4;
+  JointState joints = 5;
+  Battery battery = 6;
+  uint64 last_command_sequence = 7;
+}
+
+// Parallel arrays indexed alike, as sensor_msgs/JointState; velocity and effort may be empty.
+message JointState {
+  repeated string name = 1;
+  repeated double position = 2;
+  repeated double velocity = 3;
+  repeated double effort = 4;
+}
+
+message Battery {
+  // Charge from 0 to 1.
+  double percentage = 1;
+  double voltage = 2;
+}
+
+// The dead-man signal: an adapter that stops receiving these stops the robot.
+message Heartbeat {
+  Header header = 1;
+  string robot_id = 2;
+  uint64 sequence = 3;
+}
+
+// Emergency stop. Executed ahead of anything queued and holds until a new command arrives.
+message Stop {
+  Header header = 1;
+  string robot_id = 2;
+}

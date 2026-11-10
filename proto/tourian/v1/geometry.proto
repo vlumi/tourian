@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package tourian.v1;
+
+// The geometry_msgs of ROS 2 that the contract uses. Lengths in meters, angles in radians, time in seconds.
+
+message Vector3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Point {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Quaternion {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  double w = 4;
+}
+
+message Pose {
+  Point position = 1;
+  Quaternion orientation = 2;
+}
+
+// Linear velocity in m/s and angular velocity in rad/s, in the frame of the robot's body.
+message Twist {
+  Vector3 linear = 1;
+  Vector3 angular = 2;
+}
