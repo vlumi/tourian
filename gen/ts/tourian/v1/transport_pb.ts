@@ -6,13 +6,15 @@ import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Capabilities, CommandAck, Heartbeat, Observation, Stop, VelocityCommand } from "./robot_pb";
 import { file_tourian_v1_robot } from "./robot_pb";
+import type { CameraAnnounce, IceCandidate, SessionDescription, VideoFrame, VideoRequest } from "./video_pb";
+import { file_tourian_v1_video } from "./video_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file tourian/v1/transport.proto.
  */
 export const file_tourian_v1_transport: GenFile = /*@__PURE__*/
-  fileDesc("Chp0b3VyaWFuL3YxL3RyYW5zcG9ydC5wcm90bxIKdG91cmlhbi52MSKtAgoIRW52ZWxvcGUSMAoMY2FwYWJpbGl0aWVzGAEgASgLMhgudG91cmlhbi52MS5DYXBhYmlsaXRpZXNIABI3ChB2ZWxvY2l0eV9jb21tYW5kGAIgASgLMhsudG91cmlhbi52MS5WZWxvY2l0eUNvbW1hbmRIABItCgtjb21tYW5kX2FjaxgDIAEoCzIWLnRvdXJpYW4udjEuQ29tbWFuZEFja0gAEi4KC29ic2VydmF0aW9uGAQgASgLMhcudG91cmlhbi52MS5PYnNlcnZhdGlvbkgAEioKCWhlYXJ0YmVhdBgFIAEoCzIVLnRvdXJpYW4udjEuSGVhcnRiZWF0SAASIAoEc3RvcBgGIAEoCzIQLnRvdXJpYW4udjEuU3RvcEgAQgkKB21lc3NhZ2VCnwEKDmNvbS50b3VyaWFuLnYxQg5UcmFuc3BvcnRQcm90b1ABWjRnaXRodWIuY29tL3ZsdW1pL3RvdXJpYW4vZ2VuL2dvL3RvdXJpYW4vdjE7dG91cmlhbnYxogIDVFhYqgIKVG91cmlhbi5WMcoCClRvdXJpYW5cVjHiAhZUb3VyaWFuXFYxXEdQQk1ldGFkYXRh6gILVG91cmlhbjo6VjFiBnByb3RvMw", [file_tourian_v1_robot]);
+  fileDesc("Chp0b3VyaWFuL3YxL3RyYW5zcG9ydC5wcm90bxIKdG91cmlhbi52MSK4BAoIRW52ZWxvcGUSMAoMY2FwYWJpbGl0aWVzGAEgASgLMhgudG91cmlhbi52MS5DYXBhYmlsaXRpZXNIABI3ChB2ZWxvY2l0eV9jb21tYW5kGAIgASgLMhsudG91cmlhbi52MS5WZWxvY2l0eUNvbW1hbmRIABItCgtjb21tYW5kX2FjaxgDIAEoCzIWLnRvdXJpYW4udjEuQ29tbWFuZEFja0gAEi4KC29ic2VydmF0aW9uGAQgASgLMhcudG91cmlhbi52MS5PYnNlcnZhdGlvbkgAEioKCWhlYXJ0YmVhdBgFIAEoCzIVLnRvdXJpYW4udjEuSGVhcnRiZWF0SAASIAoEc3RvcBgGIAEoCzIQLnRvdXJpYW4udjEuU3RvcEgAEjUKD2NhbWVyYV9hbm5vdW5jZRgHIAEoCzIaLnRvdXJpYW4udjEuQ2FtZXJhQW5ub3VuY2VIABIxCg12aWRlb19yZXF1ZXN0GAggASgLMhgudG91cmlhbi52MS5WaWRlb1JlcXVlc3RIABI9ChNzZXNzaW9uX2Rlc2NyaXB0aW9uGAkgASgLMh4udG91cmlhbi52MS5TZXNzaW9uRGVzY3JpcHRpb25IABIxCg1pY2VfY2FuZGlkYXRlGAogASgLMhgudG91cmlhbi52MS5JY2VDYW5kaWRhdGVIABItCgt2aWRlb19mcmFtZRgLIAEoCzIWLnRvdXJpYW4udjEuVmlkZW9GcmFtZUgAQgkKB21lc3NhZ2VCnwEKDmNvbS50b3VyaWFuLnYxQg5UcmFuc3BvcnRQcm90b1ABWjRnaXRodWIuY29tL3ZsdW1pL3RvdXJpYW4vZ2VuL2dvL3RvdXJpYW4vdjE7dG91cmlhbnYxogIDVFhYqgIKVG91cmlhbi5WMcoCClRvdXJpYW5cVjHiAhZUb3VyaWFuXFYxXEdQQk1ldGFkYXRh6gILVG91cmlhbjo6VjFiBnByb3RvMw", [file_tourian_v1_robot, file_tourian_v1_video]);
 
 /**
  * One contract message as it crosses a transport; every frame on the wire is one of these.
@@ -59,6 +61,36 @@ export type Envelope = Message<"tourian.v1.Envelope"> & {
      */
     value: Stop;
     case: "stop";
+  } | {
+    /**
+     * @generated from field: tourian.v1.CameraAnnounce camera_announce = 7;
+     */
+    value: CameraAnnounce;
+    case: "cameraAnnounce";
+  } | {
+    /**
+     * @generated from field: tourian.v1.VideoRequest video_request = 8;
+     */
+    value: VideoRequest;
+    case: "videoRequest";
+  } | {
+    /**
+     * @generated from field: tourian.v1.SessionDescription session_description = 9;
+     */
+    value: SessionDescription;
+    case: "sessionDescription";
+  } | {
+    /**
+     * @generated from field: tourian.v1.IceCandidate ice_candidate = 10;
+     */
+    value: IceCandidate;
+    case: "iceCandidate";
+  } | {
+    /**
+     * @generated from field: tourian.v1.VideoFrame video_frame = 11;
+     */
+    value: VideoFrame;
+    case: "videoFrame";
   } | { case: undefined; value?: undefined };
 };
 

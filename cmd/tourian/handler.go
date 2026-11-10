@@ -13,6 +13,7 @@ func newHandler(h *hub.Hub) http.Handler {
 		_, _ = w.Write([]byte("ok\n"))
 	})
 	mux.HandleFunc("GET /robot", h.ServeRobot)
+	mux.HandleFunc("GET /camera", h.ServeCamera)
 	mux.HandleFunc("GET /console", h.ServeConsole)
 	return mux
 }

@@ -45,6 +45,51 @@ func TestRoutesBetweenRobotAndConsole(t *testing.T) {
 	}
 }
 
+func TestRelaysSignalingBetweenConsoleAndCamera(t *testing.T) {
+	h := New()
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /camera", h.ServeCamera)
+	mux.HandleFunc("GET /console", h.ServeConsole)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	base := "ws" + strings.TrimPrefix(server.URL, "http")
+
+	camera := dial(t, ctx, base+"/camera")
+	send(t, ctx, camera, &tourianv1.CameraAnnounce{RobotId: "r1", Kinds: []tourianv1.VideoKind{tourianv1.VideoKind_VIDEO_KIND_WEBRTC}})
+
+	console := dial(t, ctx, base+"/console")
+	if announce := receive(t, ctx, console).GetCameraAnnounce(); announce.GetRobotId() != "r1" {
+		t.Fatalf("console should learn the camera on joining, got %v", announce)
+	}
+	bystander := dial(t, ctx, base+"/console")
+	receive(t, ctx, bystander)
+
+	send(t, ctx, console, &tourianv1.SessionDescription{RobotId: "r1", Type: "offer", Sdp: "v=0"})
+	offer := receive(t, ctx, camera).GetSessionDescription()
+	if offer.GetSdp() != "v=0" || offer.GetPeerId() == "" {
+		t.Fatalf("camera should receive the offer stamped with the console's id, got %v", offer)
+	}
+
+	send(t, ctx, camera, &tourianv1.SessionDescription{RobotId: "r1", PeerId: offer.GetPeerId(), Type: "answer", Sdp: "v=1"})
+	if answer := receive(t, ctx, console).GetSessionDescription(); answer.GetSdp() != "v=1" {
+		t.Fatalf("the offering console should receive the answer, got %v", answer)
+	}
+
+	send(t, ctx, camera, &tourianv1.VideoFrame{RobotId: "r1", Sequence: 1})
+	for _, c := range []*websocket.Conn{console, bystander} {
+		if frame := receive(t, ctx, c).GetVideoFrame(); frame.GetSequence() != 1 {
+			t.Fatalf("every console should receive the frame, got %v", frame)
+		}
+	}
+
+	_ = console.CloseNow()
+	if request := receive(t, ctx, camera).GetVideoRequest(); request.GetEnabled() || request.GetPeerId() != offer.GetPeerId() {
+		t.Fatalf("the camera should be told the console left, got %v", request)
+	}
+}
+
 func TestRobotMustAnnounceFirst(t *testing.T) {
 	h := New()
 	server := httptest.NewServer(http.HandlerFunc(h.ServeRobot))

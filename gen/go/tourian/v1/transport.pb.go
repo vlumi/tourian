@@ -32,6 +32,11 @@ type Envelope struct {
 	//	*Envelope_Observation
 	//	*Envelope_Heartbeat
 	//	*Envelope_Stop
+	//	*Envelope_CameraAnnounce
+	//	*Envelope_VideoRequest
+	//	*Envelope_SessionDescription
+	//	*Envelope_IceCandidate
+	//	*Envelope_VideoFrame
 	Message       isEnvelope_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -128,6 +133,51 @@ func (x *Envelope) GetStop() *Stop {
 	return nil
 }
 
+func (x *Envelope) GetCameraAnnounce() *CameraAnnounce {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_CameraAnnounce); ok {
+			return x.CameraAnnounce
+		}
+	}
+	return nil
+}
+
+func (x *Envelope) GetVideoRequest() *VideoRequest {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_VideoRequest); ok {
+			return x.VideoRequest
+		}
+	}
+	return nil
+}
+
+func (x *Envelope) GetSessionDescription() *SessionDescription {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_SessionDescription); ok {
+			return x.SessionDescription
+		}
+	}
+	return nil
+}
+
+func (x *Envelope) GetIceCandidate() *IceCandidate {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_IceCandidate); ok {
+			return x.IceCandidate
+		}
+	}
+	return nil
+}
+
+func (x *Envelope) GetVideoFrame() *VideoFrame {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_VideoFrame); ok {
+			return x.VideoFrame
+		}
+	}
+	return nil
+}
+
 type isEnvelope_Message interface {
 	isEnvelope_Message()
 }
@@ -156,6 +206,26 @@ type Envelope_Stop struct {
 	Stop *Stop `protobuf:"bytes,6,opt,name=stop,proto3,oneof"`
 }
 
+type Envelope_CameraAnnounce struct {
+	CameraAnnounce *CameraAnnounce `protobuf:"bytes,7,opt,name=camera_announce,json=cameraAnnounce,proto3,oneof"`
+}
+
+type Envelope_VideoRequest struct {
+	VideoRequest *VideoRequest `protobuf:"bytes,8,opt,name=video_request,json=videoRequest,proto3,oneof"`
+}
+
+type Envelope_SessionDescription struct {
+	SessionDescription *SessionDescription `protobuf:"bytes,9,opt,name=session_description,json=sessionDescription,proto3,oneof"`
+}
+
+type Envelope_IceCandidate struct {
+	IceCandidate *IceCandidate `protobuf:"bytes,10,opt,name=ice_candidate,json=iceCandidate,proto3,oneof"`
+}
+
+type Envelope_VideoFrame struct {
+	VideoFrame *VideoFrame `protobuf:"bytes,11,opt,name=video_frame,json=videoFrame,proto3,oneof"`
+}
+
 func (*Envelope_Capabilities) isEnvelope_Message() {}
 
 func (*Envelope_VelocityCommand) isEnvelope_Message() {}
@@ -168,12 +238,22 @@ func (*Envelope_Heartbeat) isEnvelope_Message() {}
 
 func (*Envelope_Stop) isEnvelope_Message() {}
 
+func (*Envelope_CameraAnnounce) isEnvelope_Message() {}
+
+func (*Envelope_VideoRequest) isEnvelope_Message() {}
+
+func (*Envelope_SessionDescription) isEnvelope_Message() {}
+
+func (*Envelope_IceCandidate) isEnvelope_Message() {}
+
+func (*Envelope_VideoFrame) isEnvelope_Message() {}
+
 var File_tourian_v1_transport_proto protoreflect.FileDescriptor
 
 const file_tourian_v1_transport_proto_rawDesc = "" +
 	"\n" +
 	"\x1atourian/v1/transport.proto\x12\n" +
-	"tourian.v1\x1a\x16tourian/v1/robot.proto\"\xf6\x02\n" +
+	"tourian.v1\x1a\x16tourian/v1/robot.proto\x1a\x16tourian/v1/video.proto\"\xcd\x05\n" +
 	"\bEnvelope\x12>\n" +
 	"\fcapabilities\x18\x01 \x01(\v2\x18.tourian.v1.CapabilitiesH\x00R\fcapabilities\x12H\n" +
 	"\x10velocity_command\x18\x02 \x01(\v2\x1b.tourian.v1.VelocityCommandH\x00R\x0fvelocityCommand\x129\n" +
@@ -181,7 +261,14 @@ const file_tourian_v1_transport_proto_rawDesc = "" +
 	"commandAck\x12;\n" +
 	"\vobservation\x18\x04 \x01(\v2\x17.tourian.v1.ObservationH\x00R\vobservation\x125\n" +
 	"\theartbeat\x18\x05 \x01(\v2\x15.tourian.v1.HeartbeatH\x00R\theartbeat\x12&\n" +
-	"\x04stop\x18\x06 \x01(\v2\x10.tourian.v1.StopH\x00R\x04stopB\t\n" +
+	"\x04stop\x18\x06 \x01(\v2\x10.tourian.v1.StopH\x00R\x04stop\x12E\n" +
+	"\x0fcamera_announce\x18\a \x01(\v2\x1a.tourian.v1.CameraAnnounceH\x00R\x0ecameraAnnounce\x12?\n" +
+	"\rvideo_request\x18\b \x01(\v2\x18.tourian.v1.VideoRequestH\x00R\fvideoRequest\x12Q\n" +
+	"\x13session_description\x18\t \x01(\v2\x1e.tourian.v1.SessionDescriptionH\x00R\x12sessionDescription\x12?\n" +
+	"\rice_candidate\x18\n" +
+	" \x01(\v2\x18.tourian.v1.IceCandidateH\x00R\ficeCandidate\x129\n" +
+	"\vvideo_frame\x18\v \x01(\v2\x16.tourian.v1.VideoFrameH\x00R\n" +
+	"videoFrameB\t\n" +
 	"\amessageB\x9f\x01\n" +
 	"\x0ecom.tourian.v1B\x0eTransportProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\n" +
 	"Tourian.V1\xca\x02\n" +
@@ -201,26 +288,36 @@ func file_tourian_v1_transport_proto_rawDescGZIP() []byte {
 
 var file_tourian_v1_transport_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_tourian_v1_transport_proto_goTypes = []any{
-	(*Envelope)(nil),        // 0: tourian.v1.Envelope
-	(*Capabilities)(nil),    // 1: tourian.v1.Capabilities
-	(*VelocityCommand)(nil), // 2: tourian.v1.VelocityCommand
-	(*CommandAck)(nil),      // 3: tourian.v1.CommandAck
-	(*Observation)(nil),     // 4: tourian.v1.Observation
-	(*Heartbeat)(nil),       // 5: tourian.v1.Heartbeat
-	(*Stop)(nil),            // 6: tourian.v1.Stop
+	(*Envelope)(nil),           // 0: tourian.v1.Envelope
+	(*Capabilities)(nil),       // 1: tourian.v1.Capabilities
+	(*VelocityCommand)(nil),    // 2: tourian.v1.VelocityCommand
+	(*CommandAck)(nil),         // 3: tourian.v1.CommandAck
+	(*Observation)(nil),        // 4: tourian.v1.Observation
+	(*Heartbeat)(nil),          // 5: tourian.v1.Heartbeat
+	(*Stop)(nil),               // 6: tourian.v1.Stop
+	(*CameraAnnounce)(nil),     // 7: tourian.v1.CameraAnnounce
+	(*VideoRequest)(nil),       // 8: tourian.v1.VideoRequest
+	(*SessionDescription)(nil), // 9: tourian.v1.SessionDescription
+	(*IceCandidate)(nil),       // 10: tourian.v1.IceCandidate
+	(*VideoFrame)(nil),         // 11: tourian.v1.VideoFrame
 }
 var file_tourian_v1_transport_proto_depIdxs = []int32{
-	1, // 0: tourian.v1.Envelope.capabilities:type_name -> tourian.v1.Capabilities
-	2, // 1: tourian.v1.Envelope.velocity_command:type_name -> tourian.v1.VelocityCommand
-	3, // 2: tourian.v1.Envelope.command_ack:type_name -> tourian.v1.CommandAck
-	4, // 3: tourian.v1.Envelope.observation:type_name -> tourian.v1.Observation
-	5, // 4: tourian.v1.Envelope.heartbeat:type_name -> tourian.v1.Heartbeat
-	6, // 5: tourian.v1.Envelope.stop:type_name -> tourian.v1.Stop
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	1,  // 0: tourian.v1.Envelope.capabilities:type_name -> tourian.v1.Capabilities
+	2,  // 1: tourian.v1.Envelope.velocity_command:type_name -> tourian.v1.VelocityCommand
+	3,  // 2: tourian.v1.Envelope.command_ack:type_name -> tourian.v1.CommandAck
+	4,  // 3: tourian.v1.Envelope.observation:type_name -> tourian.v1.Observation
+	5,  // 4: tourian.v1.Envelope.heartbeat:type_name -> tourian.v1.Heartbeat
+	6,  // 5: tourian.v1.Envelope.stop:type_name -> tourian.v1.Stop
+	7,  // 6: tourian.v1.Envelope.camera_announce:type_name -> tourian.v1.CameraAnnounce
+	8,  // 7: tourian.v1.Envelope.video_request:type_name -> tourian.v1.VideoRequest
+	9,  // 8: tourian.v1.Envelope.session_description:type_name -> tourian.v1.SessionDescription
+	10, // 9: tourian.v1.Envelope.ice_candidate:type_name -> tourian.v1.IceCandidate
+	11, // 10: tourian.v1.Envelope.video_frame:type_name -> tourian.v1.VideoFrame
+	11, // [11:11] is the sub-list for method output_type
+	11, // [11:11] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_tourian_v1_transport_proto_init() }
@@ -229,6 +326,7 @@ func file_tourian_v1_transport_proto_init() {
 		return
 	}
 	file_tourian_v1_robot_proto_init()
+	file_tourian_v1_video_proto_init()
 	file_tourian_v1_transport_proto_msgTypes[0].OneofWrappers = []any{
 		(*Envelope_Capabilities)(nil),
 		(*Envelope_VelocityCommand)(nil),
@@ -236,6 +334,11 @@ func file_tourian_v1_transport_proto_init() {
 		(*Envelope_Observation)(nil),
 		(*Envelope_Heartbeat)(nil),
 		(*Envelope_Stop)(nil),
+		(*Envelope_CameraAnnounce)(nil),
+		(*Envelope_VideoRequest)(nil),
+		(*Envelope_SessionDescription)(nil),
+		(*Envelope_IceCandidate)(nil),
+		(*Envelope_VideoFrame)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
