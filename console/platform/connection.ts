@@ -48,6 +48,9 @@ function receive(envelope: Envelope): void {
     case 'controlState':
       store.setControl(envelope.message.value)
       break
+    case 'robotConfig':
+      store.setConfig(envelope.message.value)
+      break
     case 'sessionDescription':
     case 'iceCandidate':
     case 'videoFrame':

@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/vlumi/tourian/config"
 	"github.com/vlumi/tourian/emmi/zebes"
 	"github.com/vlumi/tourian/episode"
 	"github.com/vlumi/tourian/episode/lerobot"
@@ -44,7 +45,8 @@ func main() {
 	if *dataset != "" {
 		sinks = append(sinks, lerobot.New(filepath.Join(*data, "lerobot", *dataset), observationsPerSecond))
 	}
-	recorder := episode.NewRecorder(h, time.Now, sinks...)
+	configs := config.NewStore(filepath.Join(*data, "config"), time.Now)
+	recorder := episode.NewRecorder(h, time.Now, sinks...).WithConfigs(configs)
 	h.AddTap(recorder.Tap)
 	go recorder.Run(ctx)
 
@@ -58,7 +60,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              *addr,
-		Handler:           newHandler(h, episodes),
+		Handler:           newHandler(h, episodes, configs),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	go func() {

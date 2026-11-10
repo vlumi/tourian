@@ -2,6 +2,16 @@
 
 One capture per milestone, taken with `make screenshot` (which builds and serves the console and runs [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs) against it), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates.
 
+## 2026-11-10 · Many
+
+![Two robots in the fleet](005-fleet.png)
+
+Two simulated robots under one platform: the fleet strip above the picture with a card each, the first driving its square under the script, the second selected and driven by the operator with its camera's picture on the card and above the world, where the first robot shows dimly.
+
+![The configuration page](005-config.png)
+
+The configuration page: a form per robot with a name of the operators' own, speed limits under the robot's, parameters and a note, each save a new version; and the tasks with their description and what success looks like.
+
 ## 2026-11-10 · Hand over
 
 ![The script holding the robot](004-handover.png)

@@ -20,6 +20,12 @@ type Platform interface {
 	RequestVideo(robotID, peerID string, enabled bool)
 }
 
+// Configs tells the recorder which configurations are current, so an episode says what it was recorded on and for.
+type Configs interface {
+	LatestRobot(robotID string) *tourianv1.RobotConfig
+	LatestTask(taskID string) *tourianv1.TaskConfig
+}
+
 // A Sink is one layout an episode is written in. Every episode goes to every sink the recorder has.
 type Sink interface {
 	Begin(episode *tourianv1.Episode) error
@@ -39,6 +45,7 @@ const (
 type Recorder struct {
 	sinks    []Sink
 	platform Platform
+	configs  Configs
 	now      func() time.Time
 	inbox    chan *tourianv1.Envelope
 	dropped  atomic.Int64
@@ -62,6 +69,12 @@ func NewRecorder(platform Platform, now func() time.Time, sinks ...Sink) *Record
 		active:   map[string]*recording{},
 		holders:  map[string]*tourianv1.Controller{},
 	}
+}
+
+// WithConfigs makes the recorder stamp the current configuration versions on each episode.
+func (r *Recorder) WithConfigs(configs Configs) *Recorder {
+	r.configs = configs
+	return r
 }
 
 // Tap hands a message to the recorder without waiting; one that finds the inbox full is dropped and counted.
@@ -134,9 +147,19 @@ func (r *Recorder) start(request *tourianv1.RecordRequest) {
 			Id:        id,
 			RobotId:   robotID,
 			Task:      request.GetTask(),
+			TaskId:    request.GetTaskId(),
 			StartedAt: timestamppb.New(now),
 		},
 		startedAt: now,
+	}
+	if r.configs != nil {
+		rec.episode.RobotConfigVersion = r.configs.LatestRobot(robotID).GetVersion()
+		if task := r.configs.LatestTask(request.GetTaskId()); task != nil {
+			rec.episode.TaskConfigVersion = task.GetVersion()
+			if rec.episode.Task == "" {
+				rec.episode.Task = task.GetName()
+			}
+		}
 	}
 	for _, sink := range r.sinks {
 		if err := sink.Begin(rec.episode); err != nil {

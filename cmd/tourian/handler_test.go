@@ -4,12 +4,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/vlumi/tourian/config"
 	"github.com/vlumi/tourian/hub"
 )
 
 func TestHealthz(t *testing.T) {
-	server := httptest.NewServer(newHandler(hub.New(), t.TempDir()))
+	server := httptest.NewServer(newHandler(hub.New(), t.TempDir(), config.NewStore(t.TempDir(), time.Now)))
 	defer server.Close()
 
 	response, err := http.Get(server.URL + "/healthz")

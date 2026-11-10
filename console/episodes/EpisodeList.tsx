@@ -46,8 +46,14 @@ export function EpisodeList() {
                 <td>
                   <Link href={`/episodes/${encodeURIComponent(episode.id)}`}>{started(episode)}</Link>
                 </td>
-                <td>{episode.robotId}</td>
-                <td>{episode.task || '–'}</td>
+                <td>
+                  {episode.robotId}
+                  {episode.robotConfigVersion > 0 && <span className="version"> v{episode.robotConfigVersion}</span>}
+                </td>
+                <td>
+                  {episode.task || '–'}
+                  {episode.taskConfigVersion > 0 && <span className="version"> v{episode.taskConfigVersion}</span>}
+                </td>
                 <td>{length(episode)}</td>
                 <td>{String(episode.frames)}</td>
                 <td>{String(episode.videoFrames)}</td>

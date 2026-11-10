@@ -3,8 +3,10 @@
 import { create } from '@bufbuild/protobuf'
 import { timestampDate } from '@bufbuild/protobuf/wkt'
 import { EpisodeFlagSchema, RecordRequestSchema } from '@tourian/contract/tourian/v1/episode_pb'
+import type { TaskConfig } from '@tourian/contract/tourian/v1/config_pb'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { listTaskConfigs } from '@/config/api'
 import { send } from '@/platform/connection'
 import { useStore } from '@/platform/store'
 
@@ -15,7 +17,15 @@ export function RecordControls() {
   const bad = useStore((s) => s.episodeBad)
   const setEpisodeBad = useStore((s) => s.setEpisodeBad)
   const [task, setTask] = useState('')
+  const [taskId, setTaskId] = useState('')
+  const [tasks, setTasks] = useState<TaskConfig[]>([])
   const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    listTaskConfigs()
+      .then(setTasks)
+      .catch(() => setTasks([]))
+  }, [])
 
   const recording = episode?.recording ?? false
   useEffect(() => {
@@ -29,7 +39,11 @@ export function RecordControls() {
 
   const toggle = () => {
     if (!robotId) return
-    send({ case: 'recordRequest', value: create(RecordRequestSchema, { robotId, start: !recording, task }) })
+    const chosen = tasks.find((t) => t.taskId === taskId)
+    send({
+      case: 'recordRequest',
+      value: create(RecordRequestSchema, { robotId, start: !recording, task: chosen?.name ?? task, taskId }),
+    })
   }
   const flag = () => {
     if (!episode) return
@@ -41,13 +55,29 @@ export function RecordControls() {
 
   return (
     <div className="record">
-      <input
-        value={task}
-        onChange={(e) => setTask(e.target.value)}
-        placeholder="task"
-        disabled={recording}
-        aria-label="Task being recorded"
-      />
+      {tasks.length > 0 ? (
+        <select
+          value={taskId}
+          onChange={(e) => setTaskId(e.target.value)}
+          disabled={recording}
+          aria-label="Task being recorded"
+        >
+          <option value="">no task</option>
+          {tasks.map((t) => (
+            <option key={t.taskId} value={t.taskId}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          value={task}
+          onChange={(e) => setTask(e.target.value)}
+          placeholder="task"
+          disabled={recording}
+          aria-label="Task being recorded"
+        />
+      )}
       <button type="button" onClick={toggle} disabled={!robotId} className={recording ? 'recording' : ''}>
         {recording ? `Stop · ${format(elapsed)}` : 'Record'}
       </button>
@@ -61,6 +91,7 @@ export function RecordControls() {
         </span>
       )}
       <Link href="/episodes">Episodes</Link>
+      <Link href="/config">Config</Link>
     </div>
   )
 }

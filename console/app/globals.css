@@ -101,6 +101,7 @@ button.bad {
   margin-right: 1rem;
 }
 
+.record select,
 .record input {
   font: inherit;
   width: 10rem;
@@ -125,7 +126,8 @@ button.bad {
 
 .record a,
 .episodes a,
-.replay a {
+.replay a,
+.config a {
   color: var(--accent);
   text-decoration: none;
 }
@@ -135,6 +137,72 @@ button.bad {
   height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.config {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+.config header {
+  border-bottom: none;
+}
+
+.config section {
+  padding: 0 1rem;
+}
+
+.config h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.config-form {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+}
+
+.config-form h3 {
+  margin: 0;
+  font-size: 1rem;
+  display: flex;
+  justify-content: space-between;
+  color: var(--accent);
+}
+
+.version {
+  color: var(--dim);
+  font-weight: normal;
+  font-size: 0.85em;
+}
+
+.config-form label {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--dim);
+}
+
+.config-form input,
+.config-form textarea {
+  font: inherit;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.config-form button {
+  justify-self: start;
 }
 
 .episodes table {

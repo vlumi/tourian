@@ -56,6 +56,12 @@ One repository, two languages, one contract. The Go module `github.com/vlumi/tou
 
 **The console** shows the holder and since when in a control section, with a button per controller to hand the robot to, and explains that engaging takes over and releasing hands back; releasing sends the request along with a zero command.
 
+### M5 — many
+
+**Several robots** were never special for the platform: the hub keys robots, cameras and capabilities by robot id, and the arbiter and the recorder hold their state per robot. What M5 added is on the edges. The simulator takes a start pose, and the platform runs several (`-sims`) with their own ids, names and positions; the console's store keeps the latest observation, control state and episode status of every robot and the trail and history of the selected one only, and a fleet strip shows a card per robot with its holder, whether it is recording, its halt or driving state, its battery and its latest picture when frames are passing by. Clicking a card selects the robot for driving; the world draws the others dimly.
+
+**Configurations** are versioned files: `data/config/robots/<id>/v<N>.json` and `data/config/tasks/<id>/v<N>.json`, each a `RobotConfig` or `TaskConfig` as JSON, every save a new version beside the earlier ones, so an episode can name the version it was recorded on and the file is still there to read. The platform serves them over HTTP, the current ones as lists and every version of one, and saving is a PUT. A new robot configuration is also published to consoles and retained, so the console drives within the configured limits at once: a configuration can lower a robot's limits, never raise them. The console's Config page edits both kinds; the recording controls offer the configured tasks, and the recorder stamps the robot's and the task's current versions on the episode, taking the task's name from the configuration.
+
 ### Layout
 
 | Directory | What it holds |
@@ -65,12 +71,13 @@ One repository, two languages, one contract. The Go module `github.com/vlumi/tou
 | `cmd/tourian` | the platform binary |
 | `cmd/zebes` | the simulator as its own process |
 | `cmd/policy` | a stand-in policy server that steers home |
+| `config/` | the versioned configurations of robots and tasks, and their HTTP |
 | `emmi/zebes` | the simulated robot: world, safety and the connection to the platform |
 | `hub/` | the platform's routing between robots, cameras and consoles, with taps for the rest of the platform |
 | `episode/` | the recorder, the JSONL sink, the HTTP for browsing; `lerobot/` the LeRobot v3.0 sink |
 | `motherbrain/` | the controller seam and the arbiter; `script/` the square, `policy/` the client of a policy server |
 | `transport/ws` | contract messages over WebSocket |
-| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `episodes/` the list and the replay; `app/camera` the page a phone opens |
+| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `fleet/` the strip of robots, `config/` the configuration page, `episodes/` the list and the replay; `app/camera` the page a phone opens |
 | `scripts/` | what the make targets run |
 | `docs/` | screenshots, and the measurements under `results/` |
 

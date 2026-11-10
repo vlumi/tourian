@@ -3,7 +3,7 @@ import { timestampNow } from '@bufbuild/protobuf/wkt'
 import { ControlRequestSchema } from '@tourian/contract/tourian/v1/control_pb'
 import { HeartbeatSchema, StopSchema, VelocityCommandSchema } from '@tourian/contract/tourian/v1/robot_pb'
 import { send } from '@/platform/connection'
-import { useStore } from '@/platform/store'
+import { effectiveLimits, useStore } from '@/platform/store'
 import { readGamepad } from './gamepad'
 import { twistFromKeys, watchKeyboard } from './keyboard'
 import { markSent } from './latency'
@@ -49,10 +49,10 @@ export function startDriver(): () => void {
           }
     store.getState().setInput(input)
 
-    const { engaged, selected, robots } = store.getState()
+    const { engaged, selected, robots, configs } = store.getState()
     if (!engaged || !selected) return
-    const limits = robots[selected]?.velocityLimits
-    sendCommand(selected, input.linear * (limits?.maxLinear ?? 0), input.angular * (limits?.maxAngular ?? 0))
+    const limits = effectiveLimits(robots[selected], configs[selected])
+    sendCommand(selected, input.linear * limits.maxLinear, input.angular * limits.maxAngular)
   }, commandIntervalMs)
 
   return () => {
