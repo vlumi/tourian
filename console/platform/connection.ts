@@ -1,49 +1,31 @@
-import { decode, encode, type Outbound } from './codec'
+import type { Envelope } from '@tourian/contract/tourian/v1/transport_pb'
 import { markAcked } from '@/drive/latency'
+import { dispatchVideoMessage } from '@/video/signals'
+import type { Message } from './codec'
+import { openSocket, platformBase, type Socket } from './socket'
 import { useStore } from './store'
 
-const reconnectDelayMs = 1000
+let socket: Socket | undefined
 
-let socket: WebSocket | undefined
-
-export function platformUrl(): string {
-  return (process.env.NEXT_PUBLIC_TOURIAN_URL ?? 'ws://localhost:8080') + '/console'
-}
-
-// Keeps one connection to the platform open for as long as the returned function has not been called.
-export function connect(url = platformUrl()): () => void {
-  let closed = false
-  let timer: ReturnType<typeof setTimeout> | undefined
-
-  const open = () => {
-    const store = useStore.getState()
-    store.setStatus('connecting')
-    const ws = new WebSocket(url)
-    ws.binaryType = 'arraybuffer'
-    ws.onopen = () => useStore.getState().setStatus('connected')
-    ws.onmessage = (event: MessageEvent<ArrayBuffer>) => receive(decode(new Uint8Array(event.data)))
-    ws.onclose = () => {
-      useStore.getState().setStatus('disconnected')
-      socket = undefined
-      if (!closed) timer = setTimeout(open, reconnectDelayMs)
-    }
-    socket = ws
-  }
-  open()
-
+// Keeps the console's connection to the platform open until the returned function is called.
+export function connect(url = platformBase() + '/console'): () => void {
+  useStore.getState().setStatus('connecting')
+  socket = openSocket(url, {
+    onOpen: () => useStore.getState().setStatus('connected'),
+    onMessage: receive,
+    onClose: () => useStore.getState().setStatus('disconnected'),
+  })
   return () => {
-    closed = true
-    if (timer) clearTimeout(timer)
     socket?.close()
     socket = undefined
   }
 }
 
-export function send(message: Outbound): void {
-  if (socket?.readyState === WebSocket.OPEN) socket.send(new Uint8Array(encode(message)))
+export function send(message: Message): void {
+  socket?.send(message)
 }
 
-function receive(envelope: ReturnType<typeof decode>): void {
+function receive(envelope: Envelope): void {
   const store = useStore.getState()
   switch (envelope.message.case) {
     case 'capabilities':
@@ -57,5 +39,13 @@ function receive(envelope: ReturnType<typeof decode>): void {
       if (rtt !== undefined) store.recordLatency(rtt)
       break
     }
+    case 'cameraAnnounce':
+      store.addCamera(envelope.message.value)
+      break
+    case 'sessionDescription':
+    case 'iceCandidate':
+    case 'videoFrame':
+      dispatchVideoMessage(envelope)
+      break
   }
 }
