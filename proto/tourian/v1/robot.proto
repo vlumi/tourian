@@ -3,6 +3,7 @@ syntax = "proto3";
 package tourian.v1;
 
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 import "tourian/v1/geometry.proto";
 import "tourian/v1/header.proto";
 
@@ -15,6 +16,8 @@ message Capabilities {
   // How long the adapter drives on without a fresh command before it stops the robot.
   google.protobuf.Duration command_timeout = 5;
   bool has_camera = 6;
+  // How long the adapter drives on without a heartbeat before it stops the robot.
+  google.protobuf.Duration heartbeat_timeout = 7;
 }
 
 message VelocityLimits {
@@ -30,6 +33,14 @@ message VelocityCommand {
   Twist twist = 4;
 }
 
+// Sent by the adapter the moment a command reaches it, with the command's own stamp, so the sender can measure the round trip.
+message CommandAck {
+  Header header = 1;
+  string robot_id = 2;
+  uint64 sequence = 3;
+  google.protobuf.Timestamp command_stamp = 4;
+}
+
 // Everything the robot reports about itself at one instant.
 message Observation {
   Header header = 1;
@@ -39,6 +50,15 @@ message Observation {
   JointState joints = 5;
   Battery battery = 6;
   uint64 last_command_sequence = 7;
+  HaltReason halt_reason = 8;
+}
+
+// Why the adapter is holding the robot still; unspecified while it is free to drive.
+enum HaltReason {
+  HALT_REASON_UNSPECIFIED = 0;
+  HALT_REASON_COMMAND_TIMEOUT = 1;
+  HALT_REASON_DEAD_MAN = 2;
+  HALT_REASON_EMERGENCY_STOP = 3;
 }
 
 // Parallel arrays indexed alike, as sensor_msgs/JointState; velocity and effort may be empty.
@@ -62,7 +82,7 @@ message Heartbeat {
   uint64 sequence = 3;
 }
 
-// Emergency stop. Executed ahead of anything queued and holds until a new command arrives.
+// Emergency stop. Executed ahead of anything queued, which is discarded; the robot holds still until a new command arrives.
 message Stop {
   Header header = 1;
   string robot_id = 2;
