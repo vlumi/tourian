@@ -62,22 +62,38 @@ One repository, two languages, one contract. The Go module `github.com/vlumi/tou
 
 **Configurations** are versioned files: `data/config/robots/<id>/v<N>.json` and `data/config/tasks/<id>/v<N>.json`, each a `RobotConfig` or `TaskConfig` as JSON, every save a new version beside the earlier ones, so an episode can name the version it was recorded on and the file is still there to read. The platform serves them over HTTP, the current ones as lists and every version of one, and saving is a PUT. A new robot configuration is also published to consoles and retained, so the console drives within the configured limits at once: a configuration can lower a robot's limits, never raise them. The console's Config page edits both kinds; the recording controls offer the configured tasks, and the recorder stamps the robot's and the task's current versions on the episode, taking the task's name from the configuration.
 
+### M6 — real
+
+**The robot seam has its second implementation.** `emmi/rosbridge` speaks the rosbridge protocol to a ROS 2 robot: velocity commands become `geometry_msgs/msg/Twist` on `/cmd_vel`, odometry, joint states and battery state become observations. It publishes the twist every 50 ms and zero the moment the operator is not heard, since a plain ROS robot keeps doing what it was last told; that is the adapter's half of the safety story, and the guard that decides when is `emmi/safety`, extracted from the simulator for every adapter to share. `rosbridgetest` is a simulated ROS robot behind the same protocol, a differential drive that applies the last `/cmd_vel`; `cmd/rossim` runs it on a port for driving from the console, and the tests run it on a port of their own.
+
+**The contract tests** in `emmi/contracttest` are what every adapter must do, exercised through a real hub with a console client: announce, drive on command, stop when commands stop, stop when heartbeats stop, stop at once on an emergency stop ahead of five queued commands. Both adapters pass them, and `make contract` runs them as part of `make ci`.
+
+**MCAP is the third sink.** One file per episode: `/observation`, `/action` and `/controller` carry the contract's messages as protobuf with the FileDescriptorSet embedded as the schema, `/camera` and `/pose` carry `foxglove.CompressedImage` and `foxglove.PoseInFrame` as JSON with their schemas, so Foxglove's panels show them without being told how. Log times are the episode's start plus each frame's offset; a metadata record names the episode.
+
+**The arm sidecar** is Python, under `sidecars/arm`, because the drivers of physical arms tend to be. The contract is generated for Python with buf's remote plugin under `gen/python`. `ArmDriver` is what the sidecar needs from an arm's own driver: named joints, positions, a target to move toward and a stop that holds; `FakeArm` stands in. The sidecar announces the arm, acknowledges each `JointCommand` on arrival, moves toward the target while the operator is heard and holds the arm the moment not, through a guard with the same semantics as the Go one. It is tested end to end against a stand-in platform over WebSocket. The hardware retest waits for an arm, and the console has no joint controls yet, so an arm is driven by a controller inside the platform or a console that speaks `JointCommand`.
+
 ### Layout
 
 | Directory | What it holds |
 | --- | --- |
 | `proto/` | the contract, and `buf` configuration |
-| `gen/` | generated Go and TypeScript, committed; `gen/ts` is the npm package `@tourian/contract` |
+| `gen/` | generated Go, TypeScript and Python, committed; `gen/ts` is the npm package `@tourian/contract` |
 | `cmd/tourian` | the platform binary |
 | `cmd/zebes` | the simulator as its own process |
 | `cmd/policy` | a stand-in policy server that steers home |
+| `cmd/rosbridge` | the rosbridge adapter as its own process |
+| `cmd/rossim` | a simulated ROS 2 robot behind the rosbridge protocol |
 | `config/` | the versioned configurations of robots and tasks, and their HTTP |
-| `emmi/zebes` | the simulated robot: world, safety and the connection to the platform |
+| `emmi/zebes` | the simulated robot: world and the connection to the platform |
+| `emmi/rosbridge` | the adapter for a ROS 2 robot through rosbridge; `rosbridgetest/` the simulated one |
+| `emmi/safety` | the guard every adapter shares |
+| `emmi/contracttest` | what every adapter must do |
 | `hub/` | the platform's routing between robots, cameras and consoles, with taps for the rest of the platform |
-| `episode/` | the recorder, the JSONL sink, the HTTP for browsing; `lerobot/` the LeRobot v3.0 sink |
+| `episode/` | the recorder, the JSONL sink, the HTTP for browsing; `lerobot/` the LeRobot v3.0 sink, `mcap/` the MCAP sink |
 | `motherbrain/` | the controller seam and the arbiter; `script/` the square, `policy/` the client of a policy server |
 | `transport/ws` | contract messages over WebSocket |
 | `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `fleet/` the strip of robots, `config/` the configuration page, `episodes/` the list and the replay; `app/camera` the page a phone opens |
+| `sidecars/arm` | the Python sidecar for a physical arm |
 | `scripts/` | what the make targets run |
 | `docs/` | screenshots, and the measurements under `results/` |
 
@@ -115,6 +131,4 @@ Protobuf packages under `proto/tourian/v1/`: `robot` (capabilities, observations
 
 | Directory | What it will hold |
 | --- | --- |
-| `emmi/` | further robot adapters: rosbridge, the sidecar client |
 | `transport/` | the other transports, for comparison |
-| `sidecars/` | Python processes for hardware with Python-only drivers |

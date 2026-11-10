@@ -4,7 +4,7 @@ A teleoperation platform for robots, simulated first, with recording for trainin
 
 **The name:** Tourian is where Mother Brain sits. The platform is the sector; the brain is whoever is at the controls. See the README for the component names.
 
-**Status:** experiment, not a product. Bootstrapped 2026-11-10; M0 to M5 done the same day. Milestones get their dates on the headings as they land.
+**Status:** experiment, not a product. Bootstrapped 2026-11-10; M0 to M6 done the same day, M6 short of its hardware test. Milestones get their dates on the headings as they land.
 
 ## The idea
 
@@ -70,11 +70,11 @@ Toolchain and layout: Go module, `buf` with a first contract (velocity command, 
 - Several robots under one platform: a fleet view with each robot's state, holder and latest frame, and one selected for driving.
 - Versioned configurations for robots and tasks, edited from the console, stored with the episodes so a recording says what it was recorded on and for.
 
-### M6 — real
+### M6 — real (done 2026-11-10, except where noted)
 
-- A ROS 2 robot through rosbridge as the second robot adapter, against a simulated ROS 2 robot first.
-- Episodes exported as MCAP and opened in Foxglove.
-- A physical arm behind the contract through a Python sidecar that uses the arm's own driver; safety behavior retested on hardware before any driving.
+- A ROS 2 robot through rosbridge as the second robot adapter, against a simulated ROS 2 robot first. Done against a simulated robot behind the rosbridge protocol; not yet run against `rosbridge_server` and a ROS 2 robot.
+- Episodes exported as MCAP and opened in Foxglove. The files are written and read back by the MCAP library; opening them in Foxglove is not yet confirmed.
+- A physical arm behind the contract through a Python sidecar that uses the arm's own driver; safety behavior retested on hardware before any driving. The sidecar is done against a stand-in arm; **the hardware retest is open**, since no arm has been attached, and the console has no joint controls yet.
 
 ### Later
 
