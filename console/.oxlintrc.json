@@ -3,6 +3,7 @@
   "plugins": ["react", "typescript", "oxc", "nextjs"],
   "ignorePatterns": [".next", "next-env.d.ts"],
   "rules": {
-    "react/rules-of-hooks": "error"
+    "react/rules-of-hooks": "error",
+    "nextjs/no-img-element": "off"
   }
 }

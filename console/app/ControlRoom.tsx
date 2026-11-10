@@ -5,6 +5,7 @@ import { startDriver, toggleEngaged, emergencyStop } from '@/drive/driver'
 import { connect } from '@/platform/connection'
 import { useStore } from '@/platform/store'
 import { TelemetryPanel } from '@/telemetry/TelemetryPanel'
+import { VideoView } from '@/video/VideoView'
 import { WorldCanvas } from '@/world/WorldCanvas'
 
 export function ControlRoom() {
@@ -33,7 +34,10 @@ export function ControlRoom() {
           </button>
         </div>
       </header>
-      <WorldCanvas />
+      <div className="scene">
+        <VideoView />
+        <WorldCanvas />
+      </div>
       <TelemetryPanel />
     </div>
   )
