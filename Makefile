@@ -21,8 +21,9 @@ tools:  ## Install buf, protoc-gen-go and golangci-lint into bin/ at the pinned 
 	@scripts/tools.sh "$(BIN)"
 
 .PHONY: deps
-deps:  ## Install the npm packages of the console and the tooling
+deps:  ## Install the npm packages of the console and the tooling, and the Python environment of the sidecars
 	npm ci
+	python3 -m venv .venv && .venv/bin/pip install -q -e 'sidecars/arm[dev]'
 
 ##@ Contract
 
@@ -42,9 +43,10 @@ build:  ## Build the Go binaries and the console
 	npm run build --workspace console
 
 .PHONY: test
-test:  ## Run the Go and console unit tests
+test:  ## Run the Go, console and sidecar unit tests
 	go test ./...
 	npm test --workspace console
+	PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest -q -p no:cacheprovider sidecars/arm
 
 .PHONY: contract
 contract:  ## Run the contract tests against every robot adapter
@@ -65,6 +67,7 @@ fmt:  ## Format Go, Protobuf, TypeScript and the configuration files
 	golangci-lint fmt
 	cd proto && buf format -w
 	npx prettier --write .
+	.venv/bin/ruff format sidecars
 
 .PHONY: lint
 lint:  ## Lint and check formatting across the repository
@@ -75,6 +78,8 @@ lint:  ## Lint and check formatting across the repository
 	npm run lint --workspace console
 	npm run typecheck --workspace console
 	npx markdownlint-cli2
+	.venv/bin/ruff check sidecars
+	.venv/bin/ruff format --check sidecars
 
 .PHONY: ci
 ci: lint generate-check test build contract  ## Everything hosted CI runs
