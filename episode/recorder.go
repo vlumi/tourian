@@ -3,7 +3,6 @@ package episode
 import (
 	"context"
 	"log"
-	"path/filepath"
 	"regexp"
 	"sync/atomic"
 	"time"
@@ -20,6 +19,15 @@ type Platform interface {
 	RequestVideo(robotID, peerID string, enabled bool)
 }
 
+// A Sink is one layout an episode is written in. Every episode goes to every sink the recorder has.
+type Sink interface {
+	Begin(episode *tourianv1.Episode) error
+	Frame(episode *tourianv1.Episode, frame *tourianv1.EpisodeFrame) error
+	Picture(episode *tourianv1.Episode, frame *tourianv1.VideoFrame, offset time.Duration) error
+	End(episode *tourianv1.Episode) error
+	Flag(episodeID string, bad bool, note string) error
+}
+
 const (
 	peerID         = "recorder"
 	inboxDepth     = 4096
@@ -28,7 +36,7 @@ const (
 
 // A Recorder listens to everything the hub routes and, for each robot it has been told to record, writes an episode: a frame per observation, carrying the command in force and the latest picture.
 type Recorder struct {
-	root     string
+	sinks    []Sink
 	platform Platform
 	now      func() time.Time
 	inbox    chan *tourianv1.Envelope
@@ -38,15 +46,14 @@ type Recorder struct {
 
 type recording struct {
 	episode     *tourianv1.Episode
-	writer      *Writer
 	startedAt   time.Time
 	lastCommand *tourianv1.VelocityCommand
 	lastVideo   uint64
 }
 
-func NewRecorder(root string, platform Platform, now func() time.Time) *Recorder {
+func NewRecorder(platform Platform, now func() time.Time, sinks ...Sink) *Recorder {
 	return &Recorder{
-		root:     root,
+		sinks:    sinks,
 		platform: platform,
 		now:      now,
 		inbox:    make(chan *tourianv1.Envelope, inboxDepth),
@@ -116,12 +123,7 @@ func (r *Recorder) start(request *tourianv1.RecordRequest) {
 		return
 	}
 	now := r.now()
-	id := now.UTC().Format("20060102-150405") + "-" + safeName(robotID)
-	writer, err := NewWriter(filepath.Join(r.root, id))
-	if err != nil {
-		log.Printf("episode: cannot start %s: %v", id, err)
-		return
-	}
+	id := now.UTC().Format("20060102-150405") + "-" + SafeName(robotID)
 	rec := &recording{
 		episode: &tourianv1.Episode{
 			Id:        id,
@@ -129,8 +131,13 @@ func (r *Recorder) start(request *tourianv1.RecordRequest) {
 			Task:      request.GetTask(),
 			StartedAt: timestamppb.New(now),
 		},
-		writer:    writer,
 		startedAt: now,
+	}
+	for _, sink := range r.sinks {
+		if err := sink.Begin(rec.episode); err != nil {
+			log.Printf("episode: cannot start %s: %v", id, err)
+			return
+		}
 	}
 	r.active[robotID] = rec
 	r.platform.RequestVideo(robotID, peerID, true)
@@ -146,8 +153,10 @@ func (r *Recorder) stop(robotID string) {
 	delete(r.active, robotID)
 	r.platform.RequestVideo(robotID, peerID, false)
 	rec.episode.EndedAt = timestamppb.New(r.now())
-	if err := rec.writer.Close(rec.episode); err != nil {
-		log.Printf("episode: closing %s: %v", rec.episode.GetId(), err)
+	for _, sink := range r.sinks {
+		if err := sink.End(rec.episode); err != nil {
+			log.Printf("episode: closing %s: %v", rec.episode.GetId(), err)
+		}
 	}
 	r.platform.Broadcast(r.status(rec, false))
 	log.Printf("episode: %s ended with %d frames and %d pictures", rec.episode.GetId(), rec.episode.GetFrames(), rec.episode.GetVideoFrames())
@@ -161,17 +170,19 @@ func (r *Recorder) observe(rec *recording, observation *tourianv1.Observation) {
 		Action:        rec.lastCommand,
 		VideoSequence: rec.lastVideo,
 	}
-	if err := rec.writer.WriteFrame(frame); err != nil {
-		log.Printf("episode: writing frame: %v", err)
-		return
+	for _, sink := range r.sinks {
+		if err := sink.Frame(rec.episode, frame); err != nil {
+			log.Printf("episode: writing frame: %v", err)
+		}
 	}
 	rec.episode.Frames++
 }
 
 func (r *Recorder) picture(rec *recording, frame *tourianv1.VideoFrame) {
-	if err := rec.writer.WriteVideo(frame, r.offset(rec, frame.GetHeader().GetStamp())); err != nil {
-		log.Printf("episode: writing picture: %v", err)
-		return
+	for _, sink := range r.sinks {
+		if err := sink.Picture(rec.episode, frame, r.offset(rec, frame.GetHeader().GetStamp())); err != nil {
+			log.Printf("episode: writing picture: %v", err)
+		}
 	}
 	rec.lastVideo = frame.GetSequence()
 	rec.episode.VideoFrames++
@@ -194,16 +205,10 @@ func (r *Recorder) flag(flag *tourianv1.EpisodeFlag) {
 			return
 		}
 	}
-	dir := filepath.Join(r.root, safeName(flag.GetEpisodeId()))
-	episode, err := ReadMeta(dir)
-	if err != nil {
-		log.Printf("episode: flagging %s: %v", flag.GetEpisodeId(), err)
-		return
-	}
-	episode.Bad = flag.GetBad()
-	episode.Note = flag.GetNote()
-	if err := WriteMeta(dir, episode); err != nil {
-		log.Printf("episode: flagging %s: %v", flag.GetEpisodeId(), err)
+	for _, sink := range r.sinks {
+		if err := sink.Flag(flag.GetEpisodeId(), flag.GetBad(), flag.GetNote()); err != nil {
+			log.Printf("episode: flagging %s: %v", flag.GetEpisodeId(), err)
+		}
 	}
 }
 
@@ -220,6 +225,7 @@ func (r *Recorder) status(rec *recording, recording bool) *tourianv1.EpisodeStat
 
 var unsafe = regexp.MustCompile(`[^A-Za-z0-9._-]+`)
 
-func safeName(s string) string {
+// SafeName keeps an id usable as a file name.
+func SafeName(s string) string {
 	return unsafe.ReplaceAllString(s, "_")
 }

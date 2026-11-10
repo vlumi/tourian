@@ -15,13 +15,18 @@ import (
 
 	"github.com/vlumi/tourian/emmi/zebes"
 	"github.com/vlumi/tourian/episode"
+	"github.com/vlumi/tourian/episode/lerobot"
 	"github.com/vlumi/tourian/hub"
 )
+
+// The simulator observes at this rate, which becomes the dataset's frame rate.
+const observationsPerSecond = 20
 
 func main() {
 	addr := flag.String("addr", ":8080", "address the platform listens on")
 	sim := flag.Bool("sim", false, "also run the simulated robot in this process, connected to this platform")
 	data := flag.String("data", "data", "directory the episodes are recorded under")
+	dataset := flag.String("lerobot", "tourian", "name of the LeRobot dataset written under the data directory, empty for none")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -29,7 +34,11 @@ func main() {
 
 	h := hub.New()
 	episodes := filepath.Join(*data, "episodes")
-	recorder := episode.NewRecorder(episodes, h, time.Now)
+	sinks := []episode.Sink{episode.NewJSONL(episodes)}
+	if *dataset != "" {
+		sinks = append(sinks, lerobot.New(filepath.Join(*data, "lerobot", *dataset), observationsPerSecond))
+	}
+	recorder := episode.NewRecorder(h, time.Now, sinks...)
 	h.AddTap(recorder.Tap)
 	go recorder.Run(ctx)
 

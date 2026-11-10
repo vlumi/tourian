@@ -38,6 +38,14 @@ One repository, two languages, one contract. The Go module `github.com/vlumi/tou
 
 **Measuring the two.** With `?clock=1` the camera page composes a band of 32 black and white blocks across the top of every frame, encoding the time it was composed, and streams the composition instead of the raw camera. With `?measure=1` the console reads the band back from every new frame on a fast timer, once per stamp, and summarizes the frames' ages; the result is the time from composition to display on the viewer's side, which covers encoding, the path, decoding and rendering but not the camera's sensor or the screen, and means something only when both pages share a clock, as they do on one machine. `make results-video` runs both pages in one headless Chrome with a fake camera, a window each so neither is throttled as a background tab, and writes the figures with date, commit and machine under `docs/results/`. The first run gave WebRTC a median of 30 ms with a spread of a few ms, and MJPEG 36 ms with a p95 near 60 ms.
 
+### M3 — record
+
+**The recorder is a tap on the hub.** Every message the hub receives, from any peer, is handed to the recorder before routing, on a channel it drains from its own goroutine so the hub never waits for the disk. A console asks to record a robot; from then on each observation of that robot becomes a frame carrying the velocity command in force and the sequence of the latest picture, until the console asks to stop. Pictures come over the MJPEG path, which the recorder requests from the camera for itself, as one more peer, and releases when it stops; WebRTC stays peer to peer and is not recorded. The recorder reports what it is writing to every console once a second, and a flag marks an episode bad with a note, during or after.
+
+**The dataset sink is a seam with two implementations.** JSONL came first: a directory per episode with `meta.json`, `frames.jsonl` of `EpisodeFrame` rows, the pictures as JPEG files and `video.jsonl` indexing them, all in the contract's own messages serialized as JSON, so the layout is readable by eye and by anything. LeRobot came second, the v3.0 layout: `meta/info.json` with the features (`observation.state` as pose, body velocity, one entry per joint and the battery; `action` as the commanded velocities; the camera as a video feature), `meta/tasks.parquet` with the pandas index metadata its reader expects, `meta/stats.json` folded across episodes the way LeRobot's own aggregation does, one Parquet data file and one episodes row per episode under `data/` and `meta/episodes/`, and one MP4 per episode under `videos/`, encoded with ffmpeg from the picture in force at each frame so the video runs at the frame rate and lines up with the rows. The layout has no place for a flag, so `meta/tourian.json` maps episode ids to indices and carries the flags. Frames are stamped at the nominal rate, as LeRobot stamps them; the true offsets stay in the JSONL layout.
+
+**Browsing** is HTTP from the platform: the list, one episode's metadata, its frames and video index as written, and its pictures. The console's episodes page lists them and replays one, the world drawn by the same code as the live view beside the picture in force, scrubbed or played at the speed it happened.
+
 ### Layout
 
 | Directory | What it holds |
@@ -47,9 +55,10 @@ One repository, two languages, one contract. The Go module `github.com/vlumi/tou
 | `cmd/tourian` | the platform binary |
 | `cmd/zebes` | the simulator as its own process |
 | `emmi/zebes` | the simulated robot: world, safety and the connection to the platform |
-| `hub/` | the platform's routing between robots and consoles |
+| `hub/` | the platform's routing between robots, cameras and consoles, with taps for the rest of the platform |
+| `episode/` | the recorder, the JSONL sink, the HTTP for browsing; `lerobot/` the LeRobot v3.0 sink |
 | `transport/ws` | contract messages over WebSocket |
-| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band; `app/camera` the page a phone opens |
+| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `episodes/` the list and the replay; `app/camera` the page a phone opens |
 | `scripts/` | what the make targets run |
 | `docs/` | screenshots, and the measurements under `results/` |
 
@@ -90,5 +99,4 @@ Protobuf packages under `proto/tourian/v1/`: `robot` (capabilities, observations
 | `emmi/` | further robot adapters: rosbridge, the sidecar client |
 | `motherbrain/` | controllers: scripted, policy client; the arbiter |
 | `transport/` | the other transports, for comparison |
-| `episode/` | recording and the dataset sinks |
 | `sidecars/` | Python processes for hardware with Python-only drivers |

@@ -41,7 +41,7 @@ func TestRecordsAnEpisode(t *testing.T) {
 	root := t.TempDir()
 	platform := &fakePlatform{}
 	clock := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
-	recorder := NewRecorder(root, platform, func() time.Time { return clock })
+	recorder := NewRecorder(platform, func() time.Time { return clock }, NewJSONL(root))
 
 	recorder.Handle(wrap(t, &tourianv1.RecordRequest{RobotId: "r1", Start: true, Task: "drive a square"}))
 	if len(platform.requests) != 1 || platform.requests[0] != "r1:recorder:on" {
@@ -103,7 +103,7 @@ func TestRecordsAnEpisode(t *testing.T) {
 }
 
 func TestIgnoresWhatIsNotRecording(t *testing.T) {
-	recorder := NewRecorder(t.TempDir(), &fakePlatform{}, time.Now)
+	recorder := NewRecorder(&fakePlatform{}, time.Now, NewJSONL(t.TempDir()))
 	recorder.Handle(wrap(t, &tourianv1.Observation{RobotId: "r1"}))
 	recorder.Handle(wrap(t, &tourianv1.RecordRequest{RobotId: "r1", Start: false}))
 	if len(recorder.active) != 0 {

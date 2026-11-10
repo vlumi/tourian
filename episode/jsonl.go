@@ -20,7 +20,51 @@ const (
 	videoDir   = "video"
 )
 
-// A Writer lays an episode out for reading by eye and by anything: one JSON object per line for the frames and the video index, the pictures as JPEG files, and the metadata as a JSON file written when the episode ends.
+// JSONL lays each episode out in its own directory for reading by eye and by anything: one JSON object per line for the frames and the video index, the pictures as JPEG files, and the metadata as a JSON file written when the episode ends.
+type JSONL struct {
+	root    string
+	writers map[string]*Writer
+}
+
+func NewJSONL(root string) *JSONL {
+	return &JSONL{root: root, writers: map[string]*Writer{}}
+}
+
+func (s *JSONL) Begin(episode *tourianv1.Episode) error {
+	writer, err := NewWriter(filepath.Join(s.root, SafeName(episode.GetId())))
+	if err != nil {
+		return err
+	}
+	s.writers[episode.GetId()] = writer
+	return nil
+}
+
+func (s *JSONL) Frame(episode *tourianv1.Episode, frame *tourianv1.EpisodeFrame) error {
+	return s.writers[episode.GetId()].WriteFrame(frame)
+}
+
+func (s *JSONL) Picture(episode *tourianv1.Episode, frame *tourianv1.VideoFrame, offset time.Duration) error {
+	return s.writers[episode.GetId()].WriteVideo(frame, offset)
+}
+
+func (s *JSONL) End(episode *tourianv1.Episode) error {
+	writer := s.writers[episode.GetId()]
+	delete(s.writers, episode.GetId())
+	return writer.Close(episode)
+}
+
+func (s *JSONL) Flag(episodeID string, bad bool, note string) error {
+	dir := filepath.Join(s.root, SafeName(episodeID))
+	episode, err := ReadMeta(dir)
+	if err != nil {
+		return err
+	}
+	episode.Bad = bad
+	episode.Note = note
+	return WriteMeta(dir, episode)
+}
+
+// A Writer is one episode under way in the JSONL layout.
 type Writer struct {
 	dir    string
 	frames *os.File
