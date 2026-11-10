@@ -42,6 +42,9 @@ function receive(envelope: Envelope): void {
     case 'cameraAnnounce':
       store.addCamera(envelope.message.value)
       break
+    case 'episodeStatus':
+      store.setEpisode(envelope.message.value)
+      break
     case 'sessionDescription':
     case 'iceCandidate':
     case 'videoFrame':
