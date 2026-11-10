@@ -4,7 +4,7 @@ A teleoperation platform for robots, simulated first, with recording for trainin
 
 **The name:** Tourian is where Mother Brain sits. The platform is the sector; the brain is whoever is at the controls. See the README for the component names.
 
-**Status:** experiment, not a product. Bootstrapped 2026-11-10; M0 to M4 done the same day. Milestones get their dates on the headings as they land.
+**Status:** experiment, not a product. Bootstrapped 2026-11-10; M0 to M5 done the same day. Milestones get their dates on the headings as they land.
 
 ## The idea
 
@@ -65,7 +65,7 @@ Toolchain and layout: Go module, `buf` with a first contract (velocity command, 
 - An arbiter per robot that says who holds it; takeover by the operator at any time, handback when they let go; every change of hands stamped into the episode.
 - The console shows who holds each robot and lets the operator switch.
 
-### M5 — many
+### M5 — many (done 2026-11-10)
 
 - Several robots under one platform: a fleet view with each robot's state, holder and latest frame, and one selected for driving.
 - Versioned configurations for robots and tasks, edited from the console, stored with the episodes so a recording says what it was recorded on and for.
