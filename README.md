@@ -8,7 +8,7 @@ It is an experiment for understanding the domain by building it, not a product. 
 
 **The name:** Tourian is the sector of planet Zebes where Mother Brain sits. The brain is the controller, whoever holds it; the sector is the platform. The components keep the theme: `motherbrain` for the controller that holds a robot, `emmi` for the robot adapters, `zebes` for the simulated world, `samus` for the operator. Named after locations and characters in Nintendo's Metroid series; not affiliated with or endorsed by Nintendo.
 
-**Status:** bootstrapped 2026-11-10; nothing built yet. [SCOPE.md](SCOPE.md) is the plan, [ARCHITECTURE.md](ARCHITECTURE.md) will explain how it works as it gets built, [AGENTS.md](AGENTS.md) how to work on it.
+**Status:** bootstrapped 2026-11-10; the toolchain and the first contract are in, nothing drives yet. [SCOPE.md](SCOPE.md) is the plan, [ARCHITECTURE.md](ARCHITECTURE.md) will explain how it works as it gets built, [AGENTS.md](AGENTS.md) how to work on it.
 
 ## What it will do
 

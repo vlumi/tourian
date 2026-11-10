@@ -4,7 +4,7 @@ A teleoperation platform for robots, simulated first, with recording for trainin
 
 **The name:** Tourian is where Mother Brain sits. The platform is the sector; the brain is whoever is at the controls. See the README for the component names.
 
-**Status:** experiment, not a product. Bootstrapped 2026-11-10; no milestone done yet. Milestones get their dates on the headings as they land.
+**Status:** experiment, not a product. Bootstrapped 2026-11-10; M0 done the same day. Milestones get their dates on the headings as they land.
 
 ## The idea
 
@@ -38,7 +38,7 @@ Safety is part of the robot seam, not the console: every adapter stops its robot
 
 ## Milestones
 
-### M0 — bootstrap
+### M0 — bootstrap (done 2026-11-10)
 
 Toolchain and layout: Go module, `buf` with a first contract (velocity command, pose and joint observations, capabilities, heartbeat and stop), generated code committed, a Next.js console that renders a page under the name, `make ci` with formatting, linters, generation check and unit tests, hosted CI running the same, a screenshot script.
 
