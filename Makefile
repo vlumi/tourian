@@ -31,8 +31,8 @@ generate:  ## Regenerate the Go and TypeScript code from proto/ into gen/
 	cd proto && buf generate
 
 .PHONY: generate-check
-generate-check: generate  ## Fail if the committed generated code is out of date
-	@git diff --exit-code --stat -- gen/ || { echo "gen/ is stale: run make generate and commit"; exit 1; }
+generate-check:  ## Fail if the generated code in gen/ is out of date
+	@scripts/generate-check.sh
 
 ##@ Build & test
 

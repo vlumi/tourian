@@ -10,6 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -22,6 +23,59 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Why the adapter is holding the robot still; unspecified while it is free to drive.
+type HaltReason int32
+
+const (
+	HaltReason_HALT_REASON_UNSPECIFIED     HaltReason = 0
+	HaltReason_HALT_REASON_COMMAND_TIMEOUT HaltReason = 1
+	HaltReason_HALT_REASON_DEAD_MAN        HaltReason = 2
+	HaltReason_HALT_REASON_EMERGENCY_STOP  HaltReason = 3
+)
+
+// Enum value maps for HaltReason.
+var (
+	HaltReason_name = map[int32]string{
+		0: "HALT_REASON_UNSPECIFIED",
+		1: "HALT_REASON_COMMAND_TIMEOUT",
+		2: "HALT_REASON_DEAD_MAN",
+		3: "HALT_REASON_EMERGENCY_STOP",
+	}
+	HaltReason_value = map[string]int32{
+		"HALT_REASON_UNSPECIFIED":     0,
+		"HALT_REASON_COMMAND_TIMEOUT": 1,
+		"HALT_REASON_DEAD_MAN":        2,
+		"HALT_REASON_EMERGENCY_STOP":  3,
+	}
+)
+
+func (x HaltReason) Enum() *HaltReason {
+	p := new(HaltReason)
+	*p = x
+	return p
+}
+
+func (x HaltReason) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (HaltReason) Descriptor() protoreflect.EnumDescriptor {
+	return file_tourian_v1_robot_proto_enumTypes[0].Descriptor()
+}
+
+func (HaltReason) Type() protoreflect.EnumType {
+	return &file_tourian_v1_robot_proto_enumTypes[0]
+}
+
+func (x HaltReason) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use HaltReason.Descriptor instead.
+func (HaltReason) EnumDescriptor() ([]byte, []int) {
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{0}
+}
+
 // What a robot is and can do, announced by its adapter when it connects.
 type Capabilities struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -32,8 +86,10 @@ type Capabilities struct {
 	// How long the adapter drives on without a fresh command before it stops the robot.
 	CommandTimeout *durationpb.Duration `protobuf:"bytes,5,opt,name=command_timeout,json=commandTimeout,proto3" json:"command_timeout,omitempty"`
 	HasCamera      bool                 `protobuf:"varint,6,opt,name=has_camera,json=hasCamera,proto3" json:"has_camera,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// How long the adapter drives on without a heartbeat before it stops the robot.
+	HeartbeatTimeout *durationpb.Duration `protobuf:"bytes,7,opt,name=heartbeat_timeout,json=heartbeatTimeout,proto3" json:"heartbeat_timeout,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *Capabilities) Reset() {
@@ -106,6 +162,13 @@ func (x *Capabilities) GetHasCamera() bool {
 		return x.HasCamera
 	}
 	return false
+}
+
+func (x *Capabilities) GetHeartbeatTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.HeartbeatTimeout
+	}
+	return nil
 }
 
 type VelocityLimits struct {
@@ -229,6 +292,75 @@ func (x *VelocityCommand) GetTwist() *Twist {
 	return nil
 }
 
+// Sent by the adapter the moment a command reaches it, with the command's own stamp, so the sender can measure the round trip.
+type CommandAck struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Header        *Header                `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	RobotId       string                 `protobuf:"bytes,2,opt,name=robot_id,json=robotId,proto3" json:"robot_id,omitempty"`
+	Sequence      uint64                 `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	CommandStamp  *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=command_stamp,json=commandStamp,proto3" json:"command_stamp,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommandAck) Reset() {
+	*x = CommandAck{}
+	mi := &file_tourian_v1_robot_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommandAck) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommandAck) ProtoMessage() {}
+
+func (x *CommandAck) ProtoReflect() protoreflect.Message {
+	mi := &file_tourian_v1_robot_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommandAck.ProtoReflect.Descriptor instead.
+func (*CommandAck) Descriptor() ([]byte, []int) {
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CommandAck) GetHeader() *Header {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *CommandAck) GetRobotId() string {
+	if x != nil {
+		return x.RobotId
+	}
+	return ""
+}
+
+func (x *CommandAck) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *CommandAck) GetCommandStamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CommandStamp
+	}
+	return nil
+}
+
 // Everything the robot reports about itself at one instant.
 type Observation struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
@@ -239,13 +371,14 @@ type Observation struct {
 	Joints              *JointState            `protobuf:"bytes,5,opt,name=joints,proto3" json:"joints,omitempty"`
 	Battery             *Battery               `protobuf:"bytes,6,opt,name=battery,proto3" json:"battery,omitempty"`
 	LastCommandSequence uint64                 `protobuf:"varint,7,opt,name=last_command_sequence,json=lastCommandSequence,proto3" json:"last_command_sequence,omitempty"`
+	HaltReason          HaltReason             `protobuf:"varint,8,opt,name=halt_reason,json=haltReason,proto3,enum=tourian.v1.HaltReason" json:"halt_reason,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
 
 func (x *Observation) Reset() {
 	*x = Observation{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[3]
+	mi := &file_tourian_v1_robot_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -257,7 +390,7 @@ func (x *Observation) String() string {
 func (*Observation) ProtoMessage() {}
 
 func (x *Observation) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[3]
+	mi := &file_tourian_v1_robot_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -270,7 +403,7 @@ func (x *Observation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Observation.ProtoReflect.Descriptor instead.
 func (*Observation) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{3}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Observation) GetHeader() *Header {
@@ -322,6 +455,13 @@ func (x *Observation) GetLastCommandSequence() uint64 {
 	return 0
 }
 
+func (x *Observation) GetHaltReason() HaltReason {
+	if x != nil {
+		return x.HaltReason
+	}
+	return HaltReason_HALT_REASON_UNSPECIFIED
+}
+
 // Parallel arrays indexed alike, as sensor_msgs/JointState; velocity and effort may be empty.
 type JointState struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -335,7 +475,7 @@ type JointState struct {
 
 func (x *JointState) Reset() {
 	*x = JointState{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[4]
+	mi := &file_tourian_v1_robot_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -347,7 +487,7 @@ func (x *JointState) String() string {
 func (*JointState) ProtoMessage() {}
 
 func (x *JointState) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[4]
+	mi := &file_tourian_v1_robot_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -360,7 +500,7 @@ func (x *JointState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JointState.ProtoReflect.Descriptor instead.
 func (*JointState) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{4}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *JointState) GetName() []string {
@@ -402,7 +542,7 @@ type Battery struct {
 
 func (x *Battery) Reset() {
 	*x = Battery{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[5]
+	mi := &file_tourian_v1_robot_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -414,7 +554,7 @@ func (x *Battery) String() string {
 func (*Battery) ProtoMessage() {}
 
 func (x *Battery) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[5]
+	mi := &file_tourian_v1_robot_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -427,7 +567,7 @@ func (x *Battery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Battery.ProtoReflect.Descriptor instead.
 func (*Battery) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{5}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Battery) GetPercentage() float64 {
@@ -456,7 +596,7 @@ type Heartbeat struct {
 
 func (x *Heartbeat) Reset() {
 	*x = Heartbeat{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[6]
+	mi := &file_tourian_v1_robot_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -468,7 +608,7 @@ func (x *Heartbeat) String() string {
 func (*Heartbeat) ProtoMessage() {}
 
 func (x *Heartbeat) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[6]
+	mi := &file_tourian_v1_robot_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -481,7 +621,7 @@ func (x *Heartbeat) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Heartbeat.ProtoReflect.Descriptor instead.
 func (*Heartbeat) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{6}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Heartbeat) GetHeader() *Header {
@@ -505,7 +645,7 @@ func (x *Heartbeat) GetSequence() uint64 {
 	return 0
 }
 
-// Emergency stop. Executed ahead of anything queued and holds until a new command arrives.
+// Emergency stop. Executed ahead of anything queued, which is discarded; the robot holds still until a new command arrives.
 type Stop struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Header        *Header                `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
@@ -516,7 +656,7 @@ type Stop struct {
 
 func (x *Stop) Reset() {
 	*x = Stop{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[7]
+	mi := &file_tourian_v1_robot_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -528,7 +668,7 @@ func (x *Stop) String() string {
 func (*Stop) ProtoMessage() {}
 
 func (x *Stop) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[7]
+	mi := &file_tourian_v1_robot_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -541,7 +681,7 @@ func (x *Stop) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Stop.ProtoReflect.Descriptor instead.
 func (*Stop) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{7}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Stop) GetHeader() *Header {
@@ -563,7 +703,7 @@ var File_tourian_v1_robot_proto protoreflect.FileDescriptor
 const file_tourian_v1_robot_proto_rawDesc = "" +
 	"\n" +
 	"\x16tourian/v1/robot.proto\x12\n" +
-	"tourian.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x19tourian/v1/geometry.proto\x1a\x17tourian/v1/header.proto\"\x86\x02\n" +
+	"tourian.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19tourian/v1/geometry.proto\x1a\x17tourian/v1/header.proto\"\xce\x02\n" +
 	"\fCapabilities\x12\x19\n" +
 	"\brobot_id\x18\x01 \x01(\tR\arobotId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
@@ -572,7 +712,8 @@ const file_tourian_v1_robot_proto_rawDesc = "" +
 	"\x0fvelocity_limits\x18\x04 \x01(\v2\x1a.tourian.v1.VelocityLimitsR\x0evelocityLimits\x12B\n" +
 	"\x0fcommand_timeout\x18\x05 \x01(\v2\x19.google.protobuf.DurationR\x0ecommandTimeout\x12\x1d\n" +
 	"\n" +
-	"has_camera\x18\x06 \x01(\bR\thasCamera\"P\n" +
+	"has_camera\x18\x06 \x01(\bR\thasCamera\x12F\n" +
+	"\x11heartbeat_timeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\x10heartbeatTimeout\"P\n" +
 	"\x0eVelocityLimits\x12\x1d\n" +
 	"\n" +
 	"max_linear\x18\x01 \x01(\x01R\tmaxLinear\x12\x1f\n" +
@@ -582,7 +723,13 @@ const file_tourian_v1_robot_proto_rawDesc = "" +
 	"\x06header\x18\x01 \x01(\v2\x12.tourian.v1.HeaderR\x06header\x12\x19\n" +
 	"\brobot_id\x18\x02 \x01(\tR\arobotId\x12\x1a\n" +
 	"\bsequence\x18\x03 \x01(\x04R\bsequence\x12'\n" +
-	"\x05twist\x18\x04 \x01(\v2\x11.tourian.v1.TwistR\x05twist\"\xbc\x02\n" +
+	"\x05twist\x18\x04 \x01(\v2\x11.tourian.v1.TwistR\x05twist\"\xb0\x01\n" +
+	"\n" +
+	"CommandAck\x12*\n" +
+	"\x06header\x18\x01 \x01(\v2\x12.tourian.v1.HeaderR\x06header\x12\x19\n" +
+	"\brobot_id\x18\x02 \x01(\tR\arobotId\x12\x1a\n" +
+	"\bsequence\x18\x03 \x01(\x04R\bsequence\x12?\n" +
+	"\rcommand_stamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\fcommandStamp\"\xf5\x02\n" +
 	"\vObservation\x12*\n" +
 	"\x06header\x18\x01 \x01(\v2\x12.tourian.v1.HeaderR\x06header\x12\x19\n" +
 	"\brobot_id\x18\x02 \x01(\tR\arobotId\x12$\n" +
@@ -590,7 +737,9 @@ const file_tourian_v1_robot_proto_rawDesc = "" +
 	"\bvelocity\x18\x04 \x01(\v2\x11.tourian.v1.TwistR\bvelocity\x12.\n" +
 	"\x06joints\x18\x05 \x01(\v2\x16.tourian.v1.JointStateR\x06joints\x12-\n" +
 	"\abattery\x18\x06 \x01(\v2\x13.tourian.v1.BatteryR\abattery\x122\n" +
-	"\x15last_command_sequence\x18\a \x01(\x04R\x13lastCommandSequence\"p\n" +
+	"\x15last_command_sequence\x18\a \x01(\x04R\x13lastCommandSequence\x127\n" +
+	"\vhalt_reason\x18\b \x01(\x0e2\x16.tourian.v1.HaltReasonR\n" +
+	"haltReason\"p\n" +
 	"\n" +
 	"JointState\x12\x12\n" +
 	"\x04name\x18\x01 \x03(\tR\x04name\x12\x1a\n" +
@@ -608,7 +757,13 @@ const file_tourian_v1_robot_proto_rawDesc = "" +
 	"\bsequence\x18\x03 \x01(\x04R\bsequence\"M\n" +
 	"\x04Stop\x12*\n" +
 	"\x06header\x18\x01 \x01(\v2\x12.tourian.v1.HeaderR\x06header\x12\x19\n" +
-	"\brobot_id\x18\x02 \x01(\tR\arobotIdB\x9b\x01\n" +
+	"\brobot_id\x18\x02 \x01(\tR\arobotId*\x84\x01\n" +
+	"\n" +
+	"HaltReason\x12\x1b\n" +
+	"\x17HALT_REASON_UNSPECIFIED\x10\x00\x12\x1f\n" +
+	"\x1bHALT_REASON_COMMAND_TIMEOUT\x10\x01\x12\x18\n" +
+	"\x14HALT_REASON_DEAD_MAN\x10\x02\x12\x1e\n" +
+	"\x1aHALT_REASON_EMERGENCY_STOP\x10\x03B\x9b\x01\n" +
 	"\x0ecom.tourian.v1B\n" +
 	"RobotProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\n" +
 	"Tourian.V1\xca\x02\n" +
@@ -626,38 +781,46 @@ func file_tourian_v1_robot_proto_rawDescGZIP() []byte {
 	return file_tourian_v1_robot_proto_rawDescData
 }
 
-var file_tourian_v1_robot_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_tourian_v1_robot_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_tourian_v1_robot_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_tourian_v1_robot_proto_goTypes = []any{
-	(*Capabilities)(nil),        // 0: tourian.v1.Capabilities
-	(*VelocityLimits)(nil),      // 1: tourian.v1.VelocityLimits
-	(*VelocityCommand)(nil),     // 2: tourian.v1.VelocityCommand
-	(*Observation)(nil),         // 3: tourian.v1.Observation
-	(*JointState)(nil),          // 4: tourian.v1.JointState
-	(*Battery)(nil),             // 5: tourian.v1.Battery
-	(*Heartbeat)(nil),           // 6: tourian.v1.Heartbeat
-	(*Stop)(nil),                // 7: tourian.v1.Stop
-	(*durationpb.Duration)(nil), // 8: google.protobuf.Duration
-	(*Header)(nil),              // 9: tourian.v1.Header
-	(*Twist)(nil),               // 10: tourian.v1.Twist
-	(*Pose)(nil),                // 11: tourian.v1.Pose
+	(HaltReason)(0),               // 0: tourian.v1.HaltReason
+	(*Capabilities)(nil),          // 1: tourian.v1.Capabilities
+	(*VelocityLimits)(nil),        // 2: tourian.v1.VelocityLimits
+	(*VelocityCommand)(nil),       // 3: tourian.v1.VelocityCommand
+	(*CommandAck)(nil),            // 4: tourian.v1.CommandAck
+	(*Observation)(nil),           // 5: tourian.v1.Observation
+	(*JointState)(nil),            // 6: tourian.v1.JointState
+	(*Battery)(nil),               // 7: tourian.v1.Battery
+	(*Heartbeat)(nil),             // 8: tourian.v1.Heartbeat
+	(*Stop)(nil),                  // 9: tourian.v1.Stop
+	(*durationpb.Duration)(nil),   // 10: google.protobuf.Duration
+	(*Header)(nil),                // 11: tourian.v1.Header
+	(*Twist)(nil),                 // 12: tourian.v1.Twist
+	(*timestamppb.Timestamp)(nil), // 13: google.protobuf.Timestamp
+	(*Pose)(nil),                  // 14: tourian.v1.Pose
 }
 var file_tourian_v1_robot_proto_depIdxs = []int32{
-	1,  // 0: tourian.v1.Capabilities.velocity_limits:type_name -> tourian.v1.VelocityLimits
-	8,  // 1: tourian.v1.Capabilities.command_timeout:type_name -> google.protobuf.Duration
-	9,  // 2: tourian.v1.VelocityCommand.header:type_name -> tourian.v1.Header
-	10, // 3: tourian.v1.VelocityCommand.twist:type_name -> tourian.v1.Twist
-	9,  // 4: tourian.v1.Observation.header:type_name -> tourian.v1.Header
-	11, // 5: tourian.v1.Observation.pose:type_name -> tourian.v1.Pose
-	10, // 6: tourian.v1.Observation.velocity:type_name -> tourian.v1.Twist
-	4,  // 7: tourian.v1.Observation.joints:type_name -> tourian.v1.JointState
-	5,  // 8: tourian.v1.Observation.battery:type_name -> tourian.v1.Battery
-	9,  // 9: tourian.v1.Heartbeat.header:type_name -> tourian.v1.Header
-	9,  // 10: tourian.v1.Stop.header:type_name -> tourian.v1.Header
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	2,  // 0: tourian.v1.Capabilities.velocity_limits:type_name -> tourian.v1.VelocityLimits
+	10, // 1: tourian.v1.Capabilities.command_timeout:type_name -> google.protobuf.Duration
+	10, // 2: tourian.v1.Capabilities.heartbeat_timeout:type_name -> google.protobuf.Duration
+	11, // 3: tourian.v1.VelocityCommand.header:type_name -> tourian.v1.Header
+	12, // 4: tourian.v1.VelocityCommand.twist:type_name -> tourian.v1.Twist
+	11, // 5: tourian.v1.CommandAck.header:type_name -> tourian.v1.Header
+	13, // 6: tourian.v1.CommandAck.command_stamp:type_name -> google.protobuf.Timestamp
+	11, // 7: tourian.v1.Observation.header:type_name -> tourian.v1.Header
+	14, // 8: tourian.v1.Observation.pose:type_name -> tourian.v1.Pose
+	12, // 9: tourian.v1.Observation.velocity:type_name -> tourian.v1.Twist
+	6,  // 10: tourian.v1.Observation.joints:type_name -> tourian.v1.JointState
+	7,  // 11: tourian.v1.Observation.battery:type_name -> tourian.v1.Battery
+	0,  // 12: tourian.v1.Observation.halt_reason:type_name -> tourian.v1.HaltReason
+	11, // 13: tourian.v1.Heartbeat.header:type_name -> tourian.v1.Header
+	11, // 14: tourian.v1.Stop.header:type_name -> tourian.v1.Header
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_tourian_v1_robot_proto_init() }
@@ -672,13 +835,14 @@ func file_tourian_v1_robot_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tourian_v1_robot_proto_rawDesc), len(file_tourian_v1_robot_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   8,
+			NumEnums:      1,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_tourian_v1_robot_proto_goTypes,
 		DependencyIndexes: file_tourian_v1_robot_proto_depIdxs,
+		EnumInfos:         file_tourian_v1_robot_proto_enumTypes,
 		MessageInfos:      file_tourian_v1_robot_proto_msgTypes,
 	}.Build()
 	File_tourian_v1_robot_proto = out.File
