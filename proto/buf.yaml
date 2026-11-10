@@ -1,0 +1,9 @@
+version: v2
+modules:
+  - path: .
+    name: buf.build/vlumi/tourian
+deps:
+  - buf.build/protocolbuffers/wellknowntypes
+lint:
+  use:
+    - STANDARD

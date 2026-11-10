@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package tourian.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// When a message was produced and the coordinate frame it is expressed in, as std_msgs/Header in ROS 2.
+message Header {
+  google.protobuf.Timestamp stamp = 1;
+  string frame_id = 2;
+}
