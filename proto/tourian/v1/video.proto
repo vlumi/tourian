@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package tourian.v1;
+
+import "tourian/v1/header.proto";
+
+// How a camera can deliver its pictures.
+enum VideoKind {
+  VIDEO_KIND_UNSPECIFIED = 0;
+  VIDEO_KIND_WEBRTC = 1;
+  VIDEO_KIND_MJPEG = 2;
+}
+
+// A camera announcing itself as a robot's eyes, in the first frame it sends the platform.
+message CameraAnnounce {
+  string robot_id = 1;
+  string name = 2;
+  repeated VideoKind kinds = 3;
+}
+
+// A console asking a robot's camera to start or stop a stream. WebRTC starts with an offer instead; this is for MJPEG.
+message VideoRequest {
+  string robot_id = 1;
+  string peer_id = 2;
+  VideoKind kind = 3;
+  bool enabled = 4;
+}
+
+// WebRTC signaling between a console and a robot's camera, relayed by the platform. The platform stamps peer_id with the console's id on the way out and routes by it on the way back.
+message SessionDescription {
+  string robot_id = 1;
+  string peer_id = 2;
+  string type = 3;
+  string sdp = 4;
+}
+
+message IceCandidate {
+  string robot_id = 1;
+  string peer_id = 2;
+  string candidate = 3;
+  string sdp_mid = 4;
+  uint32 sdp_mline_index = 5;
+}
+
+// One JPEG picture from a robot's camera, the MJPEG path.
+message VideoFrame {
+  Header header = 1;
+  string robot_id = 2;
+  uint64 sequence = 3;
+  bytes jpeg = 4;
+  uint32 width = 5;
+  uint32 height = 6;
+}

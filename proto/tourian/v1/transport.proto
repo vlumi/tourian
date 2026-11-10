@@ -3,6 +3,7 @@ syntax = "proto3";
 package tourian.v1;
 
 import "tourian/v1/robot.proto";
+import "tourian/v1/video.proto";
 
 // One contract message as it crosses a transport; every frame on the wire is one of these.
 message Envelope {
@@ -13,5 +14,10 @@ message Envelope {
     Observation observation = 4;
     Heartbeat heartbeat = 5;
     Stop stop = 6;
+    CameraAnnounce camera_announce = 7;
+    VideoRequest video_request = 8;
+    SessionDescription session_description = 9;
+    IceCandidate ice_candidate = 10;
+    VideoFrame video_frame = 11;
   }
 }
