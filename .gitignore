@@ -3,6 +3,13 @@ bin/
 *.test
 *.out
 
+# Python (sidecars/)
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
 # Node (console/)
 node_modules/
 .next/

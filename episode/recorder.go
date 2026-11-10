@@ -57,6 +57,7 @@ type recording struct {
 	episode     *tourianv1.Episode
 	startedAt   time.Time
 	lastCommand *tourianv1.VelocityCommand
+	lastJoints  *tourianv1.JointCommand
 	lastVideo   uint64
 }
 
@@ -121,6 +122,10 @@ func (r *Recorder) Handle(env *tourianv1.Envelope) {
 	case *tourianv1.Envelope_VelocityCommand:
 		if rec := r.active[m.VelocityCommand.GetRobotId()]; rec != nil {
 			rec.lastCommand = m.VelocityCommand
+		}
+	case *tourianv1.Envelope_JointCommand:
+		if rec := r.active[m.JointCommand.GetRobotId()]; rec != nil {
+			rec.lastJoints = m.JointCommand
 		}
 	case *tourianv1.Envelope_Observation:
 		if rec := r.active[m.Observation.GetRobotId()]; rec != nil {
@@ -196,6 +201,7 @@ func (r *Recorder) observe(rec *recording, observation *tourianv1.Observation) {
 		Offset:        durationpb.New(r.offset(rec, observation.GetHeader().GetStamp())),
 		Observation:   observation,
 		Action:        rec.lastCommand,
+		JointAction:   rec.lastJoints,
 		VideoSequence: rec.lastVideo,
 		Controller:    r.holders[observation.GetRobotId()],
 	}

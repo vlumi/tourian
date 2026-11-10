@@ -8,8 +8,8 @@ cp -R gen/. "$before"
 
 (cd proto && buf generate)
 
-if ! diff -r "$before" gen >/dev/null; then
+if ! diff -r -x __pycache__ "$before" gen >/dev/null; then
   echo "gen/ is stale; the fresh generation is now in place, review and commit it" >&2
-  diff -r "$before" gen | head -20 >&2
+  diff -r -x __pycache__ "$before" gen | head -20 >&2
   exit 1
 fi

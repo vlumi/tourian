@@ -6,3 +6,5 @@ gen
 data
 package-lock.json
 *.md
+.venv
+sidecars

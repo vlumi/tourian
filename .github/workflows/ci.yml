@@ -18,6 +18,9 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
       - run: make deps
       - run: make tools
       - run: make ci

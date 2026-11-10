@@ -80,6 +80,8 @@ func Wrap(message proto.Message) (*tourianv1.Envelope, error) {
 		return &tourianv1.Envelope{Message: &tourianv1.Envelope_ControlRequest{ControlRequest: m}}, nil
 	case *tourianv1.RobotConfig:
 		return &tourianv1.Envelope{Message: &tourianv1.Envelope_RobotConfig{RobotConfig: m}}, nil
+	case *tourianv1.JointCommand:
+		return &tourianv1.Envelope{Message: &tourianv1.Envelope_JointCommand{JointCommand: m}}, nil
 	default:
 		return nil, fmt.Errorf("ws: %T is not a contract message", message)
 	}
@@ -120,6 +122,8 @@ func RobotID(env *tourianv1.Envelope) string {
 		return m.ControlRequest.GetRobotId()
 	case *tourianv1.Envelope_RobotConfig:
 		return m.RobotConfig.GetRobotId()
+	case *tourianv1.Envelope_JointCommand:
+		return m.JointCommand.GetRobotId()
 	default:
 		return ""
 	}

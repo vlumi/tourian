@@ -41,6 +41,14 @@ message CommandAck {
   google.protobuf.Timestamp command_stamp = 4;
 }
 
+// The controller's intent for the robot's joints: target positions, and velocities where the robot takes them. The sequence comes back in acknowledgements as for velocity commands.
+message JointCommand {
+  Header header = 1;
+  string robot_id = 2;
+  uint64 sequence = 3;
+  JointState target = 4;
+}
+
 // Everything the robot reports about itself at one instant.
 message Observation {
   Header header = 1;
