@@ -1,8 +1,9 @@
 import { create } from '@bufbuild/protobuf'
 import { CapabilitiesSchema, HaltReason, ObservationSchema } from '@tourian/contract/tourian/v1/robot_pb'
+import { RobotConfigSchema } from '@tourian/contract/tourian/v1/config_pb'
 import { ControlStateSchema } from '@tourian/contract/tourian/v1/control_pb'
 import { CameraAnnounceSchema } from '@tourian/contract/tourian/v1/video_pb'
-import { haltLabel, heading, historyLength, useStore } from './store'
+import { effectiveLimits, haltLabel, heading, historyLength, useStore } from './store'
 
 const initial = useStore.getState()
 
@@ -61,6 +62,20 @@ test('the fleet is known as a whole, the selected robot in detail', () => {
   expect(selected.control?.holder?.id).toBe('square')
   expect(selected.observation?.pose?.position?.x).toBe(7)
   expect(selected.trail).toEqual([])
+})
+
+test('a configuration can only lower the limits', () => {
+  const caps = create(CapabilitiesSchema, { velocityLimits: { maxLinear: 1, maxAngular: 2 } })
+  expect(effectiveLimits(caps, undefined)).toEqual({ maxLinear: 1, maxAngular: 2 })
+  expect(effectiveLimits(caps, create(RobotConfigSchema, { limits: { maxLinear: 0.3 } }))).toEqual({
+    maxLinear: 0.3,
+    maxAngular: 2,
+  })
+  expect(effectiveLimits(caps, create(RobotConfigSchema, { limits: { maxLinear: 5, maxAngular: 5 } }))).toEqual({
+    maxLinear: 1,
+    maxAngular: 2,
+  })
+  expect(effectiveLimits(undefined, undefined)).toEqual({ maxLinear: 0, maxAngular: 0 })
 })
 
 test('heading comes from the yaw quaternion', () => {

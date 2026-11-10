@@ -83,8 +83,11 @@ export function Replay({ id }: { id: string }) {
           <Link href="/">tourian</Link> · <Link href="/episodes">episodes</Link> · {started(episode)}
         </h1>
         <span className="episode">
-          {episode.robotId} · {episode.task || 'no task'} · {length(episode)} · {String(episode.frames)} frames ·{' '}
-          {String(episode.videoFrames)} pictures{episode.bad && ` · bad${episode.note ? `: ${episode.note}` : ''}`}
+          {episode.robotId}
+          {episode.robotConfigVersion > 0 && ` v${episode.robotConfigVersion}`} · {episode.task || 'no task'}
+          {episode.taskConfigVersion > 0 && ` v${episode.taskConfigVersion}`} · {length(episode)} ·{' '}
+          {String(episode.frames)} frames · {String(episode.videoFrames)} pictures
+          {episode.bad && ` · bad${episode.note ? `: ${episode.note}` : ''}`}
         </span>
       </header>
       <div className="replay-scene">

@@ -1,4 +1,5 @@
 import type { Capabilities, Observation } from '@tourian/contract/tourian/v1/robot_pb'
+import type { RobotConfig } from '@tourian/contract/tourian/v1/config_pb'
 import type { ControlState } from '@tourian/contract/tourian/v1/control_pb'
 import type { EpisodeStatus } from '@tourian/contract/tourian/v1/episode_pb'
 import type { CameraAnnounce } from '@tourian/contract/tourian/v1/video_pb'
@@ -21,6 +22,7 @@ export type State = {
   robots: Record<string, Capabilities>
   cameras: Record<string, CameraAnnounce>
   observations: Record<string, Observation>
+  configs: Record<string, RobotConfig>
   controls: Record<string, ControlState>
   episodes: Record<string, EpisodeStatus>
   videoPath: VideoPath
@@ -44,6 +46,7 @@ export type State = {
   setEpisode: (status: EpisodeStatus) => void
   setEpisodeBad: (bad: boolean) => void
   setControl: (state: ControlState) => void
+  setConfig: (config: RobotConfig) => void
   observe: (observation: Observation) => void
   recordLatency: (ms: number) => void
   engage: () => void
@@ -58,6 +61,7 @@ export const useStore = create<State>()((set) => ({
   robots: {},
   cameras: {},
   observations: {},
+  configs: {},
   controls: {},
   episodes: {},
   videoPath: 'webrtc',
@@ -99,6 +103,7 @@ export const useStore = create<State>()((set) => ({
         : {}),
     })),
   setEpisodeBad: (episodeBad) => set({ episodeBad }),
+  setConfig: (config) => set((state) => ({ configs: { ...state.configs, [config.robotId]: config } })),
   setControl: (control) =>
     set((state) => ({
       controls: { ...state.controls, [control.robotId]: control },
@@ -141,6 +146,20 @@ function push<T>(list: T[], item: T, limit: number): T[] {
 export function heading(observation?: Observation): number {
   const q = observation?.pose?.orientation
   return q ? 2 * Math.atan2(q.z, q.w) : 0
+}
+
+// The limits a robot is driven within: the robot's own, lowered by its configuration where that says so.
+export function effectiveLimits(
+  capabilities?: Capabilities,
+  config?: RobotConfig,
+): { maxLinear: number; maxAngular: number } {
+  const cap = capabilities?.velocityLimits
+  const cfg = config?.limits
+  const lower = (a: number | undefined, b: number | undefined) => {
+    const candidates = [a, b].filter((v): v is number => v !== undefined && v > 0)
+    return candidates.length ? Math.min(...candidates) : 0
+  }
+  return { maxLinear: lower(cap?.maxLinear, cfg?.maxLinear), maxAngular: lower(cap?.maxAngular, cfg?.maxAngular) }
 }
 
 export function haltLabel(reason: HaltReason | undefined): string | undefined {
