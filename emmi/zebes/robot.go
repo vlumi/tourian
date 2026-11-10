@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/vlumi/tourian/emmi/safety"
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -59,16 +60,21 @@ type Robot struct {
 	wheelLeft, wheelRight float64
 	battery               float64
 
-	queue           []*tourianv1.VelocityCommand
-	lastCommandAt   time.Time
-	lastHeartbeatAt time.Time
-	lastSequence    uint64
-	halt            tourianv1.HaltReason
+	queue        []*tourianv1.VelocityCommand
+	guard        *safety.Guard
+	lastSequence uint64
+	halt         tourianv1.HaltReason
 }
 
 // New places the robot at its start pose, fully charged and held still until a heartbeat arrives.
 func New(cfg Config, now func() time.Time) *Robot {
-	return &Robot{cfg: cfg, now: now, x: cfg.StartX, y: cfg.StartY, theta: cfg.StartTheta, battery: 1, halt: tourianv1.HaltReason_HALT_REASON_DEAD_MAN}
+	return &Robot{
+		cfg: cfg, now: now,
+		x: cfg.StartX, y: cfg.StartY, theta: cfg.StartTheta,
+		battery: 1,
+		guard:   safety.New(cfg.CommandTimeout, cfg.HeartbeatTimeout),
+		halt:    tourianv1.HaltReason_HALT_REASON_DEAD_MAN,
+	}
 }
 
 func (r *Robot) Capabilities() *tourianv1.Capabilities {
@@ -102,9 +108,7 @@ func (r *Robot) Command(cmd *tourianv1.VelocityCommand) *tourianv1.CommandAck {
 }
 
 func (r *Robot) Heartbeat(*tourianv1.Heartbeat) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.lastHeartbeatAt = r.now()
+	r.guard.Heartbeat(r.now())
 }
 
 // Stop halts the robot immediately and discards whatever was queued.
@@ -113,6 +117,7 @@ func (r *Robot) Stop(*tourianv1.Stop) {
 	defer r.mu.Unlock()
 	r.queue = nil
 	r.linear, r.angular = 0, 0
+	r.guard.Stop()
 	r.halt = tourianv1.HaltReason_HALT_REASON_EMERGENCY_STOP
 }
 
@@ -127,20 +132,11 @@ func (r *Robot) Step(dt time.Duration) {
 		r.linear = clamp(cmd.GetTwist().GetLinear().GetX(), r.cfg.MaxLinear)
 		r.angular = clamp(cmd.GetTwist().GetAngular().GetZ(), r.cfg.MaxAngular)
 		r.lastSequence = cmd.GetSequence()
-		r.lastCommandAt = now
-		r.halt = tourianv1.HaltReason_HALT_REASON_UNSPECIFIED
+		r.guard.Command(now)
 	}
 	r.queue = r.queue[:0]
 
-	switch {
-	case r.halt == tourianv1.HaltReason_HALT_REASON_EMERGENCY_STOP:
-	case now.Sub(r.lastHeartbeatAt) > r.cfg.HeartbeatTimeout:
-		r.halt = tourianv1.HaltReason_HALT_REASON_DEAD_MAN
-	case now.Sub(r.lastCommandAt) > r.cfg.CommandTimeout:
-		r.halt = tourianv1.HaltReason_HALT_REASON_COMMAND_TIMEOUT
-	default:
-		r.halt = tourianv1.HaltReason_HALT_REASON_UNSPECIFIED
-	}
+	r.halt = r.guard.Halt(now)
 	if r.halt != tourianv1.HaltReason_HALT_REASON_UNSPECIFIED {
 		r.linear, r.angular = 0, 0
 	}
