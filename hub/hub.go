@@ -28,7 +28,12 @@ type Hub struct {
 	consoles     map[string]*peer
 	capabilities map[string]*tourianv1.Capabilities
 	announces    map[string]*tourianv1.CameraAnnounce
+	taps         map[int]Tap
+	nextTap      int
 }
+
+// A Tap sees every message the hub receives from any peer, before routing, on the receiving goroutine; it must not block.
+type Tap func(env *tourianv1.Envelope)
 
 func New() *Hub {
 	return &Hub{
@@ -37,6 +42,48 @@ func New() *Hub {
 		consoles:     map[string]*peer{},
 		capabilities: map[string]*tourianv1.Capabilities{},
 		announces:    map[string]*tourianv1.CameraAnnounce{},
+		taps:         map[int]Tap{},
+	}
+}
+
+func (h *Hub) AddTap(tap Tap) (remove func()) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	id := h.nextTap
+	h.nextTap++
+	h.taps[id] = tap
+	return func() {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		delete(h.taps, id)
+	}
+}
+
+func (h *Hub) tap(env *tourianv1.Envelope) {
+	h.mu.Lock()
+	taps := make([]Tap, 0, len(h.taps))
+	for _, t := range h.taps {
+		taps = append(taps, t)
+	}
+	h.mu.Unlock()
+	for _, t := range taps {
+		t(env)
+	}
+}
+
+// Broadcast sends a message to every console, for parts of the platform that speak to consoles, like the recorder.
+func (h *Hub) Broadcast(message proto.Message) {
+	env, err := ws.Wrap(message)
+	if err != nil {
+		return
+	}
+	h.broadcast(env)
+}
+
+// RequestVideo asks a robot's camera for frames on behalf of a part of the platform named by peerID.
+func (h *Hub) RequestVideo(robotID, peerID string, enabled bool) {
+	if camera := h.camera(robotID); camera != nil {
+		camera.send(&tourianv1.VideoRequest{RobotId: robotID, PeerId: peerID, Kind: tourianv1.VideoKind_VIDEO_KIND_MJPEG, Enabled: enabled})
 	}
 }
 
@@ -64,6 +111,7 @@ func (h *Hub) ServeRobot(w http.ResponseWriter, r *http.Request) {
 			log.Printf("hub: robot %q disconnected: %v", id, err)
 			return
 		}
+		h.tap(env)
 		switch env.GetMessage().(type) {
 		case *tourianv1.Envelope_Observation, *tourianv1.Envelope_CommandAck:
 			h.broadcast(env)
@@ -97,6 +145,7 @@ func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
 			log.Printf("hub: camera for %q disconnected: %v", id, err)
 			return
 		}
+		h.tap(env)
 		switch env.GetMessage().(type) {
 		case *tourianv1.Envelope_VideoFrame:
 			h.broadcast(env)
@@ -128,6 +177,7 @@ func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
 			log.Printf("hub: console %s disconnected: %v", id, err)
 			return
 		}
+		h.tap(env)
 		switch env.GetMessage().(type) {
 		case *tourianv1.Envelope_VelocityCommand, *tourianv1.Envelope_Heartbeat, *tourianv1.Envelope_Stop:
 			if robot := h.robot(ws.RobotID(env)); robot != nil {
