@@ -43,13 +43,24 @@ test('losing the link releases control and forgets the robots and cameras', () =
   expect(useStore.getState()).toMatchObject({ engaged: false, robots: {}, cameras: {}, selected: undefined })
 })
 
-test('control state is kept for the selected robot only', () => {
+test('the fleet is known as a whole, the selected robot in detail', () => {
   const store = useStore.getState()
   store.addRobot(create(CapabilitiesSchema, { robotId: 'r1' }))
+  store.addRobot(create(CapabilitiesSchema, { robotId: 'r2' }))
   store.setControl(create(ControlStateSchema, { robotId: 'r2', holder: { id: 'square' } }))
+  store.observe(create(ObservationSchema, { robotId: 'r2', pose: { position: { x: 7 } } }))
   expect(useStore.getState().control).toBeUndefined()
-  store.setControl(create(ControlStateSchema, { robotId: 'r1', holder: { id: 'square' } }))
-  expect(useStore.getState().control?.holder?.id).toBe('square')
+  expect(useStore.getState().observation).toBeUndefined()
+  expect(useStore.getState().observations.r2?.pose?.position?.x).toBe(7)
+
+  store.engage()
+  store.select('r2')
+  const selected = useStore.getState()
+  expect(selected.selected).toBe('r2')
+  expect(selected.engaged).toBe(false)
+  expect(selected.control?.holder?.id).toBe('square')
+  expect(selected.observation?.pose?.position?.x).toBe(7)
+  expect(selected.trail).toEqual([])
 })
 
 test('heading comes from the yaw quaternion', () => {

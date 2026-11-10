@@ -16,6 +16,8 @@ func main() {
 	cfg := zebes.DefaultConfig()
 	flag.StringVar(&cfg.RobotID, "id", cfg.RobotID, "robot id")
 	flag.StringVar(&cfg.Name, "name", cfg.Name, "robot name")
+	flag.Float64Var(&cfg.StartX, "x", 0, "start position x in meters")
+	flag.Float64Var(&cfg.StartY, "y", 0, "start position y in meters")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { startDriver, toggleEngaged, emergencyStop } from '@/drive/driver'
 import { connect } from '@/platform/connection'
 import { useStore } from '@/platform/store'
+import { FleetStrip } from '@/fleet/FleetStrip'
 import { RecordControls } from '@/record/RecordControls'
 import { TelemetryPanel } from '@/telemetry/TelemetryPanel'
 import { VideoView } from '@/video/VideoView'
@@ -39,6 +40,7 @@ export function ControlRoom() {
         </div>
       </header>
       <div className="scene">
+        <FleetStrip />
         <VideoView measure={measure} />
         <WorldCanvas />
       </div>

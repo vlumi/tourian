@@ -8,6 +8,7 @@ export type WorldState = {
   heading: number
   trail: Point[]
   active: boolean
+  others?: { position: Point; heading: number }[]
 }
 
 // The arena from above: a meter grid centered on the origin, the trail driven and the robot with its heading.
@@ -54,19 +55,22 @@ export function renderWorld(context: CanvasRenderingContext2D, width: number, he
     context.stroke()
   }
 
-  if (!state.position) return
-  const center = toScreen(state.position)
   const r = robotRadius * scale
-  context.fillStyle = state.active ? color('--accent') : color('--dim')
-  context.beginPath()
-  context.arc(center.x, center.y, r, 0, 2 * Math.PI)
-  context.fill()
-  context.strokeStyle = color('--bg')
-  context.lineWidth = 3
-  context.beginPath()
-  context.moveTo(center.x, center.y)
-  context.lineTo(center.x + Math.cos(state.heading) * r * 1.6, center.y - Math.sin(state.heading) * r * 1.6)
-  context.stroke()
+  const robot = (position: Point, heading: number, fill: string) => {
+    const center = toScreen(position)
+    context.fillStyle = fill
+    context.beginPath()
+    context.arc(center.x, center.y, r, 0, 2 * Math.PI)
+    context.fill()
+    context.strokeStyle = color('--bg')
+    context.lineWidth = 3
+    context.beginPath()
+    context.moveTo(center.x, center.y)
+    context.lineTo(center.x + Math.cos(heading) * r * 1.6, center.y - Math.sin(heading) * r * 1.6)
+    context.stroke()
+  }
+  for (const other of state.others ?? []) robot(other.position, other.heading, color('--trail'))
+  if (state.position) robot(state.position, state.heading, state.active ? color('--accent') : color('--dim'))
 }
 
 // Keeps a canvas sized to its element and the device, and redraws through draw whenever asked.
