@@ -1,9 +1,11 @@
 import type { Capabilities, Observation } from '@tourian/contract/tourian/v1/robot_pb'
+import type { CameraAnnounce } from '@tourian/contract/tourian/v1/video_pb'
 import { HaltReason } from '@tourian/contract/tourian/v1/robot_pb'
 import { create } from 'zustand'
 
 export type Status = 'connecting' | 'connected' | 'disconnected'
 export type InputSource = 'none' | 'keyboard' | 'gamepad'
+export type VideoPath = 'off' | 'webrtc' | 'mjpeg'
 
 export type Input = { linear: number; angular: number; source: InputSource }
 
@@ -15,6 +17,8 @@ export const trailLength = 600
 export type State = {
   status: Status
   robots: Record<string, Capabilities>
+  cameras: Record<string, CameraAnnounce>
+  videoPath: VideoPath
   selected?: string
   observation?: Observation
   trail: Point[]
@@ -26,6 +30,8 @@ export type State = {
 
   setStatus: (status: Status) => void
   addRobot: (capabilities: Capabilities) => void
+  addCamera: (announce: CameraAnnounce) => void
+  setVideoPath: (path: VideoPath) => void
   observe: (observation: Observation) => void
   recordLatency: (ms: number) => void
   engage: () => void
@@ -38,6 +44,8 @@ const idle: Input = { linear: 0, angular: 0, source: 'none' }
 export const useStore = create<State>()((set) => ({
   status: 'connecting',
   robots: {},
+  cameras: {},
+  videoPath: 'webrtc',
   trail: [],
   history: { speed: [], angular: [], battery: [], latency: [] },
   engaged: false,
@@ -51,6 +59,8 @@ export const useStore = create<State>()((set) => ({
       robots: { ...state.robots, [capabilities.robotId]: capabilities },
       selected: state.selected ?? capabilities.robotId,
     })),
+  addCamera: (announce) => set((state) => ({ cameras: { ...state.cameras, [announce.robotId]: announce } })),
+  setVideoPath: (videoPath) => set({ videoPath }),
   observe: (observation) =>
     set((state) => {
       if (observation.robotId !== state.selected) return {}

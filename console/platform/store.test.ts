@@ -1,5 +1,6 @@
 import { create } from '@bufbuild/protobuf'
 import { CapabilitiesSchema, HaltReason, ObservationSchema } from '@tourian/contract/tourian/v1/robot_pb'
+import { CameraAnnounceSchema } from '@tourian/contract/tourian/v1/video_pb'
 import { haltLabel, heading, historyLength, useStore } from './store'
 
 const initial = useStore.getState()
@@ -31,12 +32,14 @@ test('history keeps the last samples only', () => {
   expect(useStore.getState().latencyMs).toBe(historyLength + 4)
 })
 
-test('losing the link releases control and forgets the robots', () => {
+test('losing the link releases control and forgets the robots and cameras', () => {
   const store = useStore.getState()
   store.addRobot(create(CapabilitiesSchema, { robotId: 'r1' }))
+  store.addCamera(create(CameraAnnounceSchema, { robotId: 'r1', name: 'phone' }))
+  expect(useStore.getState().cameras.r1?.name).toBe('phone')
   store.engage()
   store.setStatus('disconnected')
-  expect(useStore.getState()).toMatchObject({ engaged: false, robots: {}, selected: undefined })
+  expect(useStore.getState()).toMatchObject({ engaged: false, robots: {}, cameras: {}, selected: undefined })
 })
 
 test('heading comes from the yaw quaternion', () => {
