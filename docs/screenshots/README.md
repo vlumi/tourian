@@ -2,6 +2,16 @@
 
 One capture per milestone, taken with `make screenshot` (which builds and serves the console and runs [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs) against it), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates.
 
+## 2026-11-10 · Hand over
+
+![The script holding the robot](004-handover.png)
+
+The scripted square holding the robot: the control section names the holder and since when, offers the square and the policy server to hand the robot to, and says that engaging takes over. The robot has driven the first leg and turned.
+
+![The policy holding the robot](004-handover-policy.png)
+
+A moment later the stand-in policy server holds the robot and has brought it back near the origin, after the operator took over by engaging, drove backward, and released, which handed the robot back to the script first.
+
 ## 2026-11-10 · Record
 
 ![Recording an episode](003-record.png)

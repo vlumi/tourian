@@ -45,6 +45,9 @@ function receive(envelope: Envelope): void {
     case 'episodeStatus':
       store.setEpisode(envelope.message.value)
       break
+    case 'controlState':
+      store.setControl(envelope.message.value)
+      break
     case 'sessionDescription':
     case 'iceCandidate':
     case 'videoFrame':

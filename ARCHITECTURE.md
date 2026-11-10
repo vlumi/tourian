@@ -46,6 +46,16 @@ One repository, two languages, one contract. The Go module `github.com/vlumi/tou
 
 **Browsing** is HTTP from the platform: the list, one episode's metadata, its frames and video index as written, and its pictures. The console's episodes page lists them and replays one, the world drawn by the same code as the live view beside the picture in force, scrubbed or played at the speed it happened.
 
+### M4 — hand over
+
+**The controller seam.** A controller inside the platform is anything that can describe itself and turn an observation into a twist: `motherbrain.Controller`. Two exist: the scripted square, which drives a leg and turns a quarter by the clock on the observations and so needs no state, and the policy client, which posts the observation as JSON to a policy server's `/act` and reads a twist back; `cmd/policy` stands in for a learned policy by steering home to the origin over the same protocol, so a real server replaces it without the platform noticing. The operator is the third kind of controller and speaks through the hub as before; nothing about driving changed for the console.
+
+**The arbiter** keeps one answer per robot to who is driving. It is a tap on the hub, like the recorder, and runs on its own goroutine with its own inbox, skipping observations that piled up so a controller acts on the latest. A console hands a robot to a controller by name with a `ControlRequest`; the operator takes over by driving, since the first velocity command from a console makes that console the holder and remembers who held it before; releasing hands the robot back to that controller, or to nobody. While a controller inside the platform holds a robot, the arbiter calls it on every observation with a 40 ms budget and sends the robot a heartbeat and the command; a controller that fails or is late sends nothing, and the robot's own timeouts hold it still, so the safety story is unchanged by who is driving. Every change of hands is published as a `ControlState` with the holder, since when, and the controllers available.
+
+**Publishing.** The platform's own voice is `Publish` on the hub: the message goes to every tap and every console, and the latest of its kind per robot is retained for consoles that join later, so a console always knows who holds a robot and whether it is being recorded. Taps also learn the source of each message, a robot, a camera, a console by id or the platform, which is how the arbiter knows which console took over. The recorder sees the control states too and stamps the holder on every frame, so each change of hands is in the episode and the replay shows who was driving at any moment.
+
+**The console** shows the holder and since when in a control section, with a button per controller to hand the robot to, and explains that engaging takes over and releasing hands back; releasing sends the request along with a zero command.
+
 ### Layout
 
 | Directory | What it holds |
@@ -54,11 +64,13 @@ One repository, two languages, one contract. The Go module `github.com/vlumi/tou
 | `gen/` | generated Go and TypeScript, committed; `gen/ts` is the npm package `@tourian/contract` |
 | `cmd/tourian` | the platform binary |
 | `cmd/zebes` | the simulator as its own process |
+| `cmd/policy` | a stand-in policy server that steers home |
 | `emmi/zebes` | the simulated robot: world, safety and the connection to the platform |
 | `hub/` | the platform's routing between robots, cameras and consoles, with taps for the rest of the platform |
 | `episode/` | the recorder, the JSONL sink, the HTTP for browsing; `lerobot/` the LeRobot v3.0 sink |
+| `motherbrain/` | the controller seam and the arbiter; `script/` the square, `policy/` the client of a policy server |
 | `transport/ws` | contract messages over WebSocket |
-| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `episodes/` the list and the replay; `app/camera` the page a phone opens |
+| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `episodes/` the list and the replay; `app/camera` the page a phone opens |
 | `scripts/` | what the make targets run |
 | `docs/` | screenshots, and the measurements under `results/` |
 
@@ -97,6 +109,5 @@ Protobuf packages under `proto/tourian/v1/`: `robot` (capabilities, observations
 | Directory | What it will hold |
 | --- | --- |
 | `emmi/` | further robot adapters: rosbridge, the sidecar client |
-| `motherbrain/` | controllers: scripted, policy client; the arbiter |
 | `transport/` | the other transports, for comparison |
 | `sidecars/` | Python processes for hardware with Python-only drivers |

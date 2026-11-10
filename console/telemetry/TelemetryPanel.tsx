@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { haltLabel, heading, useStore } from '@/platform/store'
+import { ControlPanel } from '@/control/ControlPanel'
 import { Sparkline } from './Sparkline'
 
 export function TelemetryPanel() {
@@ -37,6 +38,8 @@ export function TelemetryPanel() {
         <Row label="halt">{halt ?? '–'}</Row>
         <Row label="input">{input.source}</Row>
       </section>
+
+      <ControlPanel />
 
       <section>
         <h2>Robot</h2>
