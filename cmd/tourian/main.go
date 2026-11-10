@@ -9,24 +9,32 @@ import (
 	"net"
 	"net/http"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/vlumi/tourian/emmi/zebes"
+	"github.com/vlumi/tourian/episode"
 	"github.com/vlumi/tourian/hub"
 )
 
 func main() {
 	addr := flag.String("addr", ":8080", "address the platform listens on")
 	sim := flag.Bool("sim", false, "also run the simulated robot in this process, connected to this platform")
+	data := flag.String("data", "data", "directory the episodes are recorded under")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	h := hub.New()
+	recorder := episode.NewRecorder(filepath.Join(*data, "episodes"), h, time.Now)
+	h.AddTap(recorder.Tap)
+	go recorder.Run(ctx)
+
 	server := &http.Server{
 		Addr:              *addr,
-		Handler:           newHandler(hub.New()),
+		Handler:           newHandler(h),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	go func() {
