@@ -4,9 +4,13 @@
   --fg: #e6f5c8;
   --dim: #8fa07a;
   --accent: #8fd400;
+  --danger: #ff5a36;
   --panel: #141a11;
   --border: #22301b;
+  --grid: #131a10;
+  --trail: #4a6e10;
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 14px;
 }
 
 * {
@@ -15,54 +19,160 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg);
   color: var(--fg);
 }
 
-main {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: 4rem 1.5rem;
+.room {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 22rem;
+  grid-template-rows: 3.5rem 1fr;
+  grid-template-areas:
+    'header header'
+    'world telemetry';
+}
+
+header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--border);
 }
 
 h1 {
   margin: 0;
-  font-size: 2.5rem;
-  letter-spacing: 0.08em;
+  font-size: 1.25rem;
+  letter-spacing: 0.1em;
   color: var(--accent);
 }
 
-h2 {
-  margin: 2.5rem 0 0.75rem;
-  font-size: 0.8rem;
+.controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+button {
+  font: inherit;
+  padding: 0.4rem 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+button.engaged {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+button.stop {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.world {
+  grid-area: world;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--bg);
+}
+
+.telemetry {
+  grid-area: telemetry;
+  border-left: 1px solid var(--border);
+  background: var(--panel);
+  overflow-y: auto;
+  padding: 0.5rem 1rem 1rem;
+}
+
+.telemetry h2 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.7rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--dim);
 }
 
-p {
-  line-height: 1.5;
-}
-
-ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.row {
   display: grid;
+  grid-template-columns: 5rem 1fr auto;
+  align-items: center;
   gap: 0.5rem;
+  min-height: 1.75rem;
 }
 
-li {
-  padding: 0.75rem 1rem;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-li span {
+.row .label {
   color: var(--dim);
+}
+
+.row .value {
+  grid-column: 3;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sparkline {
+  grid-column: 2;
+  width: 100%;
+  color: var(--trail);
+}
+
+.status {
+  padding: 0.1rem 0.5rem;
+  border-radius: 0.25rem;
+  background: var(--border);
+}
+
+.status-connected,
+.status-engaged {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.status-disconnected,
+.status-stopped {
+  background: var(--danger);
+  color: var(--bg);
+}
+
+.keys p {
+  margin: 0.25rem 0;
+  color: var(--dim);
+  line-height: 1.6;
+}
+
+kbd {
+  font: inherit;
+  padding: 0 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  color: var(--fg);
+}
+
+@media (max-width: 720px) {
+  .room {
+    grid-template-columns: 1fr;
+    grid-template-rows: 3.5rem 50vh 1fr;
+    grid-template-areas:
+      'header'
+      'world'
+      'telemetry';
+  }
+
+  .telemetry {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
 }
