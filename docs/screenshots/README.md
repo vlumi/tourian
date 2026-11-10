@@ -2,6 +2,16 @@
 
 One capture per milestone, taken with `make screenshot` (which builds and serves the console and runs [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs) against it), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates.
 
+## 2026-11-10 · Record
+
+![Recording an episode](003-record.png)
+
+The console recording: the task typed into the header, the record button with the running time, the frames and pictures written so far and the button that marks the episode bad, while the robot drives a curve on the camera's picture and the world below.
+
+![Replaying an episode](003-record-replay.png)
+
+The same episode replayed from the episodes page a moment later: the world as recorded on the left, the picture in force on the right, the slider and the frame's figures along the bottom, the flag and its note in the header.
+
 ## 2026-11-10 · See
 
 ![The camera on the console](002-see.png)
