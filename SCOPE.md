@@ -4,7 +4,7 @@ A teleoperation platform for robots, simulated first, with recording for trainin
 
 **The name:** Tourian is where Mother Brain sits. The platform is the sector; the brain is whoever is at the controls. See the README for the component names.
 
-**Status:** experiment, not a product. Bootstrapped 2026-11-10; M0 and M1 done the same day. Milestones get their dates on the headings as they land.
+**Status:** experiment, not a product. Bootstrapped 2026-11-10; M0 to M2 done the same day. Milestones get their dates on the headings as they land.
 
 ## The idea
 
@@ -49,7 +49,7 @@ Toolchain and layout: Go module, `buf` with a first contract (velocity command, 
 - The console: the world and the robot on a canvas, keyboard and gamepad driving, a telemetry panel with sparklines, round-trip latency of each command from stamped echoes.
 - Safety in the simulator: command timeout stops the robot, a dead-man signal from the console, an emergency stop that preempts the command queue. Tests for all three.
 
-### M2 — see
+### M2 — see (done 2026-11-10)
 
 - WebRTC video from a phone's camera to the console, the Go platform signaling; a page the phone opens that publishes its camera as the robot's.
 - The same frames over MJPEG on the WebSocket as the second video implementation, and a measurement of glass-to-glass latency on both paths, recorded under `docs/results/` with date, commit and machine.

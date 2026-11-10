@@ -28,6 +28,16 @@ One repository, two languages, one contract. The Go module `github.com/vlumi/tou
 
 **The console** keeps one store (zustand) that the connection writes and the components read: the robots announced, the latest observation of the selected one, its trail, the last two minutes of speed, turn rate, battery and latency, and the operator's state. A driver loop at 20 Hz reads the keyboard and the gamepad, and while engaged sends a heartbeat and a velocity command scaled to the robot's limits. Latency is the round trip of each command: the moment it is sent to the moment its acknowledgement comes back, matched by sequence number. The world is a canvas redrawn on every store change; the telemetry panel shows the figures with sparklines beside them.
 
+### M2 — see
+
+**The camera is a peer like the robot.** A phone opens the console's `/camera` page, which takes the camera and connects to the hub's `/camera` endpoint, announcing which robot it is the eyes of. The hub learns cameras as it learns robots and tells every console; the console's video view, above the world, shows the camera of the selected robot over the path chosen.
+
+**WebRTC is peer to peer, the platform only signals.** The console offers a receive-only connection; the hub stamps the offer with the console's id and routes it to the robot's camera, which answers with its track; the answer and the ICE candidates route back by the same id. Candidates that arrive before their description wait for it. The platform never touches the media, which is also why nothing about it is recorded yet. There are no STUN or TURN servers: everything is on one network until the platform is reachable from elsewhere.
+
+**MJPEG goes through the platform.** When a console asks, the camera page repaints its frames onto a canvas 640 wide, encodes each as JPEG at quality 0.7 and sends them at 15 fps as `VideoFrame` messages; the hub fans them out to every console, and the viewer shows each as it arrives. The camera stops when the last console that asked has left, which the hub tells it on the console's behalf. This path puts the frames in the platform's hands, which is what recording will need.
+
+**Measuring the two.** With `?clock=1` the camera page composes a band of 32 black and white blocks across the top of every frame, encoding the time it was composed, and streams the composition instead of the raw camera. With `?measure=1` the console reads the band back from every new frame on a fast timer, once per stamp, and summarizes the frames' ages; the result is the time from composition to display on the viewer's side, which covers encoding, the path, decoding and rendering but not the camera's sensor or the screen, and means something only when both pages share a clock, as they do on one machine. `make results-video` runs both pages in one headless Chrome with a fake camera, a window each so neither is throttled as a background tab, and writes the figures with date, commit and machine under `docs/results/`. The first run gave WebRTC a median of 30 ms with a spread of a few ms, and MJPEG 36 ms with a p95 near 60 ms.
+
 ### Layout
 
 | Directory | What it holds |
@@ -39,9 +49,9 @@ One repository, two languages, one contract. The Go module `github.com/vlumi/tou
 | `emmi/zebes` | the simulated robot: world, safety and the connection to the platform |
 | `hub/` | the platform's routing between robots and consoles |
 | `transport/ws` | contract messages over WebSocket |
-| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel |
+| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band; `app/camera` the page a phone opens |
 | `scripts/` | what the make targets run |
-| `docs/` | screenshots, later results |
+| `docs/` | screenshots, and the measurements under `results/` |
 
 ## Planned
 
@@ -80,7 +90,5 @@ Protobuf packages under `proto/tourian/v1/`: `robot` (capabilities, observations
 | `emmi/` | further robot adapters: rosbridge, the sidecar client |
 | `motherbrain/` | controllers: scripted, policy client; the arbiter |
 | `transport/` | the other transports, for comparison |
-| `video/` | WebRTC signaling and the MJPEG path |
 | `episode/` | recording and the dataset sinks |
 | `sidecars/` | Python processes for hardware with Python-only drivers |
-| `docs/results/` | latency measurements with date, commit and machine |
