@@ -211,7 +211,7 @@ func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
 		}
 		h.tap(Source{Kind: SourceConsole, ID: id}, env)
 		switch env.GetMessage().(type) {
-		case *tourianv1.Envelope_VelocityCommand, *tourianv1.Envelope_Heartbeat, *tourianv1.Envelope_Stop:
+		case *tourianv1.Envelope_VelocityCommand, *tourianv1.Envelope_JointCommand, *tourianv1.Envelope_Heartbeat, *tourianv1.Envelope_Stop:
 			if robot := h.robot(ws.RobotID(env)); robot != nil {
 				robot.send(env)
 			}

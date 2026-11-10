@@ -116,6 +116,10 @@ func (a *Arbiter) Handle(ctx context.Context, from hub.Source, env *tourianv1.En
 		if from.Kind == hub.SourceConsole {
 			a.takeOver(m.VelocityCommand.GetRobotId(), from.ID)
 		}
+	case *tourianv1.Envelope_JointCommand:
+		if from.Kind == hub.SourceConsole {
+			a.takeOver(m.JointCommand.GetRobotId(), from.ID)
+		}
 	case *tourianv1.Envelope_ControlRequest:
 		if from.Kind == hub.SourceConsole {
 			a.request(m.ControlRequest)

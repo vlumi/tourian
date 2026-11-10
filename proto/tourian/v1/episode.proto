@@ -40,6 +40,7 @@ message EpisodeFrame {
   VelocityCommand action = 4;
   uint64 video_sequence = 5;
   Controller controller = 6;
+  JointCommand joint_action = 7;
 }
 
 // One picture of an episode's video, as a sink that keeps pictures as files indexes it.

@@ -16,7 +16,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file tourian/v1/robot.proto.
  */
 export const file_tourian_v1_robot: GenFile = /*@__PURE__*/
-  fileDesc("ChZ0b3VyaWFuL3YxL3JvYm90LnByb3RvEgp0b3VyaWFuLnYxIvYBCgxDYXBhYmlsaXRpZXMSEAoIcm9ib3RfaWQYASABKAkSDAoEbmFtZRgCIAEoCRITCgtqb2ludF9uYW1lcxgDIAMoCRIzCg92ZWxvY2l0eV9saW1pdHMYBCABKAsyGi50b3VyaWFuLnYxLlZlbG9jaXR5TGltaXRzEjIKD2NvbW1hbmRfdGltZW91dBgFIAEoCzIZLmdvb2dsZS5wcm90b2J1Zi5EdXJhdGlvbhISCgpoYXNfY2FtZXJhGAYgASgIEjQKEWhlYXJ0YmVhdF90aW1lb3V0GAcgASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uIjkKDlZlbG9jaXR5TGltaXRzEhIKCm1heF9saW5lYXIYASABKAESEwoLbWF4X2FuZ3VsYXIYAiABKAEiewoPVmVsb2NpdHlDb21tYW5kEiIKBmhlYWRlchgBIAEoCzISLnRvdXJpYW4udjEuSGVhZGVyEhAKCHJvYm90X2lkGAIgASgJEhAKCHNlcXVlbmNlGAMgASgEEiAKBXR3aXN0GAQgASgLMhEudG91cmlhbi52MS5Ud2lzdCKHAQoKQ29tbWFuZEFjaxIiCgZoZWFkZXIYASABKAsyEi50b3VyaWFuLnYxLkhlYWRlchIQCghyb2JvdF9pZBgCIAEoCRIQCghzZXF1ZW5jZRgDIAEoBBIxCg1jb21tYW5kX3N0YW1wGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKiAgoLT2JzZXJ2YXRpb24SIgoGaGVhZGVyGAEgASgLMhIudG91cmlhbi52MS5IZWFkZXISEAoIcm9ib3RfaWQYAiABKAkSHgoEcG9zZRgDIAEoCzIQLnRvdXJpYW4udjEuUG9zZRIjCgh2ZWxvY2l0eRgEIAEoCzIRLnRvdXJpYW4udjEuVHdpc3QSJgoGam9pbnRzGAUgASgLMhYudG91cmlhbi52MS5Kb2ludFN0YXRlEiQKB2JhdHRlcnkYBiABKAsyEy50b3VyaWFuLnYxLkJhdHRlcnkSHQoVbGFzdF9jb21tYW5kX3NlcXVlbmNlGAcgASgEEisKC2hhbHRfcmVhc29uGAggASgOMhYudG91cmlhbi52MS5IYWx0UmVhc29uIk4KCkpvaW50U3RhdGUSDAoEbmFtZRgBIAMoCRIQCghwb3NpdGlvbhgCIAMoARIQCgh2ZWxvY2l0eRgDIAMoARIOCgZlZmZvcnQYBCADKAEiLgoHQmF0dGVyeRISCgpwZXJjZW50YWdlGAEgASgBEg8KB3ZvbHRhZ2UYAiABKAEiUwoJSGVhcnRiZWF0EiIKBmhlYWRlchgBIAEoCzISLnRvdXJpYW4udjEuSGVhZGVyEhAKCHJvYm90X2lkGAIgASgJEhAKCHNlcXVlbmNlGAMgASgEIjwKBFN0b3ASIgoGaGVhZGVyGAEgASgLMhIudG91cmlhbi52MS5IZWFkZXISEAoIcm9ib3RfaWQYAiABKAkqhAEKCkhhbHRSZWFzb24SGwoXSEFMVF9SRUFTT05fVU5TUEVDSUZJRUQQABIfChtIQUxUX1JFQVNPTl9DT01NQU5EX1RJTUVPVVQQARIYChRIQUxUX1JFQVNPTl9ERUFEX01BThACEh4KGkhBTFRfUkVBU09OX0VNRVJHRU5DWV9TVE9QEANCmwEKDmNvbS50b3VyaWFuLnYxQgpSb2JvdFByb3RvUAFaNGdpdGh1Yi5jb20vdmx1bWkvdG91cmlhbi9nZW4vZ28vdG91cmlhbi92MTt0b3VyaWFudjGiAgNUWFiqAgpUb3VyaWFuLlYxygIKVG91cmlhblxWMeICFlRvdXJpYW5cVjFcR1BCTWV0YWRhdGHqAgtUb3VyaWFuOjpWMWIGcHJvdG8z", [file_google_protobuf_duration, file_google_protobuf_timestamp, file_tourian_v1_geometry, file_tourian_v1_header]);
+  fileDesc("ChZ0b3VyaWFuL3YxL3JvYm90LnByb3RvEgp0b3VyaWFuLnYxIvYBCgxDYXBhYmlsaXRpZXMSEAoIcm9ib3RfaWQYASABKAkSDAoEbmFtZRgCIAEoCRITCgtqb2ludF9uYW1lcxgDIAMoCRIzCg92ZWxvY2l0eV9saW1pdHMYBCABKAsyGi50b3VyaWFuLnYxLlZlbG9jaXR5TGltaXRzEjIKD2NvbW1hbmRfdGltZW91dBgFIAEoCzIZLmdvb2dsZS5wcm90b2J1Zi5EdXJhdGlvbhISCgpoYXNfY2FtZXJhGAYgASgIEjQKEWhlYXJ0YmVhdF90aW1lb3V0GAcgASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uIjkKDlZlbG9jaXR5TGltaXRzEhIKCm1heF9saW5lYXIYASABKAESEwoLbWF4X2FuZ3VsYXIYAiABKAEiewoPVmVsb2NpdHlDb21tYW5kEiIKBmhlYWRlchgBIAEoCzISLnRvdXJpYW4udjEuSGVhZGVyEhAKCHJvYm90X2lkGAIgASgJEhAKCHNlcXVlbmNlGAMgASgEEiAKBXR3aXN0GAQgASgLMhEudG91cmlhbi52MS5Ud2lzdCKHAQoKQ29tbWFuZEFjaxIiCgZoZWFkZXIYASABKAsyEi50b3VyaWFuLnYxLkhlYWRlchIQCghyb2JvdF9pZBgCIAEoCRIQCghzZXF1ZW5jZRgDIAEoBBIxCg1jb21tYW5kX3N0YW1wGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJ+CgxKb2ludENvbW1hbmQSIgoGaGVhZGVyGAEgASgLMhIudG91cmlhbi52MS5IZWFkZXISEAoIcm9ib3RfaWQYAiABKAkSEAoIc2VxdWVuY2UYAyABKAQSJgoGdGFyZ2V0GAQgASgLMhYudG91cmlhbi52MS5Kb2ludFN0YXRlIqICCgtPYnNlcnZhdGlvbhIiCgZoZWFkZXIYASABKAsyEi50b3VyaWFuLnYxLkhlYWRlchIQCghyb2JvdF9pZBgCIAEoCRIeCgRwb3NlGAMgASgLMhAudG91cmlhbi52MS5Qb3NlEiMKCHZlbG9jaXR5GAQgASgLMhEudG91cmlhbi52MS5Ud2lzdBImCgZqb2ludHMYBSABKAsyFi50b3VyaWFuLnYxLkpvaW50U3RhdGUSJAoHYmF0dGVyeRgGIAEoCzITLnRvdXJpYW4udjEuQmF0dGVyeRIdChVsYXN0X2NvbW1hbmRfc2VxdWVuY2UYByABKAQSKwoLaGFsdF9yZWFzb24YCCABKA4yFi50b3VyaWFuLnYxLkhhbHRSZWFzb24iTgoKSm9pbnRTdGF0ZRIMCgRuYW1lGAEgAygJEhAKCHBvc2l0aW9uGAIgAygBEhAKCHZlbG9jaXR5GAMgAygBEg4KBmVmZm9ydBgEIAMoASIuCgdCYXR0ZXJ5EhIKCnBlcmNlbnRhZ2UYASABKAESDwoHdm9sdGFnZRgCIAEoASJTCglIZWFydGJlYXQSIgoGaGVhZGVyGAEgASgLMhIudG91cmlhbi52MS5IZWFkZXISEAoIcm9ib3RfaWQYAiABKAkSEAoIc2VxdWVuY2UYAyABKAQiPAoEU3RvcBIiCgZoZWFkZXIYASABKAsyEi50b3VyaWFuLnYxLkhlYWRlchIQCghyb2JvdF9pZBgCIAEoCSqEAQoKSGFsdFJlYXNvbhIbChdIQUxUX1JFQVNPTl9VTlNQRUNJRklFRBAAEh8KG0hBTFRfUkVBU09OX0NPTU1BTkRfVElNRU9VVBABEhgKFEhBTFRfUkVBU09OX0RFQURfTUFOEAISHgoaSEFMVF9SRUFTT05fRU1FUkdFTkNZX1NUT1AQA0KbAQoOY29tLnRvdXJpYW4udjFCClJvYm90UHJvdG9QAVo0Z2l0aHViLmNvbS92bHVtaS90b3VyaWFuL2dlbi9nby90b3VyaWFuL3YxO3RvdXJpYW52MaICA1RYWKoCClRvdXJpYW4uVjHKAgpUb3VyaWFuXFYx4gIWVG91cmlhblxWMVxHUEJNZXRhZGF0YeoCC1RvdXJpYW46OlYxYgZwcm90bzM", [file_google_protobuf_duration, file_google_protobuf_timestamp, file_tourian_v1_geometry, file_tourian_v1_header]);
 
 /**
  * What a robot is and can do, announced by its adapter when it connects.
@@ -162,6 +162,40 @@ export const CommandAckSchema: GenMessage<CommandAck> = /*@__PURE__*/
   messageDesc(file_tourian_v1_robot, 3);
 
 /**
+ * The controller's intent for the robot's joints: target positions, and velocities where the robot takes them. The sequence comes back in acknowledgements as for velocity commands.
+ *
+ * @generated from message tourian.v1.JointCommand
+ */
+export type JointCommand = Message<"tourian.v1.JointCommand"> & {
+  /**
+   * @generated from field: tourian.v1.Header header = 1;
+   */
+  header?: Header | undefined;
+
+  /**
+   * @generated from field: string robot_id = 2;
+   */
+  robotId: string;
+
+  /**
+   * @generated from field: uint64 sequence = 3;
+   */
+  sequence: bigint;
+
+  /**
+   * @generated from field: tourian.v1.JointState target = 4;
+   */
+  target?: JointState | undefined;
+};
+
+/**
+ * Describes the message tourian.v1.JointCommand.
+ * Use `create(JointCommandSchema)` to create a new message.
+ */
+export const JointCommandSchema: GenMessage<JointCommand> = /*@__PURE__*/
+  messageDesc(file_tourian_v1_robot, 4);
+
+/**
  * Everything the robot reports about itself at one instant.
  *
  * @generated from message tourian.v1.Observation
@@ -213,7 +247,7 @@ export type Observation = Message<"tourian.v1.Observation"> & {
  * Use `create(ObservationSchema)` to create a new message.
  */
 export const ObservationSchema: GenMessage<Observation> = /*@__PURE__*/
-  messageDesc(file_tourian_v1_robot, 4);
+  messageDesc(file_tourian_v1_robot, 5);
 
 /**
  * Parallel arrays indexed alike, as sensor_msgs/JointState; velocity and effort may be empty.
@@ -247,7 +281,7 @@ export type JointState = Message<"tourian.v1.JointState"> & {
  * Use `create(JointStateSchema)` to create a new message.
  */
 export const JointStateSchema: GenMessage<JointState> = /*@__PURE__*/
-  messageDesc(file_tourian_v1_robot, 5);
+  messageDesc(file_tourian_v1_robot, 6);
 
 /**
  * @generated from message tourian.v1.Battery
@@ -271,7 +305,7 @@ export type Battery = Message<"tourian.v1.Battery"> & {
  * Use `create(BatterySchema)` to create a new message.
  */
 export const BatterySchema: GenMessage<Battery> = /*@__PURE__*/
-  messageDesc(file_tourian_v1_robot, 6);
+  messageDesc(file_tourian_v1_robot, 7);
 
 /**
  * The dead-man signal: an adapter that stops receiving these stops the robot.
@@ -300,7 +334,7 @@ export type Heartbeat = Message<"tourian.v1.Heartbeat"> & {
  * Use `create(HeartbeatSchema)` to create a new message.
  */
 export const HeartbeatSchema: GenMessage<Heartbeat> = /*@__PURE__*/
-  messageDesc(file_tourian_v1_robot, 7);
+  messageDesc(file_tourian_v1_robot, 8);
 
 /**
  * Emergency stop. Executed ahead of anything queued, which is discarded; the robot holds still until a new command arrives.
@@ -324,7 +358,7 @@ export type Stop = Message<"tourian.v1.Stop"> & {
  * Use `create(StopSchema)` to create a new message.
  */
 export const StopSchema: GenMessage<Stop> = /*@__PURE__*/
-  messageDesc(file_tourian_v1_robot, 8);
+  messageDesc(file_tourian_v1_robot, 9);
 
 /**
  * Why the adapter is holding the robot still; unspecified while it is free to drive.

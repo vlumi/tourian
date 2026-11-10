@@ -361,6 +361,75 @@ func (x *CommandAck) GetCommandStamp() *timestamppb.Timestamp {
 	return nil
 }
 
+// The controller's intent for the robot's joints: target positions, and velocities where the robot takes them. The sequence comes back in acknowledgements as for velocity commands.
+type JointCommand struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Header        *Header                `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	RobotId       string                 `protobuf:"bytes,2,opt,name=robot_id,json=robotId,proto3" json:"robot_id,omitempty"`
+	Sequence      uint64                 `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	Target        *JointState            `protobuf:"bytes,4,opt,name=target,proto3" json:"target,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JointCommand) Reset() {
+	*x = JointCommand{}
+	mi := &file_tourian_v1_robot_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JointCommand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JointCommand) ProtoMessage() {}
+
+func (x *JointCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_tourian_v1_robot_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JointCommand.ProtoReflect.Descriptor instead.
+func (*JointCommand) Descriptor() ([]byte, []int) {
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *JointCommand) GetHeader() *Header {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *JointCommand) GetRobotId() string {
+	if x != nil {
+		return x.RobotId
+	}
+	return ""
+}
+
+func (x *JointCommand) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *JointCommand) GetTarget() *JointState {
+	if x != nil {
+		return x.Target
+	}
+	return nil
+}
+
 // Everything the robot reports about itself at one instant.
 type Observation struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
@@ -378,7 +447,7 @@ type Observation struct {
 
 func (x *Observation) Reset() {
 	*x = Observation{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[4]
+	mi := &file_tourian_v1_robot_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -390,7 +459,7 @@ func (x *Observation) String() string {
 func (*Observation) ProtoMessage() {}
 
 func (x *Observation) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[4]
+	mi := &file_tourian_v1_robot_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -403,7 +472,7 @@ func (x *Observation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Observation.ProtoReflect.Descriptor instead.
 func (*Observation) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{4}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Observation) GetHeader() *Header {
@@ -475,7 +544,7 @@ type JointState struct {
 
 func (x *JointState) Reset() {
 	*x = JointState{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[5]
+	mi := &file_tourian_v1_robot_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -487,7 +556,7 @@ func (x *JointState) String() string {
 func (*JointState) ProtoMessage() {}
 
 func (x *JointState) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[5]
+	mi := &file_tourian_v1_robot_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -500,7 +569,7 @@ func (x *JointState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JointState.ProtoReflect.Descriptor instead.
 func (*JointState) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{5}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *JointState) GetName() []string {
@@ -542,7 +611,7 @@ type Battery struct {
 
 func (x *Battery) Reset() {
 	*x = Battery{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[6]
+	mi := &file_tourian_v1_robot_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -554,7 +623,7 @@ func (x *Battery) String() string {
 func (*Battery) ProtoMessage() {}
 
 func (x *Battery) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[6]
+	mi := &file_tourian_v1_robot_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -567,7 +636,7 @@ func (x *Battery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Battery.ProtoReflect.Descriptor instead.
 func (*Battery) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{6}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Battery) GetPercentage() float64 {
@@ -596,7 +665,7 @@ type Heartbeat struct {
 
 func (x *Heartbeat) Reset() {
 	*x = Heartbeat{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[7]
+	mi := &file_tourian_v1_robot_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -608,7 +677,7 @@ func (x *Heartbeat) String() string {
 func (*Heartbeat) ProtoMessage() {}
 
 func (x *Heartbeat) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[7]
+	mi := &file_tourian_v1_robot_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -621,7 +690,7 @@ func (x *Heartbeat) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Heartbeat.ProtoReflect.Descriptor instead.
 func (*Heartbeat) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{7}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Heartbeat) GetHeader() *Header {
@@ -656,7 +725,7 @@ type Stop struct {
 
 func (x *Stop) Reset() {
 	*x = Stop{}
-	mi := &file_tourian_v1_robot_proto_msgTypes[8]
+	mi := &file_tourian_v1_robot_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -668,7 +737,7 @@ func (x *Stop) String() string {
 func (*Stop) ProtoMessage() {}
 
 func (x *Stop) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_robot_proto_msgTypes[8]
+	mi := &file_tourian_v1_robot_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -681,7 +750,7 @@ func (x *Stop) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Stop.ProtoReflect.Descriptor instead.
 func (*Stop) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{8}
+	return file_tourian_v1_robot_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Stop) GetHeader() *Header {
@@ -729,7 +798,12 @@ const file_tourian_v1_robot_proto_rawDesc = "" +
 	"\x06header\x18\x01 \x01(\v2\x12.tourian.v1.HeaderR\x06header\x12\x19\n" +
 	"\brobot_id\x18\x02 \x01(\tR\arobotId\x12\x1a\n" +
 	"\bsequence\x18\x03 \x01(\x04R\bsequence\x12?\n" +
-	"\rcommand_stamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\fcommandStamp\"\xf5\x02\n" +
+	"\rcommand_stamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\fcommandStamp\"\xa1\x01\n" +
+	"\fJointCommand\x12*\n" +
+	"\x06header\x18\x01 \x01(\v2\x12.tourian.v1.HeaderR\x06header\x12\x19\n" +
+	"\brobot_id\x18\x02 \x01(\tR\arobotId\x12\x1a\n" +
+	"\bsequence\x18\x03 \x01(\x04R\bsequence\x12.\n" +
+	"\x06target\x18\x04 \x01(\v2\x16.tourian.v1.JointStateR\x06target\"\xf5\x02\n" +
 	"\vObservation\x12*\n" +
 	"\x06header\x18\x01 \x01(\v2\x12.tourian.v1.HeaderR\x06header\x12\x19\n" +
 	"\brobot_id\x18\x02 \x01(\tR\arobotId\x12$\n" +
@@ -782,45 +856,48 @@ func file_tourian_v1_robot_proto_rawDescGZIP() []byte {
 }
 
 var file_tourian_v1_robot_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_tourian_v1_robot_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_tourian_v1_robot_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_tourian_v1_robot_proto_goTypes = []any{
 	(HaltReason)(0),               // 0: tourian.v1.HaltReason
 	(*Capabilities)(nil),          // 1: tourian.v1.Capabilities
 	(*VelocityLimits)(nil),        // 2: tourian.v1.VelocityLimits
 	(*VelocityCommand)(nil),       // 3: tourian.v1.VelocityCommand
 	(*CommandAck)(nil),            // 4: tourian.v1.CommandAck
-	(*Observation)(nil),           // 5: tourian.v1.Observation
-	(*JointState)(nil),            // 6: tourian.v1.JointState
-	(*Battery)(nil),               // 7: tourian.v1.Battery
-	(*Heartbeat)(nil),             // 8: tourian.v1.Heartbeat
-	(*Stop)(nil),                  // 9: tourian.v1.Stop
-	(*durationpb.Duration)(nil),   // 10: google.protobuf.Duration
-	(*Header)(nil),                // 11: tourian.v1.Header
-	(*Twist)(nil),                 // 12: tourian.v1.Twist
-	(*timestamppb.Timestamp)(nil), // 13: google.protobuf.Timestamp
-	(*Pose)(nil),                  // 14: tourian.v1.Pose
+	(*JointCommand)(nil),          // 5: tourian.v1.JointCommand
+	(*Observation)(nil),           // 6: tourian.v1.Observation
+	(*JointState)(nil),            // 7: tourian.v1.JointState
+	(*Battery)(nil),               // 8: tourian.v1.Battery
+	(*Heartbeat)(nil),             // 9: tourian.v1.Heartbeat
+	(*Stop)(nil),                  // 10: tourian.v1.Stop
+	(*durationpb.Duration)(nil),   // 11: google.protobuf.Duration
+	(*Header)(nil),                // 12: tourian.v1.Header
+	(*Twist)(nil),                 // 13: tourian.v1.Twist
+	(*timestamppb.Timestamp)(nil), // 14: google.protobuf.Timestamp
+	(*Pose)(nil),                  // 15: tourian.v1.Pose
 }
 var file_tourian_v1_robot_proto_depIdxs = []int32{
 	2,  // 0: tourian.v1.Capabilities.velocity_limits:type_name -> tourian.v1.VelocityLimits
-	10, // 1: tourian.v1.Capabilities.command_timeout:type_name -> google.protobuf.Duration
-	10, // 2: tourian.v1.Capabilities.heartbeat_timeout:type_name -> google.protobuf.Duration
-	11, // 3: tourian.v1.VelocityCommand.header:type_name -> tourian.v1.Header
-	12, // 4: tourian.v1.VelocityCommand.twist:type_name -> tourian.v1.Twist
-	11, // 5: tourian.v1.CommandAck.header:type_name -> tourian.v1.Header
-	13, // 6: tourian.v1.CommandAck.command_stamp:type_name -> google.protobuf.Timestamp
-	11, // 7: tourian.v1.Observation.header:type_name -> tourian.v1.Header
-	14, // 8: tourian.v1.Observation.pose:type_name -> tourian.v1.Pose
-	12, // 9: tourian.v1.Observation.velocity:type_name -> tourian.v1.Twist
-	6,  // 10: tourian.v1.Observation.joints:type_name -> tourian.v1.JointState
-	7,  // 11: tourian.v1.Observation.battery:type_name -> tourian.v1.Battery
-	0,  // 12: tourian.v1.Observation.halt_reason:type_name -> tourian.v1.HaltReason
-	11, // 13: tourian.v1.Heartbeat.header:type_name -> tourian.v1.Header
-	11, // 14: tourian.v1.Stop.header:type_name -> tourian.v1.Header
-	15, // [15:15] is the sub-list for method output_type
-	15, // [15:15] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	11, // 1: tourian.v1.Capabilities.command_timeout:type_name -> google.protobuf.Duration
+	11, // 2: tourian.v1.Capabilities.heartbeat_timeout:type_name -> google.protobuf.Duration
+	12, // 3: tourian.v1.VelocityCommand.header:type_name -> tourian.v1.Header
+	13, // 4: tourian.v1.VelocityCommand.twist:type_name -> tourian.v1.Twist
+	12, // 5: tourian.v1.CommandAck.header:type_name -> tourian.v1.Header
+	14, // 6: tourian.v1.CommandAck.command_stamp:type_name -> google.protobuf.Timestamp
+	12, // 7: tourian.v1.JointCommand.header:type_name -> tourian.v1.Header
+	7,  // 8: tourian.v1.JointCommand.target:type_name -> tourian.v1.JointState
+	12, // 9: tourian.v1.Observation.header:type_name -> tourian.v1.Header
+	15, // 10: tourian.v1.Observation.pose:type_name -> tourian.v1.Pose
+	13, // 11: tourian.v1.Observation.velocity:type_name -> tourian.v1.Twist
+	7,  // 12: tourian.v1.Observation.joints:type_name -> tourian.v1.JointState
+	8,  // 13: tourian.v1.Observation.battery:type_name -> tourian.v1.Battery
+	0,  // 14: tourian.v1.Observation.halt_reason:type_name -> tourian.v1.HaltReason
+	12, // 15: tourian.v1.Heartbeat.header:type_name -> tourian.v1.Header
+	12, // 16: tourian.v1.Stop.header:type_name -> tourian.v1.Header
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_tourian_v1_robot_proto_init() }
@@ -836,7 +913,7 @@ func file_tourian_v1_robot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tourian_v1_robot_proto_rawDesc), len(file_tourian_v1_robot_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   9,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

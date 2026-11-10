@@ -247,6 +247,7 @@ type EpisodeFrame struct {
 	Action        *VelocityCommand       `protobuf:"bytes,4,opt,name=action,proto3" json:"action,omitempty"`
 	VideoSequence uint64                 `protobuf:"varint,5,opt,name=video_sequence,json=videoSequence,proto3" json:"video_sequence,omitempty"`
 	Controller    *Controller            `protobuf:"bytes,6,opt,name=controller,proto3" json:"controller,omitempty"`
+	JointAction   *JointCommand          `protobuf:"bytes,7,opt,name=joint_action,json=jointAction,proto3" json:"joint_action,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -319,6 +320,13 @@ func (x *EpisodeFrame) GetVideoSequence() uint64 {
 func (x *EpisodeFrame) GetController() *Controller {
 	if x != nil {
 		return x.Controller
+	}
+	return nil
+}
+
+func (x *EpisodeFrame) GetJointAction() *JointCommand {
+	if x != nil {
+		return x.JointAction
 	}
 	return nil
 }
@@ -558,7 +566,7 @@ const file_tourian_v1_episode_proto_rawDesc = "" +
 	"\n" +
 	"episode_id\x18\x01 \x01(\tR\tepisodeId\x12\x10\n" +
 	"\x03bad\x18\x02 \x01(\bR\x03bad\x12\x12\n" +
-	"\x04note\x18\x03 \x01(\tR\x04note\"\xa6\x02\n" +
+	"\x04note\x18\x03 \x01(\tR\x04note\"\xe3\x02\n" +
 	"\fEpisodeFrame\x12\x14\n" +
 	"\x05index\x18\x01 \x01(\x04R\x05index\x121\n" +
 	"\x06offset\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x06offset\x129\n" +
@@ -567,7 +575,8 @@ const file_tourian_v1_episode_proto_rawDesc = "" +
 	"\x0evideo_sequence\x18\x05 \x01(\x04R\rvideoSequence\x126\n" +
 	"\n" +
 	"controller\x18\x06 \x01(\v2\x16.tourian.v1.ControllerR\n" +
-	"controller\"\x9f\x01\n" +
+	"controller\x12;\n" +
+	"\fjoint_action\x18\a \x01(\v2\x18.tourian.v1.JointCommandR\vjointAction\"\x9f\x01\n" +
 	"\fEpisodeVideo\x12\x1a\n" +
 	"\bsequence\x18\x01 \x01(\x04R\bsequence\x121\n" +
 	"\x06offset\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x06offset\x12\x12\n" +
@@ -618,6 +627,7 @@ var file_tourian_v1_episode_proto_goTypes = []any{
 	(*Observation)(nil),           // 8: tourian.v1.Observation
 	(*VelocityCommand)(nil),       // 9: tourian.v1.VelocityCommand
 	(*Controller)(nil),            // 10: tourian.v1.Controller
+	(*JointCommand)(nil),          // 11: tourian.v1.JointCommand
 }
 var file_tourian_v1_episode_proto_depIdxs = []int32{
 	6,  // 0: tourian.v1.EpisodeStatus.started_at:type_name -> google.protobuf.Timestamp
@@ -625,14 +635,15 @@ var file_tourian_v1_episode_proto_depIdxs = []int32{
 	8,  // 2: tourian.v1.EpisodeFrame.observation:type_name -> tourian.v1.Observation
 	9,  // 3: tourian.v1.EpisodeFrame.action:type_name -> tourian.v1.VelocityCommand
 	10, // 4: tourian.v1.EpisodeFrame.controller:type_name -> tourian.v1.Controller
-	7,  // 5: tourian.v1.EpisodeVideo.offset:type_name -> google.protobuf.Duration
-	6,  // 6: tourian.v1.Episode.started_at:type_name -> google.protobuf.Timestamp
-	6,  // 7: tourian.v1.Episode.ended_at:type_name -> google.protobuf.Timestamp
-	8,  // [8:8] is the sub-list for method output_type
-	8,  // [8:8] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	11, // 5: tourian.v1.EpisodeFrame.joint_action:type_name -> tourian.v1.JointCommand
+	7,  // 6: tourian.v1.EpisodeVideo.offset:type_name -> google.protobuf.Duration
+	6,  // 7: tourian.v1.Episode.started_at:type_name -> google.protobuf.Timestamp
+	6,  // 8: tourian.v1.Episode.ended_at:type_name -> google.protobuf.Timestamp
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_tourian_v1_episode_proto_init() }
