@@ -46,6 +46,10 @@ test:  ## Run the Go and console unit tests
 	go test ./...
 	npm test --workspace console
 
+.PHONY: contract
+contract:  ## Run the contract tests against every robot adapter
+	go test -run TestContract -count=1 ./emmi/...
+
 .PHONY: run
 run:  ## Run the platform with the simulated robot in-process
 	go run ./cmd/tourian -sim
@@ -73,7 +77,7 @@ lint:  ## Lint and check formatting across the repository
 	npx markdownlint-cli2
 
 .PHONY: ci
-ci: lint generate-check test build  ## Everything hosted CI runs
+ci: lint generate-check test build contract  ## Everything hosted CI runs
 
 ##@ Docs
 
