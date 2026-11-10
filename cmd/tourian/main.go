@@ -18,6 +18,7 @@ import (
 	"github.com/vlumi/tourian/emmi/zebes"
 	"github.com/vlumi/tourian/episode"
 	"github.com/vlumi/tourian/episode/lerobot"
+	"github.com/vlumi/tourian/episode/mcap"
 	"github.com/vlumi/tourian/hub"
 	"github.com/vlumi/tourian/motherbrain"
 	"github.com/vlumi/tourian/motherbrain/policy"
@@ -33,6 +34,7 @@ func main() {
 	sims := flag.Int("sims", 1, "how many simulated robots -sim runs, each with its own id and start pose")
 	data := flag.String("data", "data", "directory the episodes are recorded under")
 	dataset := flag.String("lerobot", "tourian", "name of the LeRobot dataset written under the data directory, empty for none")
+	writeMcap := flag.Bool("mcap", true, "also write each episode as an MCAP file for Foxglove under the data directory")
 	policyURL := flag.String("policy", "", "URL of a policy server to offer as a controller, such as http://localhost:8091")
 	flag.Parse()
 
@@ -44,6 +46,9 @@ func main() {
 	sinks := []episode.Sink{episode.NewJSONL(episodes)}
 	if *dataset != "" {
 		sinks = append(sinks, lerobot.New(filepath.Join(*data, "lerobot", *dataset), observationsPerSecond))
+	}
+	if *writeMcap {
+		sinks = append(sinks, mcap.New(filepath.Join(*data, "mcap")))
 	}
 	configs := config.NewStore(filepath.Join(*data, "config"), time.Now)
 	recorder := episode.NewRecorder(h, time.Now, sinks...).WithConfigs(configs)
