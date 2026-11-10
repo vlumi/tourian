@@ -1,0 +1,68 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0f0a;
+  --fg: #e6f5c8;
+  --dim: #8fa07a;
+  --accent: #8fd400;
+  --panel: #141a11;
+  --border: #22301b;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+h2 {
+  margin: 2.5rem 0 0.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+p {
+  line-height: 1.5;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+li {
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+li span {
+  color: var(--dim);
+}
