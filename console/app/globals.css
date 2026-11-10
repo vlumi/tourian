@@ -35,12 +35,17 @@ body {
 }
 
 header {
-  grid-area: header;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.5rem;
   padding: 0 1rem;
   border-bottom: 1px solid var(--border);
+}
+
+.room > header {
+  grid-area: header;
 }
 
 h1 {
@@ -79,6 +84,115 @@ button.engaged {
 button.stop {
   border-color: var(--danger);
   color: var(--danger);
+}
+
+button.recording,
+button.bad {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--bg);
+}
+
+.record {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  margin-right: 1rem;
+}
+
+.record input {
+  font: inherit;
+  width: 10rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.record .episode {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--dim);
+}
+
+.record .episode button {
+  padding: 0.1rem 0.6rem;
+  font-size: 0.85em;
+}
+
+.record a,
+.episodes a,
+.replay a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.episodes,
+.replay {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.episodes table {
+  margin: 1rem;
+  border-collapse: collapse;
+}
+
+.episodes th,
+.episodes td {
+  text-align: left;
+  padding: 0.4rem 1rem 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.episodes th {
+  font-weight: normal;
+  color: var(--dim);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.episodes tr.bad td {
+  color: var(--dim);
+}
+
+.replay-scene {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 0;
+}
+
+.replay-scene .video-frame {
+  border-left: 1px solid var(--border);
+}
+
+.replay-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.replay-bar input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.replay-bar .value {
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.replay header .episode {
+  color: var(--dim);
+  text-align: right;
 }
 
 .scene {

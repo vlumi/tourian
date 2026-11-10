@@ -28,13 +28,14 @@ func main() {
 	defer stop()
 
 	h := hub.New()
-	recorder := episode.NewRecorder(filepath.Join(*data, "episodes"), h, time.Now)
+	episodes := filepath.Join(*data, "episodes")
+	recorder := episode.NewRecorder(episodes, h, time.Now)
 	h.AddTap(recorder.Tap)
 	go recorder.Run(ctx)
 
 	server := &http.Server{
 		Addr:              *addr,
-		Handler:           newHandler(h),
+		Handler:           newHandler(h, episodes),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	go func() {

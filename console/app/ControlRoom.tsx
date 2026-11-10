@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { startDriver, toggleEngaged, emergencyStop } from '@/drive/driver'
 import { connect } from '@/platform/connection'
 import { useStore } from '@/platform/store'
+import { RecordControls } from '@/record/RecordControls'
 import { TelemetryPanel } from '@/telemetry/TelemetryPanel'
 import { VideoView } from '@/video/VideoView'
 import { WorldCanvas } from '@/world/WorldCanvas'
@@ -27,6 +28,7 @@ export function ControlRoom() {
     <div className="room">
       <header>
         <h1>tourian</h1>
+        <RecordControls />
         <div className="controls">
           <button type="button" onClick={toggleEngaged} disabled={!robot} className={engaged ? 'engaged' : ''}>
             {engaged ? 'Release' : 'Engage'}

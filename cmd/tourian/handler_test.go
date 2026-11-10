@@ -9,7 +9,7 @@ import (
 )
 
 func TestHealthz(t *testing.T) {
-	server := httptest.NewServer(newHandler(hub.New()))
+	server := httptest.NewServer(newHandler(hub.New(), t.TempDir()))
 	defer server.Close()
 
 	response, err := http.Get(server.URL + "/healthz")

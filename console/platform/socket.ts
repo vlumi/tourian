@@ -15,6 +15,11 @@ export function platformBase(): string {
   return process.env.NEXT_PUBLIC_TOURIAN_URL ?? 'ws://localhost:8080'
 }
 
+// The same platform over HTTP, for what is fetched rather than streamed.
+export function platformHttp(): string {
+  return platformBase().replace(/^ws/, 'http')
+}
+
 // Keeps a WebSocket to the platform open, reconnecting after a pause, until closed.
 export function openSocket(url: string, handlers: Handlers): Socket {
   let closed = false

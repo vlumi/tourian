@@ -1,4 +1,5 @@
 import type { Capabilities, Observation } from '@tourian/contract/tourian/v1/robot_pb'
+import type { EpisodeStatus } from '@tourian/contract/tourian/v1/episode_pb'
 import type { CameraAnnounce } from '@tourian/contract/tourian/v1/video_pb'
 import { HaltReason } from '@tourian/contract/tourian/v1/robot_pb'
 import { create } from 'zustand'
@@ -19,6 +20,8 @@ export type State = {
   robots: Record<string, Capabilities>
   cameras: Record<string, CameraAnnounce>
   videoPath: VideoPath
+  episode?: EpisodeStatus
+  episodeBad: boolean
   selected?: string
   observation?: Observation
   trail: Point[]
@@ -32,6 +35,8 @@ export type State = {
   addRobot: (capabilities: Capabilities) => void
   addCamera: (announce: CameraAnnounce) => void
   setVideoPath: (path: VideoPath) => void
+  setEpisode: (status: EpisodeStatus) => void
+  setEpisodeBad: (bad: boolean) => void
   observe: (observation: Observation) => void
   recordLatency: (ms: number) => void
   engage: () => void
@@ -46,6 +51,7 @@ export const useStore = create<State>()((set) => ({
   robots: {},
   cameras: {},
   videoPath: 'webrtc',
+  episodeBad: false,
   trail: [],
   history: { speed: [], angular: [], battery: [], latency: [] },
   engaged: false,
@@ -61,6 +67,13 @@ export const useStore = create<State>()((set) => ({
     })),
   addCamera: (announce) => set((state) => ({ cameras: { ...state.cameras, [announce.robotId]: announce } })),
   setVideoPath: (videoPath) => set({ videoPath }),
+  setEpisode: (episode) =>
+    set((state) =>
+      episode.robotId === state.selected
+        ? { episode, episodeBad: episode.episodeId === state.episode?.episodeId ? state.episodeBad : false }
+        : {},
+    ),
+  setEpisodeBad: (episodeBad) => set({ episodeBad }),
   observe: (observation) =>
     set((state) => {
       if (observation.robotId !== state.selected) return {}
