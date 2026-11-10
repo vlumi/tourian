@@ -35,15 +35,27 @@ type twist struct {
 	Angular vector3 `json:"angular"`
 }
 
+// New starts the robot on a port of its own, for tests.
 func New() *Server {
-	s := &Server{topics: map[string]string{}}
-	s.server = httptest.NewServer(http.HandlerFunc(s.serve))
+	s := NewRobot()
+	s.server = httptest.NewServer(s)
 	return s
+}
+
+// NewRobot is the robot without a listener; it serves HTTP wherever it is mounted.
+func NewRobot() *Server {
+	return &Server{topics: map[string]string{}}
 }
 
 func (s *Server) URL() string { return "ws" + strings.TrimPrefix(s.server.URL, "http") }
 
-func (s *Server) Close() { s.server.Close() }
+func (s *Server) Close() {
+	if s.server != nil {
+		s.server.Close()
+	}
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) { s.serve(w, r) }
 
 // Command is the last twist received on /cmd_vel.
 func (s *Server) Command() (linear, angular float64) {
