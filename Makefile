@@ -47,8 +47,8 @@ test:  ## Run the Go and console unit tests
 	npm test --workspace console
 
 .PHONY: run
-run:  ## Run the platform
-	go run ./cmd/tourian
+run:  ## Run the platform with the simulated robot in-process
+	go run ./cmd/tourian -sim
 
 .PHONY: dev
 dev:  ## Run the console with live reload
