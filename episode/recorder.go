@@ -8,6 +8,7 @@ import (
 	"time"
 
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
+	"github.com/vlumi/tourian/hub"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -15,7 +16,7 @@ import (
 
 // Platform is what the recorder needs from the hub: a word to every console, and a robot's pictures.
 type Platform interface {
-	Broadcast(message proto.Message)
+	Publish(message proto.Message)
 	RequestVideo(robotID, peerID string, enabled bool)
 }
 
@@ -42,6 +43,7 @@ type Recorder struct {
 	inbox    chan *tourianv1.Envelope
 	dropped  atomic.Int64
 	active   map[string]*recording
+	holders  map[string]*tourianv1.Controller
 }
 
 type recording struct {
@@ -58,11 +60,12 @@ func NewRecorder(platform Platform, now func() time.Time, sinks ...Sink) *Record
 		now:      now,
 		inbox:    make(chan *tourianv1.Envelope, inboxDepth),
 		active:   map[string]*recording{},
+		holders:  map[string]*tourianv1.Controller{},
 	}
 }
 
 // Tap hands a message to the recorder without waiting; one that finds the inbox full is dropped and counted.
-func (r *Recorder) Tap(env *tourianv1.Envelope) {
+func (r *Recorder) Tap(_ hub.Source, env *tourianv1.Envelope) {
 	select {
 	case r.inbox <- env:
 	default:
@@ -85,7 +88,7 @@ func (r *Recorder) Run(ctx context.Context) {
 			r.Handle(env)
 		case <-ticker.C:
 			for _, rec := range r.active {
-				r.platform.Broadcast(r.status(rec, true))
+				r.platform.Publish(r.status(rec, true))
 			}
 		}
 	}
@@ -114,6 +117,8 @@ func (r *Recorder) Handle(env *tourianv1.Envelope) {
 		if rec := r.active[m.VideoFrame.GetRobotId()]; rec != nil {
 			r.picture(rec, m.VideoFrame)
 		}
+	case *tourianv1.Envelope_ControlState:
+		r.holders[m.ControlState.GetRobotId()] = m.ControlState.GetHolder()
 	}
 }
 
@@ -141,7 +146,7 @@ func (r *Recorder) start(request *tourianv1.RecordRequest) {
 	}
 	r.active[robotID] = rec
 	r.platform.RequestVideo(robotID, peerID, true)
-	r.platform.Broadcast(r.status(rec, true))
+	r.platform.Publish(r.status(rec, true))
 	log.Printf("episode: recording %s", id)
 }
 
@@ -158,7 +163,7 @@ func (r *Recorder) stop(robotID string) {
 			log.Printf("episode: closing %s: %v", rec.episode.GetId(), err)
 		}
 	}
-	r.platform.Broadcast(r.status(rec, false))
+	r.platform.Publish(r.status(rec, false))
 	log.Printf("episode: %s ended with %d frames and %d pictures", rec.episode.GetId(), rec.episode.GetFrames(), rec.episode.GetVideoFrames())
 }
 
@@ -169,6 +174,7 @@ func (r *Recorder) observe(rec *recording, observation *tourianv1.Observation) {
 		Observation:   observation,
 		Action:        rec.lastCommand,
 		VideoSequence: rec.lastVideo,
+		Controller:    r.holders[observation.GetRobotId()],
 	}
 	for _, sink := range r.sinks {
 		if err := sink.Frame(rec.episode, frame); err != nil {

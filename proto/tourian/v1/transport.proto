@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package tourian.v1;
 
+import "tourian/v1/control.proto";
 import "tourian/v1/episode.proto";
 import "tourian/v1/robot.proto";
 import "tourian/v1/video.proto";
@@ -23,5 +24,7 @@ message Envelope {
     RecordRequest record_request = 12;
     EpisodeStatus episode_status = 13;
     EpisodeFlag episode_flag = 14;
+    ControlState control_state = 15;
+    ControlRequest control_request = 16;
   }
 }

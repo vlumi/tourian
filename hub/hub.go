@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -28,12 +29,28 @@ type Hub struct {
 	consoles     map[string]*peer
 	capabilities map[string]*tourianv1.Capabilities
 	announces    map[string]*tourianv1.CameraAnnounce
+	retained     map[string]*tourianv1.Envelope
 	taps         map[int]Tap
 	nextTap      int
 }
 
-// A Tap sees every message the hub receives from any peer, before routing, on the receiving goroutine; it must not block.
-type Tap func(env *tourianv1.Envelope)
+// Where a message came from: a robot, a camera or a console by its id, or the platform itself.
+type Source struct {
+	Kind SourceKind
+	ID   string
+}
+
+type SourceKind int
+
+const (
+	SourceRobot SourceKind = iota
+	SourceCamera
+	SourceConsole
+	SourcePlatform
+)
+
+// A Tap sees every message the hub receives from any peer, before routing, and everything the platform publishes, on the sender's goroutine; it must not block.
+type Tap func(from Source, env *tourianv1.Envelope)
 
 func New() *Hub {
 	return &Hub{
@@ -42,6 +59,7 @@ func New() *Hub {
 		consoles:     map[string]*peer{},
 		capabilities: map[string]*tourianv1.Capabilities{},
 		announces:    map[string]*tourianv1.CameraAnnounce{},
+		retained:     map[string]*tourianv1.Envelope{},
 		taps:         map[int]Tap{},
 	}
 }
@@ -59,7 +77,7 @@ func (h *Hub) AddTap(tap Tap) (remove func()) {
 	}
 }
 
-func (h *Hub) tap(env *tourianv1.Envelope) {
+func (h *Hub) tap(from Source, env *tourianv1.Envelope) {
 	h.mu.Lock()
 	taps := make([]Tap, 0, len(h.taps))
 	for _, t := range h.taps {
@@ -67,17 +85,30 @@ func (h *Hub) tap(env *tourianv1.Envelope) {
 	}
 	h.mu.Unlock()
 	for _, t := range taps {
-		t(env)
+		t(from, env)
 	}
 }
 
-// Broadcast sends a message to every console, for parts of the platform that speak to consoles, like the recorder.
-func (h *Hub) Broadcast(message proto.Message) {
+// Publish is how the rest of the platform speaks: the message goes to every tap and every console, and the latest of its kind per robot is kept for consoles that join later.
+func (h *Hub) Publish(message proto.Message) {
 	env, err := ws.Wrap(message)
 	if err != nil {
 		return
 	}
-	h.broadcast(env)
+	h.tap(Source{Kind: SourcePlatform}, env)
+	h.mu.Lock()
+	h.retained[fmt.Sprintf("%T/%s", env.GetMessage(), ws.RobotID(env))] = env
+	for _, console := range h.consoles {
+		console.send(env)
+	}
+	h.mu.Unlock()
+}
+
+// SendToRobot delivers a message to a robot on behalf of a part of the platform, like a controller that holds it.
+func (h *Hub) SendToRobot(robotID string, message proto.Message) {
+	if robot := h.robot(robotID); robot != nil {
+		robot.send(message)
+	}
 }
 
 // RequestVideo asks a robot's camera for frames on behalf of a part of the platform named by peerID.
@@ -101,6 +132,7 @@ func (h *Hub) ServeRobot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := env.GetCapabilities().GetRobotId()
+	h.tap(Source{Kind: SourceRobot, ID: id}, env)
 	h.announceRobot(id, p, env)
 	defer h.leaveRobot(id, p)
 	log.Printf("hub: robot %q connected from %s", id, r.RemoteAddr)
@@ -111,7 +143,7 @@ func (h *Hub) ServeRobot(w http.ResponseWriter, r *http.Request) {
 			log.Printf("hub: robot %q disconnected: %v", id, err)
 			return
 		}
-		h.tap(env)
+		h.tap(Source{Kind: SourceRobot, ID: id}, env)
 		switch env.GetMessage().(type) {
 		case *tourianv1.Envelope_Observation, *tourianv1.Envelope_CommandAck:
 			h.broadcast(env)
@@ -145,7 +177,7 @@ func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
 			log.Printf("hub: camera for %q disconnected: %v", id, err)
 			return
 		}
-		h.tap(env)
+		h.tap(Source{Kind: SourceCamera, ID: id}, env)
 		switch env.GetMessage().(type) {
 		case *tourianv1.Envelope_VideoFrame:
 			h.broadcast(env)
@@ -177,7 +209,7 @@ func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
 			log.Printf("hub: console %s disconnected: %v", id, err)
 			return
 		}
-		h.tap(env)
+		h.tap(Source{Kind: SourceConsole, ID: id}, env)
 		switch env.GetMessage().(type) {
 		case *tourianv1.Envelope_VelocityCommand, *tourianv1.Envelope_Heartbeat, *tourianv1.Envelope_Stop:
 			if robot := h.robot(ws.RobotID(env)); robot != nil {
@@ -246,6 +278,9 @@ func (h *Hub) join(id string, p *peer) {
 	}
 	for _, announce := range h.announces {
 		p.send(announce)
+	}
+	for _, env := range h.retained {
+		p.send(env)
 	}
 }
 

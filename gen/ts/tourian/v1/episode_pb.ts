@@ -6,6 +6,8 @@ import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Duration, Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_duration, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
+import type { Controller } from "./control_pb";
+import { file_tourian_v1_control } from "./control_pb";
 import type { Observation, VelocityCommand } from "./robot_pb";
 import { file_tourian_v1_robot } from "./robot_pb";
 import type { Message } from "@bufbuild/protobuf";
@@ -14,7 +16,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file tourian/v1/episode.proto.
  */
 export const file_tourian_v1_episode: GenFile = /*@__PURE__*/
-  fileDesc("Chh0b3VyaWFuL3YxL2VwaXNvZGUucHJvdG8SCnRvdXJpYW4udjEiPgoNUmVjb3JkUmVxdWVzdBIQCghyb2JvdF9pZBgBIAEoCRINCgVzdGFydBgCIAEoCBIMCgR0YXNrGAMgASgJIp4BCg1FcGlzb2RlU3RhdHVzEhAKCHJvYm90X2lkGAEgASgJEhIKCmVwaXNvZGVfaWQYAiABKAkSEQoJcmVjb3JkaW5nGAMgASgIEi4KCnN0YXJ0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg4KBmZyYW1lcxgFIAEoBBIUCgx2aWRlb19mcmFtZXMYBiABKAQiPAoLRXBpc29kZUZsYWcSEgoKZXBpc29kZV9pZBgBIAEoCRILCgNiYWQYAiABKAgSDAoEbm90ZRgDIAEoCSK7AQoMRXBpc29kZUZyYW1lEg0KBWluZGV4GAEgASgEEikKBm9mZnNldBgCIAEoCzIZLmdvb2dsZS5wcm90b2J1Zi5EdXJhdGlvbhIsCgtvYnNlcnZhdGlvbhgDIAEoCzIXLnRvdXJpYW4udjEuT2JzZXJ2YXRpb24SKwoGYWN0aW9uGAQgASgLMhsudG91cmlhbi52MS5WZWxvY2l0eUNvbW1hbmQSFgoOdmlkZW9fc2VxdWVuY2UYBSABKAQieAoMRXBpc29kZVZpZGVvEhAKCHNlcXVlbmNlGAEgASgEEikKBm9mZnNldBgCIAEoCzIZLmdvb2dsZS5wcm90b2J1Zi5EdXJhdGlvbhIMCgRmaWxlGAMgASgJEg0KBXdpZHRoGAQgASgNEg4KBmhlaWdodBgFIAEoDSLUAQoHRXBpc29kZRIKCgJpZBgBIAEoCRIQCghyb2JvdF9pZBgCIAEoCRIMCgR0YXNrGAMgASgJEi4KCnN0YXJ0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiwKCGVuZGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIOCgZmcmFtZXMYBiABKAQSFAoMdmlkZW9fZnJhbWVzGAcgASgEEgsKA2JhZBgIIAEoCBIMCgRub3RlGAkgASgJQp0BCg5jb20udG91cmlhbi52MUIMRXBpc29kZVByb3RvUAFaNGdpdGh1Yi5jb20vdmx1bWkvdG91cmlhbi9nZW4vZ28vdG91cmlhbi92MTt0b3VyaWFudjGiAgNUWFiqAgpUb3VyaWFuLlYxygIKVG91cmlhblxWMeICFlRvdXJpYW5cVjFcR1BCTWV0YWRhdGHqAgtUb3VyaWFuOjpWMWIGcHJvdG8z", [file_google_protobuf_duration, file_google_protobuf_timestamp, file_tourian_v1_robot]);
+  fileDesc("Chh0b3VyaWFuL3YxL2VwaXNvZGUucHJvdG8SCnRvdXJpYW4udjEiPgoNUmVjb3JkUmVxdWVzdBIQCghyb2JvdF9pZBgBIAEoCRINCgVzdGFydBgCIAEoCBIMCgR0YXNrGAMgASgJIp4BCg1FcGlzb2RlU3RhdHVzEhAKCHJvYm90X2lkGAEgASgJEhIKCmVwaXNvZGVfaWQYAiABKAkSEQoJcmVjb3JkaW5nGAMgASgIEi4KCnN0YXJ0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg4KBmZyYW1lcxgFIAEoBBIUCgx2aWRlb19mcmFtZXMYBiABKAQiPAoLRXBpc29kZUZsYWcSEgoKZXBpc29kZV9pZBgBIAEoCRILCgNiYWQYAiABKAgSDAoEbm90ZRgDIAEoCSLnAQoMRXBpc29kZUZyYW1lEg0KBWluZGV4GAEgASgEEikKBm9mZnNldBgCIAEoCzIZLmdvb2dsZS5wcm90b2J1Zi5EdXJhdGlvbhIsCgtvYnNlcnZhdGlvbhgDIAEoCzIXLnRvdXJpYW4udjEuT2JzZXJ2YXRpb24SKwoGYWN0aW9uGAQgASgLMhsudG91cmlhbi52MS5WZWxvY2l0eUNvbW1hbmQSFgoOdmlkZW9fc2VxdWVuY2UYBSABKAQSKgoKY29udHJvbGxlchgGIAEoCzIWLnRvdXJpYW4udjEuQ29udHJvbGxlciJ4CgxFcGlzb2RlVmlkZW8SEAoIc2VxdWVuY2UYASABKAQSKQoGb2Zmc2V0GAIgASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uEgwKBGZpbGUYAyABKAkSDQoFd2lkdGgYBCABKA0SDgoGaGVpZ2h0GAUgASgNItQBCgdFcGlzb2RlEgoKAmlkGAEgASgJEhAKCHJvYm90X2lkGAIgASgJEgwKBHRhc2sYAyABKAkSLgoKc3RhcnRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLAoIZW5kZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg4KBmZyYW1lcxgGIAEoBBIUCgx2aWRlb19mcmFtZXMYByABKAQSCwoDYmFkGAggASgIEgwKBG5vdGUYCSABKAlCnQEKDmNvbS50b3VyaWFuLnYxQgxFcGlzb2RlUHJvdG9QAVo0Z2l0aHViLmNvbS92bHVtaS90b3VyaWFuL2dlbi9nby90b3VyaWFuL3YxO3RvdXJpYW52MaICA1RYWKoCClRvdXJpYW4uVjHKAgpUb3VyaWFuXFYx4gIWVG91cmlhblxWMVxHUEJNZXRhZGF0YeoCC1RvdXJpYW46OlYxYgZwcm90bzM", [file_google_protobuf_duration, file_google_protobuf_timestamp, file_tourian_v1_control, file_tourian_v1_robot]);
 
 /**
  * A console asking the platform to start or stop recording a robot.
@@ -119,7 +121,7 @@ export const EpisodeFlagSchema: GenMessage<EpisodeFlag> = /*@__PURE__*/
   messageDesc(file_tourian_v1_episode, 2);
 
 /**
- * One row of an episode: the observation at that instant, the action in force and the latest picture, as every sink writes it.
+ * One row of an episode: the observation at that instant, the action in force, the latest picture and who was at the controls, as every sink writes it.
  *
  * @generated from message tourian.v1.EpisodeFrame
  */
@@ -148,6 +150,11 @@ export type EpisodeFrame = Message<"tourian.v1.EpisodeFrame"> & {
    * @generated from field: uint64 video_sequence = 5;
    */
   videoSequence: bigint;
+
+  /**
+   * @generated from field: tourian.v1.Controller controller = 6;
+   */
+  controller?: Controller | undefined;
 };
 
 /**

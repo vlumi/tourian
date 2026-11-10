@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package tourian.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// What kind of thing is at the controls.
+enum ControllerKind {
+  CONTROLLER_KIND_UNSPECIFIED = 0;
+  CONTROLLER_KIND_OPERATOR = 1;
+  CONTROLLER_KIND_SCRIPT = 2;
+  CONTROLLER_KIND_POLICY = 3;
+}
+
+message Controller {
+  string id = 1;
+  ControllerKind kind = 2;
+  string name = 3;
+}
+
+// Who holds a robot, since when, and who else could; sent to every console on each change of hands.
+message ControlState {
+  string robot_id = 1;
+  Controller holder = 2;
+  google.protobuf.Timestamp since = 3;
+  repeated Controller available = 4;
+}
+
+// A console asking for a robot to be handed to a controller, or released back to whoever held it before the operator took over.
+message ControlRequest {
+  string robot_id = 1;
+  string controller_id = 2;
+  bool release = 3;
+}

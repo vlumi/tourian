@@ -4,6 +4,7 @@ package tourian.v1;
 
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "tourian/v1/control.proto";
 import "tourian/v1/robot.proto";
 
 // A console asking the platform to start or stop recording a robot.
@@ -30,13 +31,14 @@ message EpisodeFlag {
   string note = 3;
 }
 
-// One row of an episode: the observation at that instant, the action in force and the latest picture, as every sink writes it.
+// One row of an episode: the observation at that instant, the action in force, the latest picture and who was at the controls, as every sink writes it.
 message EpisodeFrame {
   uint64 index = 1;
   google.protobuf.Duration offset = 2;
   Observation observation = 3;
   VelocityCommand action = 4;
   uint64 video_sequence = 5;
+  Controller controller = 6;
 }
 
 // One picture of an episode's video, as a sink that keeps pictures as files indexes it.

@@ -17,6 +17,9 @@ import (
 	"github.com/vlumi/tourian/episode"
 	"github.com/vlumi/tourian/episode/lerobot"
 	"github.com/vlumi/tourian/hub"
+	"github.com/vlumi/tourian/motherbrain"
+	"github.com/vlumi/tourian/motherbrain/policy"
+	"github.com/vlumi/tourian/motherbrain/script"
 )
 
 // The simulator observes at this rate, which becomes the dataset's frame rate.
@@ -27,6 +30,7 @@ func main() {
 	sim := flag.Bool("sim", false, "also run the simulated robot in this process, connected to this platform")
 	data := flag.String("data", "data", "directory the episodes are recorded under")
 	dataset := flag.String("lerobot", "tourian", "name of the LeRobot dataset written under the data directory, empty for none")
+	policyURL := flag.String("policy", "", "URL of a policy server to offer as a controller, such as http://localhost:8091")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -41,6 +45,14 @@ func main() {
 	recorder := episode.NewRecorder(h, time.Now, sinks...)
 	h.AddTap(recorder.Tap)
 	go recorder.Run(ctx)
+
+	controllers := []motherbrain.Controller{script.Square{}}
+	if *policyURL != "" {
+		controllers = append(controllers, policy.New(*policyURL))
+	}
+	arbiter := motherbrain.NewArbiter(h, time.Now, controllers...)
+	h.AddTap(arbiter.Tap)
+	go arbiter.Run(ctx)
 
 	server := &http.Server{
 		Addr:              *addr,
