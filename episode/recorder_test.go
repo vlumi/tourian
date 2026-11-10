@@ -19,6 +19,18 @@ type fakePlatform struct {
 	requests   []string
 }
 
+type fakeConfigs struct{}
+
+func (fakeConfigs) LatestRobot(string) *tourianv1.RobotConfig {
+	return &tourianv1.RobotConfig{Version: 3}
+}
+func (fakeConfigs) LatestTask(id string) *tourianv1.TaskConfig {
+	if id != "square" {
+		return nil
+	}
+	return &tourianv1.TaskConfig{TaskId: id, Version: 2, Name: "Drive a square"}
+}
+
 func (p *fakePlatform) Publish(message proto.Message) { p.broadcasts = append(p.broadcasts, message) }
 func (p *fakePlatform) RequestVideo(robotID, peerID string, enabled bool) {
 	state := "off"
@@ -41,9 +53,9 @@ func TestRecordsAnEpisode(t *testing.T) {
 	root := t.TempDir()
 	platform := &fakePlatform{}
 	clock := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
-	recorder := NewRecorder(platform, func() time.Time { return clock }, NewJSONL(root))
+	recorder := NewRecorder(platform, func() time.Time { return clock }, NewJSONL(root)).WithConfigs(fakeConfigs{})
 
-	recorder.Handle(wrap(t, &tourianv1.RecordRequest{RobotId: "r1", Start: true, Task: "drive a square"}))
+	recorder.Handle(wrap(t, &tourianv1.RecordRequest{RobotId: "r1", Start: true, TaskId: "square"}))
 	if len(platform.requests) != 1 || platform.requests[0] != "r1:recorder:on" {
 		t.Fatalf("video should be requested on start, got %v", platform.requests)
 	}
@@ -73,8 +85,11 @@ func TestRecordsAnEpisode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if episode.GetFrames() != 3 || episode.GetVideoFrames() != 1 || episode.GetTask() != "drive a square" || episode.GetEndedAt().AsTime().Sub(episode.GetStartedAt().AsTime()) != time.Second {
+	if episode.GetFrames() != 3 || episode.GetVideoFrames() != 1 || episode.GetTask() != "Drive a square" || episode.GetEndedAt().AsTime().Sub(episode.GetStartedAt().AsTime()) != time.Second {
 		t.Errorf("episode = %v", episode)
+	}
+	if episode.GetRobotConfigVersion() != 3 || episode.GetTaskId() != "square" || episode.GetTaskConfigVersion() != 2 {
+		t.Errorf("configuration versions = %d / %s v%d", episode.GetRobotConfigVersion(), episode.GetTaskId(), episode.GetTaskConfigVersion())
 	}
 
 	frames := readFrames(t, filepath.Join(dir, framesFile))
