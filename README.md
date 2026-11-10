@@ -8,7 +8,7 @@ It is an experiment for understanding the domain by building it, not a product. 
 
 **The name:** Tourian is the sector of planet Zebes where Mother Brain sits. The brain is the controller, whoever holds it; the sector is the platform. The components keep the theme: `motherbrain` for the controller that holds a robot, `emmi` for the robot adapters, `zebes` for the simulated world, `samus` for the operator. Named after locations and characters in Nintendo's Metroid series; not affiliated with or endorsed by Nintendo.
 
-**Status:** bootstrapped 2026-11-10; the toolchain and the first contract are in, nothing drives yet. [SCOPE.md](SCOPE.md) is the plan, [ARCHITECTURE.md](ARCHITECTURE.md) will explain how it works as it gets built, [AGENTS.md](AGENTS.md) how to work on it.
+**Status:** bootstrapped 2026-11-10; the simulated robot drives from the console over WebSocket, with the safety behaviors in the robot (M1). [SCOPE.md](SCOPE.md) is the plan, [ARCHITECTURE.md](ARCHITECTURE.md) will explain how it works as it gets built, [AGENTS.md](AGENTS.md) how to work on it.
 
 ## What it will do
 
@@ -23,6 +23,10 @@ It is an experiment for understanding the domain by building it, not a product. 
 **Many.** A fleet view with every robot's state, who holds it and its latest frame, and versioned configurations for robots and tasks.
 
 **Real.** A ROS 2 robot through rosbridge, episodes exported as MCAP for Foxglove, and a physical arm behind the same contract.
+
+## Running it
+
+`make run` starts the platform on port 8080 with the simulated robot in-process; `make dev` serves the console on port 3000, which reaches the platform at the address in `.env` (see `.env.example`). Press Enter in the console to engage, drive with the keys or a gamepad, Space for the emergency stop. `go run ./cmd/zebes` runs the simulator as a separate process against a platform started without `-sim`.
 
 ## License
 
