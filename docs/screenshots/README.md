@@ -2,6 +2,12 @@
 
 One capture per milestone, taken with `make screenshot` (which builds and serves the console and runs [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs) against it), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates.
 
+## 2026-11-10 · Real
+
+![Three kinds of robot in the fleet](006-real.png)
+
+Three kinds of robot under one platform, each behind the same contract: the arm through its Python sidecar, the simulated ROS 2 robot through the rosbridge adapter, and the simulator. The ROS robot is selected and driven by the operator; its odometry, joint and battery topics show in the panel like any robot's.
+
 ## 2026-11-10 · Many
 
 ![Two robots in the fleet](005-fleet.png)
