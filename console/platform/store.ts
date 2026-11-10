@@ -20,6 +20,9 @@ export type State = {
   status: Status
   robots: Record<string, Capabilities>
   cameras: Record<string, CameraAnnounce>
+  observations: Record<string, Observation>
+  controls: Record<string, ControlState>
+  episodes: Record<string, EpisodeStatus>
   videoPath: VideoPath
   episode?: EpisodeStatus
   episodeBad: boolean
@@ -35,6 +38,7 @@ export type State = {
 
   setStatus: (status: Status) => void
   addRobot: (capabilities: Capabilities) => void
+  select: (robotId: string) => void
   addCamera: (announce: CameraAnnounce) => void
   setVideoPath: (path: VideoPath) => void
   setEpisode: (status: EpisodeStatus) => void
@@ -53,6 +57,9 @@ export const useStore = create<State>()((set) => ({
   status: 'connecting',
   robots: {},
   cameras: {},
+  observations: {},
+  controls: {},
+  episodes: {},
   videoPath: 'webrtc',
   episodeBad: false,
   trail: [],
@@ -68,22 +75,43 @@ export const useStore = create<State>()((set) => ({
       robots: { ...state.robots, [capabilities.robotId]: capabilities },
       selected: state.selected ?? capabilities.robotId,
     })),
+  // Selecting another robot starts its trail and history afresh; what the fleet already knows about it is carried over.
+  select: (robotId) =>
+    set((state) => ({
+      selected: robotId,
+      engaged: false,
+      stopped: false,
+      observation: state.observations[robotId],
+      control: state.controls[robotId],
+      episode: state.episodes[robotId],
+      episodeBad: false,
+      trail: [],
+      history: { speed: [], angular: [], battery: [], latency: [] },
+      latencyMs: undefined,
+    })),
   addCamera: (announce) => set((state) => ({ cameras: { ...state.cameras, [announce.robotId]: announce } })),
   setVideoPath: (videoPath) => set({ videoPath }),
   setEpisode: (episode) =>
-    set((state) =>
-      episode.robotId === state.selected
+    set((state) => ({
+      episodes: { ...state.episodes, [episode.robotId]: episode },
+      ...(episode.robotId === state.selected
         ? { episode, episodeBad: episode.episodeId === state.episode?.episodeId ? state.episodeBad : false }
-        : {},
-    ),
+        : {}),
+    })),
   setEpisodeBad: (episodeBad) => set({ episodeBad }),
-  setControl: (control) => set((state) => (control.robotId === state.selected ? { control } : {})),
+  setControl: (control) =>
+    set((state) => ({
+      controls: { ...state.controls, [control.robotId]: control },
+      ...(control.robotId === state.selected ? { control } : {}),
+    })),
   observe: (observation) =>
     set((state) => {
-      if (observation.robotId !== state.selected) return {}
+      const observations = { ...state.observations, [observation.robotId]: observation }
+      if (observation.robotId !== state.selected) return { observations }
       const position = observation.pose?.position
       const trail = position ? push(state.trail, { x: position.x, y: position.y }, trailLength) : state.trail
       return {
+        observations,
         observation,
         trail,
         history: {

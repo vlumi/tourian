@@ -198,8 +198,53 @@ button.bad {
 .scene {
   grid-area: world;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
   min-height: 0;
+}
+
+.fleet {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.fleet-card {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  grid-template-rows: auto auto auto;
+  column-gap: 0.6rem;
+  row-gap: 0.1rem;
+  align-items: center;
+  text-align: left;
+  min-width: 14rem;
+  padding: 0.4rem 0.6rem;
+}
+
+.fleet-card.selected {
+  border-color: var(--accent);
+}
+
+.fleet-card img {
+  grid-row: 1 / 4;
+  width: 4rem;
+  height: 3rem;
+  object-fit: cover;
+  background: #000;
+  border-radius: 0.25rem;
+}
+
+.fleet-name {
+  color: var(--accent);
+}
+
+.fleet-line {
+  color: var(--dim);
+  font-size: 0.85em;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
 }
 
 .world {

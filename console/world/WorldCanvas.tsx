@@ -11,13 +11,18 @@ export function WorldCanvas() {
     const canvas = canvasRef.current
     if (!canvas) return
     const drawing = startCanvasDrawing(canvas, (context, width, height) => {
-      const { observation, trail, engaged } = useStore.getState()
+      const { observation, observations, selected, trail, engaged } = useStore.getState()
       const position = observation?.pose?.position
+      const others = Object.entries(observations).flatMap(([id, other]) => {
+        const p = other.pose?.position
+        return id !== selected && p ? [{ position: { x: p.x, y: p.y }, heading: heading(other) }] : []
+      })
       renderWorld(context, width, height, {
         position: position ? { x: position.x, y: position.y } : undefined,
         heading: heading(observation),
         trail,
         active: engaged,
+        others,
       })
     })
     const unsubscribe = useStore.subscribe(drawing.schedule)
