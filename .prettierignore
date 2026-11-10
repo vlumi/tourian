@@ -1,0 +1,8 @@
+node_modules
+.next
+out
+bin
+gen
+data
+package-lock.json
+*.md
