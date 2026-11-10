@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package tourian.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "tourian/v1/robot.proto";
+
+// A console asking the platform to start or stop recording a robot.
+message RecordRequest {
+  string robot_id = 1;
+  bool start = 2;
+  string task = 3;
+}
+
+// What the platform is recording for a robot, sent on every change and once a second while recording.
+message EpisodeStatus {
+  string robot_id = 1;
+  string episode_id = 2;
+  bool recording = 3;
+  google.protobuf.Timestamp started_at = 4;
+  uint64 frames = 5;
+  uint64 video_frames = 6;
+}
+
+// Marking an episode bad, or good again, with a note; the operator does it while the episode is fresh.
+message EpisodeFlag {
+  string episode_id = 1;
+  bool bad = 2;
+  string note = 3;
+}
+
+// One row of an episode: the observation at that instant, the action in force and the latest picture, as every sink writes it.
+message EpisodeFrame {
+  uint64 index = 1;
+  google.protobuf.Duration offset = 2;
+  Observation observation = 3;
+  VelocityCommand action = 4;
+  uint64 video_sequence = 5;
+}
+
+// One picture of an episode's video, as a sink that keeps pictures as files indexes it.
+message EpisodeVideo {
+  uint64 sequence = 1;
+  google.protobuf.Duration offset = 2;
+  string file = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+}
+
+// An episode's metadata, as every sink writes it.
+message Episode {
+  string id = 1;
+  string robot_id = 2;
+  string task = 3;
+  google.protobuf.Timestamp started_at = 4;
+  google.protobuf.Timestamp ended_at = 5;
+  uint64 frames = 6;
+  uint64 video_frames = 7;
+  bool bad = 8;
+  string note = 9;
+}
