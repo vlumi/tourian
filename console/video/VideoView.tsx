@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useStore, type VideoPath } from '@/platform/store'
+import { createMeter, sampleIntervalMs, type Summary } from './measure'
 import { viewMjpeg, viewWebRtc } from './viewer'
 
 const paths: { path: VideoPath; label: string }[] = [
@@ -10,8 +11,14 @@ const paths: { path: VideoPath; label: string }[] = [
   { path: 'off', label: 'Off' },
 ]
 
-// The robot's camera, over whichever path is chosen, with the frame rate it is arriving at.
-export function VideoView() {
+declare global {
+  interface Window {
+    tourianLatency?: { path: VideoPath; samples: number[] }
+  }
+}
+
+// The robot's camera, over whichever path is chosen, with the frame rate it is arriving at. When measuring, each frame's clock band is read as it is shown and the ages are summarized.
+export function VideoView({ measure = false }: { measure?: boolean }) {
   const robotId = useStore((s) => s.selected)
   const camera = useStore((s) => (s.selected ? s.cameras[s.selected] : undefined))
   const videoPath = useStore((s) => s.videoPath)
@@ -19,15 +26,25 @@ export function VideoView() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const [fps, setFps] = useState<number>()
+  const [latency, setLatency] = useState<Summary>()
 
   useEffect(() => {
     if (!robotId || !camera || videoPath === 'off') return
     let frames = 0
+    const meter = measure ? createMeter() : undefined
+    if (meter) window.tourianLatency = { path: videoPath, samples: meter.samples }
     const ticker = setInterval(() => {
-      setFps(frames)
+      setFps(meter ? meter.takeFrames() : frames)
       frames = 0
+      if (meter) setLatency(meter.summary())
     }, 1000)
     const onFrame = () => frames++
+    const sampler =
+      meter &&
+      setInterval(() => {
+        if (videoPath === 'webrtc' && videoRef.current) meter.sample(videoRef.current, videoRef.current.videoWidth)
+        if (videoPath === 'mjpeg' && imgRef.current) meter.sample(imgRef.current, imgRef.current.naturalWidth)
+      }, sampleIntervalMs)
     const viewer =
       videoPath === 'webrtc' && videoRef.current
         ? viewWebRtc(robotId, videoRef.current, onFrame)
@@ -36,10 +53,12 @@ export function VideoView() {
           : undefined
     return () => {
       clearInterval(ticker)
+      if (sampler) clearInterval(sampler)
       viewer?.stop()
       setFps(undefined)
+      setLatency(undefined)
     }
-  }, [robotId, camera, videoPath])
+  }, [robotId, camera, videoPath, measure])
 
   return (
     <section className="video">
@@ -58,7 +77,10 @@ export function VideoView() {
             </button>
           ))}
         </span>
-        <span className="value">{fps === undefined ? '' : `${fps} fps`}</span>
+        <span className="value">
+          {latency && `age ${latency.median.toFixed(0)} ms, p95 ${latency.p95.toFixed(0)} ms, n=${latency.count} · `}
+          {fps === undefined ? '' : `${fps} fps`}
+        </span>
       </div>
       <div className="video-frame">
         <video ref={videoRef} autoPlay playsInline muted hidden={videoPath !== 'webrtc' || !camera} />

@@ -1,5 +1,6 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 import { startDriver, toggleEngaged, emergencyStop } from '@/drive/driver'
 import { connect } from '@/platform/connection'
@@ -9,6 +10,7 @@ import { VideoView } from '@/video/VideoView'
 import { WorldCanvas } from '@/world/WorldCanvas'
 
 export function ControlRoom() {
+  const measure = useSearchParams().get('measure') === '1'
   const engaged = useStore((s) => s.engaged)
   const robot = useStore((s) => s.selected)
 
@@ -35,7 +37,7 @@ export function ControlRoom() {
         </div>
       </header>
       <div className="scene">
-        <VideoView />
+        <VideoView measure={measure} />
         <WorldCanvas />
       </div>
       <TelemetryPanel />
