@@ -19,7 +19,7 @@ type fakePlatform struct {
 	requests   []string
 }
 
-func (p *fakePlatform) Broadcast(message proto.Message) { p.broadcasts = append(p.broadcasts, message) }
+func (p *fakePlatform) Publish(message proto.Message) { p.broadcasts = append(p.broadcasts, message) }
 func (p *fakePlatform) RequestVideo(robotID, peerID string, enabled bool) {
 	state := "off"
 	if enabled {
@@ -52,6 +52,7 @@ func TestRecordsAnEpisode(t *testing.T) {
 		t.Fatalf("status = %v", status)
 	}
 
+	recorder.Handle(wrap(t, &tourianv1.ControlState{RobotId: "r1", Holder: &tourianv1.Controller{Id: "script", Kind: tourianv1.ControllerKind_CONTROLLER_KIND_SCRIPT}}))
 	recorder.Handle(wrap(t, &tourianv1.VelocityCommand{RobotId: "r1", Sequence: 5, Twist: &tourianv1.Twist{Linear: &tourianv1.Vector3{X: 0.5}}}))
 	recorder.Handle(wrap(t, &tourianv1.Observation{RobotId: "other", Header: stamp(clock)}))
 	for i := range 3 {
@@ -80,7 +81,7 @@ func TestRecordsAnEpisode(t *testing.T) {
 	if len(frames) != 3 {
 		t.Fatalf("frames = %d", len(frames))
 	}
-	if frames[2].GetIndex() != 2 || frames[2].GetOffset().AsDuration() != 100*time.Millisecond || frames[2].GetVideoSequence() != 42 || frames[2].GetAction().GetSequence() != 5 {
+	if frames[2].GetIndex() != 2 || frames[2].GetOffset().AsDuration() != 100*time.Millisecond || frames[2].GetVideoSequence() != 42 || frames[2].GetAction().GetSequence() != 5 || frames[2].GetController().GetId() != "script" {
 		t.Errorf("last frame = %v", frames[2])
 	}
 	if frames[0].GetVideoSequence() != 0 {

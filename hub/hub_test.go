@@ -2,6 +2,7 @@ package hub
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -87,6 +88,48 @@ func TestRelaysSignalingBetweenConsoleAndCamera(t *testing.T) {
 	_ = console.CloseNow()
 	if request := receive(t, ctx, camera).GetVideoRequest(); request.GetEnabled() || request.GetPeerId() != offer.GetPeerId() {
 		t.Fatalf("the camera should be told the console left, got %v", request)
+	}
+}
+
+func TestTapsAndPublishing(t *testing.T) {
+	h := New()
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /robot", h.ServeRobot)
+	mux.HandleFunc("GET /console", h.ServeConsole)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	base := "ws" + strings.TrimPrefix(server.URL, "http")
+
+	seen := make(chan string, 16)
+	h.AddTap(func(from Source, env *tourianv1.Envelope) {
+		seen <- fmt.Sprintf("%d:%T", from.Kind, env.GetMessage())
+	})
+
+	robot := dial(t, ctx, base+"/robot")
+	send(t, ctx, robot, &tourianv1.Capabilities{RobotId: "r1"})
+	if got := <-seen; got != "0:*tourianv1.Envelope_Capabilities" {
+		t.Fatalf("tap saw %s", got)
+	}
+
+	h.Publish(&tourianv1.ControlState{RobotId: "r1", Holder: &tourianv1.Controller{Id: "script"}})
+	if got := <-seen; got != "3:*tourianv1.Envelope_ControlState" {
+		t.Fatalf("tap saw %s", got)
+	}
+
+	console := dial(t, ctx, base+"/console")
+	kinds := map[string]bool{}
+	for range 2 {
+		kinds[fmt.Sprintf("%T", receive(t, ctx, console).GetMessage())] = true
+	}
+	if !kinds["*tourianv1.Envelope_Capabilities"] || !kinds["*tourianv1.Envelope_ControlState"] {
+		t.Fatalf("a late console should get the robot and the retained state, got %v", kinds)
+	}
+
+	h.SendToRobot("r1", &tourianv1.Stop{RobotId: "r1"})
+	if receive(t, ctx, robot).GetStop() == nil {
+		t.Fatal("robot should receive what the platform sends it")
 	}
 }
 
