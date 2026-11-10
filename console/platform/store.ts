@@ -1,4 +1,5 @@
 import type { Capabilities, Observation } from '@tourian/contract/tourian/v1/robot_pb'
+import type { ControlState } from '@tourian/contract/tourian/v1/control_pb'
 import type { EpisodeStatus } from '@tourian/contract/tourian/v1/episode_pb'
 import type { CameraAnnounce } from '@tourian/contract/tourian/v1/video_pb'
 import { HaltReason } from '@tourian/contract/tourian/v1/robot_pb'
@@ -22,6 +23,7 @@ export type State = {
   videoPath: VideoPath
   episode?: EpisodeStatus
   episodeBad: boolean
+  control?: ControlState
   selected?: string
   observation?: Observation
   trail: Point[]
@@ -37,6 +39,7 @@ export type State = {
   setVideoPath: (path: VideoPath) => void
   setEpisode: (status: EpisodeStatus) => void
   setEpisodeBad: (bad: boolean) => void
+  setControl: (state: ControlState) => void
   observe: (observation: Observation) => void
   recordLatency: (ms: number) => void
   engage: () => void
@@ -74,6 +77,7 @@ export const useStore = create<State>()((set) => ({
         : {},
     ),
   setEpisodeBad: (episodeBad) => set({ episodeBad }),
+  setControl: (control) => set((state) => (control.robotId === state.selected ? { control } : {})),
   observe: (observation) =>
     set((state) => {
       if (observation.robotId !== state.selected) return {}

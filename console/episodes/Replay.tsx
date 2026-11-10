@@ -114,7 +114,7 @@ export function Replay({ id }: { id: string }) {
         </span>
         <span className="value">
           {frame
-            ? `x ${frame.observation?.pose?.position?.x.toFixed(2)} y ${frame.observation?.pose?.position?.y.toFixed(2)} · v ${(frame.observation?.velocity?.linear?.x ?? 0).toFixed(2)} · cmd ${(frame.action?.twist?.linear?.x ?? 0).toFixed(2)}`
+            ? `x ${frame.observation?.pose?.position?.x.toFixed(2)} y ${frame.observation?.pose?.position?.y.toFixed(2)} · v ${(frame.observation?.velocity?.linear?.x ?? 0).toFixed(2)} · cmd ${(frame.action?.twist?.linear?.x ?? 0).toFixed(2)} · held by ${frame.controller?.name ?? 'nobody'}`
             : ''}
         </span>
       </div>

@@ -1,5 +1,6 @@
 import { create } from '@bufbuild/protobuf'
 import { CapabilitiesSchema, HaltReason, ObservationSchema } from '@tourian/contract/tourian/v1/robot_pb'
+import { ControlStateSchema } from '@tourian/contract/tourian/v1/control_pb'
 import { CameraAnnounceSchema } from '@tourian/contract/tourian/v1/video_pb'
 import { haltLabel, heading, historyLength, useStore } from './store'
 
@@ -40,6 +41,15 @@ test('losing the link releases control and forgets the robots and cameras', () =
   store.engage()
   store.setStatus('disconnected')
   expect(useStore.getState()).toMatchObject({ engaged: false, robots: {}, cameras: {}, selected: undefined })
+})
+
+test('control state is kept for the selected robot only', () => {
+  const store = useStore.getState()
+  store.addRobot(create(CapabilitiesSchema, { robotId: 'r1' }))
+  store.setControl(create(ControlStateSchema, { robotId: 'r2', holder: { id: 'square' } }))
+  expect(useStore.getState().control).toBeUndefined()
+  store.setControl(create(ControlStateSchema, { robotId: 'r1', holder: { id: 'square' } }))
+  expect(useStore.getState().control?.holder?.id).toBe('square')
 })
 
 test('heading comes from the yaw quaternion', () => {

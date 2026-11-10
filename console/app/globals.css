@@ -376,6 +376,28 @@ button.bad {
   color: var(--bg);
 }
 
+.status-held {
+  background: var(--trail);
+  color: var(--fg);
+}
+
+.hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.hand button {
+  padding: 0.2rem 0.7rem;
+  font-size: 0.9em;
+}
+
+.hint {
+  margin: 0.25rem 0;
+  color: var(--dim);
+}
+
 .keys p {
   margin: 0.25rem 0;
   color: var(--dim);

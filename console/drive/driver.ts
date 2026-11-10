@@ -1,5 +1,6 @@
 import { create } from '@bufbuild/protobuf'
 import { timestampNow } from '@bufbuild/protobuf/wkt'
+import { ControlRequestSchema } from '@tourian/contract/tourian/v1/control_pb'
 import { HeartbeatSchema, StopSchema, VelocityCommandSchema } from '@tourian/contract/tourian/v1/robot_pb'
 import { send } from '@/platform/connection'
 import { useStore } from '@/platform/store'
@@ -68,10 +69,21 @@ export function toggleEngaged(): void {
   else useStore.getState().engage()
 }
 
+// Releasing hands the robot back to whoever held it before the operator took over, if anyone.
 function disengage(): void {
   const { engaged, selected } = useStore.getState()
-  if (engaged && selected) sendCommand(selected, 0, 0)
+  if (engaged && selected) {
+    sendCommand(selected, 0, 0)
+    send({ case: 'controlRequest', value: create(ControlRequestSchema, { robotId: selected, release: true }) })
+  }
   useStore.getState().disengage()
+}
+
+export function handTo(controllerId: string): void {
+  const { selected } = useStore.getState()
+  if (!selected) return
+  useStore.getState().disengage()
+  send({ case: 'controlRequest', value: create(ControlRequestSchema, { robotId: selected, controllerId }) })
 }
 
 export function emergencyStop(): void {
