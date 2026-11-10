@@ -58,6 +58,16 @@ func Wrap(message proto.Message) (*tourianv1.Envelope, error) {
 		return &tourianv1.Envelope{Message: &tourianv1.Envelope_Heartbeat{Heartbeat: m}}, nil
 	case *tourianv1.Stop:
 		return &tourianv1.Envelope{Message: &tourianv1.Envelope_Stop{Stop: m}}, nil
+	case *tourianv1.CameraAnnounce:
+		return &tourianv1.Envelope{Message: &tourianv1.Envelope_CameraAnnounce{CameraAnnounce: m}}, nil
+	case *tourianv1.VideoRequest:
+		return &tourianv1.Envelope{Message: &tourianv1.Envelope_VideoRequest{VideoRequest: m}}, nil
+	case *tourianv1.SessionDescription:
+		return &tourianv1.Envelope{Message: &tourianv1.Envelope_SessionDescription{SessionDescription: m}}, nil
+	case *tourianv1.IceCandidate:
+		return &tourianv1.Envelope{Message: &tourianv1.Envelope_IceCandidate{IceCandidate: m}}, nil
+	case *tourianv1.VideoFrame:
+		return &tourianv1.Envelope{Message: &tourianv1.Envelope_VideoFrame{VideoFrame: m}}, nil
 	default:
 		return nil, fmt.Errorf("ws: %T is not a contract message", message)
 	}
@@ -78,7 +88,43 @@ func RobotID(env *tourianv1.Envelope) string {
 		return m.Heartbeat.GetRobotId()
 	case *tourianv1.Envelope_Stop:
 		return m.Stop.GetRobotId()
+	case *tourianv1.Envelope_CameraAnnounce:
+		return m.CameraAnnounce.GetRobotId()
+	case *tourianv1.Envelope_VideoRequest:
+		return m.VideoRequest.GetRobotId()
+	case *tourianv1.Envelope_SessionDescription:
+		return m.SessionDescription.GetRobotId()
+	case *tourianv1.Envelope_IceCandidate:
+		return m.IceCandidate.GetRobotId()
+	case *tourianv1.Envelope_VideoFrame:
+		return m.VideoFrame.GetRobotId()
 	default:
 		return ""
+	}
+}
+
+// PeerID names the console a signaling message is for or from, empty for anything else.
+func PeerID(env *tourianv1.Envelope) string {
+	switch m := env.GetMessage().(type) {
+	case *tourianv1.Envelope_VideoRequest:
+		return m.VideoRequest.GetPeerId()
+	case *tourianv1.Envelope_SessionDescription:
+		return m.SessionDescription.GetPeerId()
+	case *tourianv1.Envelope_IceCandidate:
+		return m.IceCandidate.GetPeerId()
+	default:
+		return ""
+	}
+}
+
+// SetPeerID stamps a signaling message with the console it comes from; other messages are left alone.
+func SetPeerID(env *tourianv1.Envelope, id string) {
+	switch m := env.GetMessage().(type) {
+	case *tourianv1.Envelope_VideoRequest:
+		m.VideoRequest.PeerId = id
+	case *tourianv1.Envelope_SessionDescription:
+		m.SessionDescription.PeerId = id
+	case *tourianv1.Envelope_IceCandidate:
+		m.IceCandidate.PeerId = id
 	}
 }

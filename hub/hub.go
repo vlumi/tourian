@@ -1,8 +1,10 @@
-// Package hub is the platform's switchboard: robot adapters announce themselves on one endpoint, consoles join on another, and every message is routed by robot id without the hub knowing what is on either side.
+// Package hub is the platform's switchboard: robot adapters and cameras announce themselves on their endpoints, consoles join on another, and every message is routed by robot id, and for signaling by console id, without the hub knowing what is on either side.
 package hub
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"log"
 	"net/http"
 	"sync"
@@ -22,15 +24,19 @@ const (
 type Hub struct {
 	mu           sync.Mutex
 	robots       map[string]*peer
-	consoles     map[*peer]struct{}
+	cameras      map[string]*peer
+	consoles     map[string]*peer
 	capabilities map[string]*tourianv1.Capabilities
+	announces    map[string]*tourianv1.CameraAnnounce
 }
 
 func New() *Hub {
 	return &Hub{
 		robots:       map[string]*peer{},
-		consoles:     map[*peer]struct{}{},
+		cameras:      map[string]*peer{},
+		consoles:     map[string]*peer{},
 		capabilities: map[string]*tourianv1.Capabilities{},
+		announces:    map[string]*tourianv1.CameraAnnounce{},
 	}
 }
 
@@ -48,7 +54,7 @@ func (h *Hub) ServeRobot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := env.GetCapabilities().GetRobotId()
-	h.announce(id, p, env)
+	h.announceRobot(id, p, env)
 	defer h.leaveRobot(id, p)
 	log.Printf("hub: robot %q connected from %s", id, r.RemoteAddr)
 
@@ -62,7 +68,44 @@ func (h *Hub) ServeRobot(w http.ResponseWriter, r *http.Request) {
 		case *tourianv1.Envelope_Observation, *tourianv1.Envelope_CommandAck:
 			h.broadcast(env)
 		case *tourianv1.Envelope_Capabilities:
-			h.announce(id, p, env)
+			h.announceRobot(id, p, env)
+		}
+	}
+}
+
+// ServeCamera accepts a robot's camera, which must announce itself in its first frame. Frames fan out to every console; signaling goes to the console it names.
+func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
+	p, err := accept(w, r)
+	if err != nil {
+		return
+	}
+	defer p.close()
+
+	env, err := ws.Receive(r.Context(), p.conn)
+	if err != nil || env.GetCameraAnnounce() == nil {
+		log.Printf("hub: camera from %s did not announce itself", r.RemoteAddr)
+		return
+	}
+	id := env.GetCameraAnnounce().GetRobotId()
+	h.announceCamera(id, p, env)
+	defer h.leaveCamera(id, p)
+	log.Printf("hub: camera for %q connected from %s", id, r.RemoteAddr)
+
+	for {
+		env, err := ws.Receive(r.Context(), p.conn)
+		if err != nil {
+			log.Printf("hub: camera for %q disconnected: %v", id, err)
+			return
+		}
+		switch env.GetMessage().(type) {
+		case *tourianv1.Envelope_VideoFrame:
+			h.broadcast(env)
+		case *tourianv1.Envelope_SessionDescription, *tourianv1.Envelope_IceCandidate:
+			if console := h.console(ws.PeerID(env)); console != nil {
+				console.send(env)
+			}
+		case *tourianv1.Envelope_CameraAnnounce:
+			h.announceCamera(id, p, env)
 		}
 	}
 }
@@ -74,14 +117,15 @@ func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer p.close()
-	h.join(p)
-	defer h.leaveConsole(p)
-	log.Printf("hub: console connected from %s", r.RemoteAddr)
+	id := newPeerID()
+	h.join(id, p)
+	defer h.leaveConsole(id, p)
+	log.Printf("hub: console %s connected from %s", id, r.RemoteAddr)
 
 	for {
 		env, err := ws.Receive(r.Context(), p.conn)
 		if err != nil {
-			log.Printf("hub: console from %s disconnected: %v", r.RemoteAddr, err)
+			log.Printf("hub: console %s disconnected: %v", id, err)
 			return
 		}
 		switch env.GetMessage().(type) {
@@ -89,21 +133,40 @@ func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
 			if robot := h.robot(ws.RobotID(env)); robot != nil {
 				robot.send(env)
 			}
+		case *tourianv1.Envelope_VideoRequest, *tourianv1.Envelope_SessionDescription, *tourianv1.Envelope_IceCandidate:
+			ws.SetPeerID(env, id)
+			if camera := h.camera(ws.RobotID(env)); camera != nil {
+				camera.send(env)
+			}
 		}
 	}
 }
 
-func (h *Hub) announce(id string, p *peer, env *tourianv1.Envelope) {
+func (h *Hub) announceRobot(id string, p *peer, env *tourianv1.Envelope) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if previous, ok := h.robots[id]; ok && previous != p {
-		previous.close()
-	}
-	h.robots[id] = p
+	replace(h.robots, id, p)
 	h.capabilities[id] = env.GetCapabilities()
-	for console := range h.consoles {
+	for _, console := range h.consoles {
 		console.send(env)
 	}
+}
+
+func (h *Hub) announceCamera(id string, p *peer, env *tourianv1.Envelope) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	replace(h.cameras, id, p)
+	h.announces[id] = env.GetCameraAnnounce()
+	for _, console := range h.consoles {
+		console.send(env)
+	}
+}
+
+func replace(peers map[string]*peer, id string, p *peer) {
+	if previous, ok := peers[id]; ok && previous != p {
+		previous.close()
+	}
+	peers[id] = p
 }
 
 func (h *Hub) leaveRobot(id string, p *peer) {
@@ -115,20 +178,38 @@ func (h *Hub) leaveRobot(id string, p *peer) {
 	}
 }
 
-func (h *Hub) join(p *peer) {
+func (h *Hub) leaveCamera(id string, p *peer) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	h.consoles[p] = struct{}{}
-	for _, caps := range h.capabilities {
-		env, _ := ws.Wrap(caps)
-		p.send(env)
+	if h.cameras[id] == p {
+		delete(h.cameras, id)
+		delete(h.announces, id)
 	}
 }
 
-func (h *Hub) leaveConsole(p *peer) {
+func (h *Hub) join(id string, p *peer) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	delete(h.consoles, p)
+	h.consoles[id] = p
+	for _, caps := range h.capabilities {
+		p.send(caps)
+	}
+	for _, announce := range h.announces {
+		p.send(announce)
+	}
+}
+
+// A console that leaves is unsubscribed from every camera, since it can no longer ask itself.
+func (h *Hub) leaveConsole(id string, p *peer) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.consoles[id] != p {
+		return
+	}
+	delete(h.consoles, id)
+	for robotID, camera := range h.cameras {
+		camera.send(&tourianv1.VideoRequest{RobotId: robotID, PeerId: id, Kind: tourianv1.VideoKind_VIDEO_KIND_MJPEG, Enabled: false})
+	}
 }
 
 func (h *Hub) robot(id string) *peer {
@@ -137,12 +218,30 @@ func (h *Hub) robot(id string) *peer {
 	return h.robots[id]
 }
 
+func (h *Hub) camera(id string) *peer {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.cameras[id]
+}
+
+func (h *Hub) console(id string) *peer {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.consoles[id]
+}
+
 func (h *Hub) broadcast(env *tourianv1.Envelope) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	for console := range h.consoles {
+	for _, console := range h.consoles {
 		console.send(env)
 	}
+}
+
+func newPeerID() string {
+	var b [6]byte
+	_, _ = rand.Read(b[:])
+	return hex.EncodeToString(b[:])
 }
 
 // A peer writes from its own goroutine so that routing never blocks on a slow connection; one that cannot keep up is dropped, and a robot behind it stops on its own timeouts.
