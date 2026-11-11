@@ -135,6 +135,51 @@ func (x *Controller) GetName() string {
 	return ""
 }
 
+// The platform's first word to a console: the id it is known by, which is the holder's id while its operator holds a robot.
+type Welcome struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ConsoleId     string                 `protobuf:"bytes,1,opt,name=console_id,json=consoleId,proto3" json:"console_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Welcome) Reset() {
+	*x = Welcome{}
+	mi := &file_tourian_v1_control_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Welcome) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Welcome) ProtoMessage() {}
+
+func (x *Welcome) ProtoReflect() protoreflect.Message {
+	mi := &file_tourian_v1_control_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Welcome.ProtoReflect.Descriptor instead.
+func (*Welcome) Descriptor() ([]byte, []int) {
+	return file_tourian_v1_control_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Welcome) GetConsoleId() string {
+	if x != nil {
+		return x.ConsoleId
+	}
+	return ""
+}
+
 // Who holds a robot, since when, and who else could; sent to every console on each change of hands.
 type ControlState struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -148,7 +193,7 @@ type ControlState struct {
 
 func (x *ControlState) Reset() {
 	*x = ControlState{}
-	mi := &file_tourian_v1_control_proto_msgTypes[1]
+	mi := &file_tourian_v1_control_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -160,7 +205,7 @@ func (x *ControlState) String() string {
 func (*ControlState) ProtoMessage() {}
 
 func (x *ControlState) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_control_proto_msgTypes[1]
+	mi := &file_tourian_v1_control_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -173,7 +218,7 @@ func (x *ControlState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ControlState.ProtoReflect.Descriptor instead.
 func (*ControlState) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_control_proto_rawDescGZIP(), []int{1}
+	return file_tourian_v1_control_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ControlState) GetRobotId() string {
@@ -216,7 +261,7 @@ type ControlRequest struct {
 
 func (x *ControlRequest) Reset() {
 	*x = ControlRequest{}
-	mi := &file_tourian_v1_control_proto_msgTypes[2]
+	mi := &file_tourian_v1_control_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -228,7 +273,7 @@ func (x *ControlRequest) String() string {
 func (*ControlRequest) ProtoMessage() {}
 
 func (x *ControlRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_tourian_v1_control_proto_msgTypes[2]
+	mi := &file_tourian_v1_control_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -241,7 +286,7 @@ func (x *ControlRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ControlRequest.ProtoReflect.Descriptor instead.
 func (*ControlRequest) Descriptor() ([]byte, []int) {
-	return file_tourian_v1_control_proto_rawDescGZIP(), []int{2}
+	return file_tourian_v1_control_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ControlRequest) GetRobotId() string {
@@ -275,7 +320,10 @@ const file_tourian_v1_control_proto_rawDesc = "" +
 	"Controller\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12.\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x1a.tourian.v1.ControllerKindR\x04kind\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\"\xc1\x01\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"(\n" +
+	"\aWelcome\x12\x1d\n" +
+	"\n" +
+	"console_id\x18\x01 \x01(\tR\tconsoleId\"\xc1\x01\n" +
 	"\fControlState\x12\x19\n" +
 	"\brobot_id\x18\x01 \x01(\tR\arobotId\x12.\n" +
 	"\x06holder\x18\x02 \x01(\v2\x16.tourian.v1.ControllerR\x06holder\x120\n" +
@@ -307,18 +355,19 @@ func file_tourian_v1_control_proto_rawDescGZIP() []byte {
 }
 
 var file_tourian_v1_control_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_tourian_v1_control_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_tourian_v1_control_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_tourian_v1_control_proto_goTypes = []any{
 	(ControllerKind)(0),           // 0: tourian.v1.ControllerKind
 	(*Controller)(nil),            // 1: tourian.v1.Controller
-	(*ControlState)(nil),          // 2: tourian.v1.ControlState
-	(*ControlRequest)(nil),        // 3: tourian.v1.ControlRequest
-	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
+	(*Welcome)(nil),               // 2: tourian.v1.Welcome
+	(*ControlState)(nil),          // 3: tourian.v1.ControlState
+	(*ControlRequest)(nil),        // 4: tourian.v1.ControlRequest
+	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
 }
 var file_tourian_v1_control_proto_depIdxs = []int32{
 	0, // 0: tourian.v1.Controller.kind:type_name -> tourian.v1.ControllerKind
 	1, // 1: tourian.v1.ControlState.holder:type_name -> tourian.v1.Controller
-	4, // 2: tourian.v1.ControlState.since:type_name -> google.protobuf.Timestamp
+	5, // 2: tourian.v1.ControlState.since:type_name -> google.protobuf.Timestamp
 	1, // 3: tourian.v1.ControlState.available:type_name -> tourian.v1.Controller
 	4, // [4:4] is the sub-list for method output_type
 	4, // [4:4] is the sub-list for method input_type
@@ -338,7 +387,7 @@ func file_tourian_v1_control_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tourian_v1_control_proto_rawDesc), len(file_tourian_v1_control_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -18,6 +18,11 @@ message Controller {
   string name = 3;
 }
 
+// The platform's first word to a console: the id it is known by, which is the holder's id while its operator holds a robot.
+message Welcome {
+  string console_id = 1;
+}
+
 // Who holds a robot, since when, and who else could; sent to every console on each change of hands.
 message ControlState {
   string robot_id = 1;

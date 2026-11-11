@@ -28,6 +28,9 @@ export function send(message: Message): void {
 function receive(envelope: Envelope): void {
   const store = useStore.getState()
   switch (envelope.message.case) {
+    case 'welcome':
+      store.welcome(envelope.message.value.consoleId)
+      break
     case 'capabilities':
       store.addRobot(envelope.message.value)
       break

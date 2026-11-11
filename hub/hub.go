@@ -196,7 +196,7 @@ func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ServeConsole accepts a console, tells it about every robot known, and routes what it sends to the robot it names.
+// ServeConsole accepts a console, tells it its id and about every robot known, and routes what it sends to the robot it names.
 func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
 	p, err := accept(w, r)
 	if err != nil {
@@ -278,6 +278,7 @@ func (h *Hub) join(id string, p *peer) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.consoles[id] = p
+	p.send(&tourianv1.Welcome{ConsoleId: id})
 	for _, caps := range h.capabilities {
 		p.send(caps)
 	}

@@ -28,6 +28,7 @@ export type State = {
   videoPath: VideoPath
   episode?: EpisodeStatus
   episodeBad: boolean
+  consoleId?: string
   control?: ControlState
   selected?: string
   observation?: Observation
@@ -39,6 +40,7 @@ export type State = {
   input: Input
 
   setStatus: (status: Status) => void
+  welcome: (consoleId: string) => void
   addRobot: (capabilities: Capabilities) => void
   select: (robotId: string) => void
   addCamera: (announce: CameraAnnounce) => void
@@ -73,7 +75,12 @@ export const useStore = create<State>()((set) => ({
   input: idle,
 
   setStatus: (status) =>
-    set(status === 'connected' ? { status } : { status, engaged: false, robots: {}, selected: undefined }),
+    set(
+      status === 'connected'
+        ? { status }
+        : { status, engaged: false, robots: {}, selected: undefined, consoleId: undefined },
+    ),
+  welcome: (consoleId) => set({ consoleId }),
   addRobot: (capabilities) =>
     set((state) => ({
       robots: { ...state.robots, [capabilities.robotId]: capabilities },
