@@ -80,6 +80,7 @@ func connect(ctx context.Context, platformURL string, cfg Config) error {
 		return err
 	}
 	defer func() { _ = ros.CloseNow() }()
+	defer leaveStopped(ros, cfg.CmdVelTopic)
 	ros.SetReadLimit(1 << 20)
 	platform, _, err := websocket.Dial(ctx, platformURL, nil)
 	if err != nil {
@@ -106,7 +107,8 @@ func connect(ctx context.Context, platformURL string, cfg Config) error {
 	toPlatform := make(chan proto.Message, 64)
 	failed := make(chan error, 3)
 	go func() { failed <- a.readPlatform(ctx, platform, toPlatform) }()
-	go func() { failed <- a.readRos(ctx, ros, toPlatform) }()
+	// The ROS side is read with a context of its own, so that cancelling ours does not close that socket before the last zero has gone out; closing it on the way out ends the read.
+	go func() { failed <- a.readRos(context.Background(), ros, toPlatform) }()
 	go func() { failed <- writePlatform(ctx, platform, toPlatform) }()
 
 	ticker := time.NewTicker(publishInterval)
@@ -124,6 +126,14 @@ func connect(ctx context.Context, platformURL string, cfg Config) error {
 			}
 		}
 	}
+}
+
+// leaveStopped is the adapter's last word to the robot on the way out, whatever the reason: a plain ROS robot would otherwise keep the last twist it was told.
+func leaveStopped(ros *websocket.Conn, topic string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+	msg, _ := json.Marshal(twist{})
+	_ = writeJSON(ctx, ros, operation{Op: "publish", Topic: topic, Msg: msg})
 }
 
 type adapter struct {
