@@ -58,6 +58,18 @@ export function viewMjpeg(robotId: string, img: HTMLImageElement, onFrame: () =>
   const request = (enabled: boolean) =>
     send({ case: 'videoRequest', value: create(VideoRequestSchema, { robotId, kind: VideoKind.MJPEG, enabled }) })
   request(true)
+  const stop = showJpegFrames(robotId, img, onFrame)
+  return {
+    stop: () => {
+      stop()
+      request(false)
+      img.removeAttribute('src')
+    },
+  }
+}
+
+// Shows the robot's JPEG frames in img as they pass by, keeping only the one on screen alive, until the returned function is called.
+export function showJpegFrames(robotId: string, img: HTMLImageElement, onFrame?: () => void): () => void {
   let url: string | undefined
   const unsubscribe = onVideoMessage((envelope) => {
     const m = envelope.message
@@ -66,16 +78,12 @@ export function viewMjpeg(robotId: string, img: HTMLImageElement, onFrame: () =>
     img.onload = () => {
       if (url) URL.revokeObjectURL(url)
       url = next
-      onFrame()
+      onFrame?.()
     }
     img.src = next
   })
-  return {
-    stop: () => {
-      unsubscribe()
-      request(false)
-      if (url) URL.revokeObjectURL(url)
-      img.removeAttribute('src')
-    },
+  return () => {
+    unsubscribe()
+    if (url) URL.revokeObjectURL(url)
   }
 }

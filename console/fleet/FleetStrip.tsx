@@ -3,7 +3,7 @@
 import { ControllerKind } from '@tourian/contract/tourian/v1/control_pb'
 import { useEffect, useRef } from 'react'
 import { haltLabel, useStore } from '@/platform/store'
-import { onVideoMessage } from '@/video/signals'
+import { showJpegFrames } from '@/video/viewer'
 
 // Every robot the platform knows, one card each: its state, who holds it, whether it is being recorded, and its latest picture when one is passing by. Clicking a card selects the robot for driving.
 export function FleetStrip() {
@@ -31,21 +31,8 @@ function FleetCard({ robotId, selected, onSelect }: { robotId: string; selected:
   const imgRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
-    let url: string | undefined
-    const off = onVideoMessage((envelope) => {
-      const m = envelope.message
-      if (m.case !== 'videoFrame' || m.value.robotId !== robotId || !imgRef.current) return
-      const next = URL.createObjectURL(new Blob([m.value.jpeg as BlobPart], { type: 'image/jpeg' }))
-      imgRef.current.onload = () => {
-        if (url) URL.revokeObjectURL(url)
-        url = next
-      }
-      imgRef.current.src = next
-    })
-    return () => {
-      off()
-      if (url) URL.revokeObjectURL(url)
-    }
+    const img = imgRef.current
+    if (img) return showJpegFrames(robotId, img)
   }, [robotId])
 
   const halt = haltLabel(observation?.haltReason)
