@@ -57,6 +57,7 @@ type State = {
 }
 
 const idle: Input = { linear: 0, angular: 0, source: 'none' }
+const emptyHistory: State['history'] = { speed: [], angular: [], battery: [], latency: [] }
 
 export const useStore = create<State>()((set) => ({
   status: 'connecting',
@@ -69,7 +70,7 @@ export const useStore = create<State>()((set) => ({
   videoPath: 'webrtc',
   episodeBad: false,
   trail: [],
-  history: { speed: [], angular: [], battery: [], latency: [] },
+  history: emptyHistory,
   engaged: false,
   stopped: false,
   input: idle,
@@ -97,7 +98,7 @@ export const useStore = create<State>()((set) => ({
       episode: state.episodes[robotId],
       episodeBad: false,
       trail: [],
-      history: { speed: [], angular: [], battery: [], latency: [] },
+      history: emptyHistory,
       latencyMs: undefined,
     })),
   addCamera: (announce) => set((state) => ({ cameras: { ...state.cameras, [announce.robotId]: announce } })),
