@@ -7,7 +7,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
+	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,6 +27,8 @@ const (
 )
 
 type Hub struct {
+	// Origins are host patterns, like "phone.local:*", whose browsers may connect and fetch besides those on the platform's own host or localhost; clients that send no Origin, like the adapters, are not browsers and pass.
+	Origins []string
 	// Admit says whether a console may drive the robot its command, joint command or heartbeat names; nil admits everyone. What it refuses is dropped before the taps see it.
 	Admit        func(consoleID string, env *tourianv1.Envelope) bool
 	mu           sync.Mutex
@@ -131,7 +137,7 @@ func mjpegRequest(robotID, peerID string, enabled bool) *tourianv1.VideoRequest 
 
 // ServeRobot accepts a robot adapter, which must announce its capabilities in its first frame.
 func (h *Hub) ServeRobot(w http.ResponseWriter, r *http.Request) {
-	p, err := accept(w, r)
+	p, err := h.accept(w, r)
 	if err != nil {
 		return
 	}
@@ -166,7 +172,7 @@ func (h *Hub) ServeRobot(w http.ResponseWriter, r *http.Request) {
 
 // ServeCamera accepts a robot's camera, which must announce itself in its first frame. Frames go to the consoles that asked for them; signaling goes to the console it names.
 func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
-	p, err := accept(w, r)
+	p, err := h.accept(w, r)
 	if err != nil {
 		return
 	}
@@ -204,7 +210,7 @@ func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
 
 // ServeConsole accepts a console, tells it its id and about every robot known, and routes what it sends to the robot it names; driving is routed only when admitted.
 func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
-	p, err := accept(w, r)
+	p, err := h.accept(w, r)
 	if err != nil {
 		return
 	}
@@ -384,8 +390,34 @@ type peer struct {
 	once   sync.Once
 }
 
-func accept(w http.ResponseWriter, r *http.Request) (*peer, error) {
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
+// AllowsOrigin says whether a browser at origin may reach the platform: from the platform's own host on any port, from localhost, or from a host in Origins. The WebSocket endpoints apply the same rule.
+func (h *Hub) AllowsOrigin(r *http.Request, origin string) bool {
+	u, err := url.Parse(origin)
+	if err != nil || u.Host == "" {
+		return false
+	}
+	for _, pattern := range h.originPatterns(r) {
+		if ok, _ := path.Match(pattern, u.Host); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *Hub) originPatterns(r *http.Request) []string {
+	host := r.Host
+	if name, _, err := net.SplitHostPort(host); err == nil {
+		host = name
+	}
+	patterns := make([]string, 0, 8+len(h.Origins))
+	for _, name := range []string{strings.ToLower(host), "localhost", "127.0.0.1", "[::1]"} {
+		patterns = append(patterns, name, name+":*")
+	}
+	return append(patterns, h.Origins...)
+}
+
+func (h *Hub) accept(w http.ResponseWriter, r *http.Request) (*peer, error) {
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: h.originPatterns(r)})
 	if err != nil {
 		return nil, err
 	}

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -36,12 +37,16 @@ func main() {
 	dataset := flag.String("lerobot", "tourian", "name of the LeRobot dataset written under the data directory, empty for none")
 	writeMcap := flag.Bool("mcap", true, "also write each episode as an MCAP file for Foxglove under the data directory")
 	policyURL := flag.String("policy", "", "URL of a policy server to offer as a controller, such as http://localhost:8091")
+	origins := flag.String("origins", "", "browser origins to let in besides this host and localhost, as host patterns separated by commas, such as phone.local:*")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	h := hub.New()
+	if *origins != "" {
+		h.Origins = strings.Split(*origins, ",")
+	}
 	episodes := filepath.Join(*data, "episodes")
 	sinks := []episode.Sink{episode.NewJSONL(episodes)}
 	if *dataset != "" {

@@ -21,15 +21,18 @@ func newHandler(h *hub.Hub, episodes string, configs *config.Store) http.Handler
 	mux.Handle("GET /episodes", browse)
 	mux.Handle("GET /episodes/", browse)
 	mux.Handle("/config/", config.Handler(configs, h))
-	return allowAnyOrigin(mux)
+	return allowOrigins(h, mux)
 }
 
-// The console is served from another port than the platform, so its fetches are cross-origin; nothing here is private until the platform leaves the laptop.
-func allowAnyOrigin(next http.Handler) http.Handler {
+// The console is served from another port than the platform, so its fetches are cross-origin; the hub's rule for browsers says which origins are let in.
+func allowOrigins(h *hub.Hub, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if origin := r.Header.Get("Origin"); origin != "" && h.AllowsOrigin(r, origin) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Add("Vary", "Origin")
+		}
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
