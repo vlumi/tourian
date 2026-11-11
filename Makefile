@@ -43,8 +43,8 @@ build:  ## Build the Go binaries and the console
 	npm run build --workspace console
 
 .PHONY: test
-test:  ## Run the Go, console and sidecar unit tests
-	go test ./...
+test:  ## Run the Go, console and sidecar unit tests, Go under the race detector
+	go test -race ./...
 	npm test --workspace console
 	PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest -q -p no:cacheprovider sidecars/arm
 

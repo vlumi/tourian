@@ -53,7 +53,11 @@ func main() {
 	configs := config.NewStore(filepath.Join(*data, "config"), time.Now)
 	recorder := episode.NewRecorder(h, time.Now, sinks...).WithConfigs(configs)
 	h.AddTap(recorder.Tap)
-	go recorder.Run(ctx)
+	recorded := make(chan struct{})
+	go func() {
+		defer close(recorded)
+		recorder.Run(ctx)
+	}()
 
 	controllers := []motherbrain.Controller{script.Square{}}
 	if *policyURL != "" {
@@ -94,6 +98,12 @@ func main() {
 	log.Printf("tourian listening on %s", *addr)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
+	}
+	// An episode under way is closed on the way out, which can take a while with a video to encode.
+	select {
+	case <-recorded:
+	case <-time.After(30 * time.Second):
+		log.Printf("tourian: giving up on closing the episodes")
 	}
 }
 
