@@ -1,78 +1,114 @@
 # Architecture
 
-How tourian works, as built, with the planned shape below it until it is. [SCOPE.md](SCOPE.md) says what, in which order and what is still missing; [AGENTS.md](AGENTS.md) how to work on it.
+How tourian works, as it is now. [SCOPE.md](SCOPE.md) says what was planned, in which order and what is still missing; [AGENTS.md](AGENTS.md) how to work on it. The history of how it was built is at the end.
 
-## Built
+## The shape
 
-### M0 — the toolchain and the first contract
+The platform is one Go process in the middle. Robot adapters connect to it and announce their capabilities; consoles connect to it and see the fleet; controllers hold robots through it. The contract is the same on every edge, so the platform forwards, records and arbitrates without knowing what kind of robot or controller is on the other side.
 
-One repository, three languages, one contract. The Go module `github.com/vlumi/tourian` holds the platform binary and the adapters; an npm workspace at the root holds the console and the generated TypeScript as a package of its own, `@tourian/contract` in `gen/ts` (its `package.json` is the one hand-written file there, which `make generate` keeps), so the console imports contract types the way it imports any dependency and the bundler's root is the repository; the Python under `gen/python` serves the sidecars.
+```mermaid
+flowchart LR
+  subgraph robots [Robots, emmi]
+    sim["2D simulator<br>Go, in process or separate"]
+    ros["ROS 2 bridge<br>rosbridge"]
+    arm["Arm<br>Python sidecar"]
+  end
+  subgraph controllers [Controllers, motherbrain]
+    samus["Operator<br>the console"]
+    script["Scripted routine"]
+    policy["Learned policy<br>policy server"]
+  end
+  platform["tourian<br>hub, arbiter, recorder"]
+  sim & ros & arm <-->|"contract over WebSocket"| platform
+  samus & script & policy <-->|"contract over WebSocket"| platform
+  camera["Camera<br>a phone"] -->|"WebRTC, or MJPEG via the platform"| samus
+  platform --> sink[("Dataset sinks<br>JSONL, LeRobot, MCAP")]
+  platform <--> config[("Configurations<br>robots, tasks, versioned")]
+```
 
-**The contract** is `proto/tourian/v1/`: `header.proto` (stamp and frame id, as std_msgs/Header), `geometry.proto` (Vector3, Point, Quaternion, Pose, Twist, as geometry_msgs) and `robot.proto` (Capabilities with velocity limits and the command timeout, VelocityCommand with a sequence number, Observation with pose, velocity, joints and battery and the sequence of the last command it reflects, JointState as parallel arrays, Heartbeat as the dead-man signal, Stop). `make generate` writes Go with `protoc-gen-go` into `gen/go`, TypeScript with `protoc-gen-es` into `gen/ts` and Python with buf's remote plugin into `gen/python`; all are committed, and `make generate-check` fails CI if they drift from the `.proto` files.
+Three languages, one contract: the Go module holds the platform and the adapters, an npm workspace holds the console and the generated TypeScript as the package `@tourian/contract`, and the Python under `gen/python` serves the sidecars. Every seam is an interface with at least two implementations: three robots, three controllers, three dataset sinks, two video paths.
 
-**The platform binary**, `cmd/tourian`, is an HTTP server with a health endpoint, the mount point for the WebSocket transport of M1.
+## The contract
 
-**The console** is Next.js with the App Router. Its first page rendered the name and listed the messages of the contract from the generated schemas, proving the generation path end to end; M1 replaced it with the control room.
+One Protobuf package, `tourian.v1`, under `proto/tourian/v1/`:
 
-**The gate**, `make ci`, is what hosted CI runs: golangci-lint with gofmt and goimports, buf lint and format, Prettier, oxlint, tsc, markdownlint, ruff, the generation check, the Go tests under the race detector, the Vitest and pytest tests, the Go and Next.js builds, and the contract tests against the Go adapters. `make tools` installs buf, protoc-gen-go and golangci-lint into `bin/` at the versions pinned in the Makefile; `make screenshot` builds and serves the console and captures it with headless Chrome.
+| File | What it defines |
+| --- | --- |
+| `header`, `geometry` | stamp and frame id, vectors, poses and twists, in ROS 2 shapes |
+| `robot` | capabilities with limits and timeouts, velocity and joint commands with sequence numbers, acknowledgements, observations with pose, velocity, joints, battery and the halt reason, heartbeat, stop |
+| `video` | camera announce, video requests, WebRTC signaling, MJPEG frames |
+| `control` | who holds a robot and since when, handing over and releasing, the welcome that tells a console its id |
+| `episode` | recording start and stop, status, flags, the frame and the episode metadata |
+| `config` | robot and task configurations with versions |
+| `transport` | the `Envelope`, a one-of over every message that crosses a seam |
 
-### M1 — drive
+`make generate` writes Go, TypeScript and Python into `gen/`; all three are committed and `make generate-check` fails CI if they drift from the `.proto` files.
 
-**The shape, as built.** The platform is one Go process, `cmd/tourian`, whose `hub` is a switchboard: robot adapters connect to `/robot` and announce their capabilities in their first frame; consoles connect to `/console` and are told about every robot known. Commands, joint commands, heartbeats and stops are routed to the robot they name, driving only when the arbiter admits the console sending it; observations and acknowledgements fan out to every console. The hub never looks inside a message beyond the robot id and, for video signaling, the console's id, so what sits on either side can change without it. Each peer writes from its own goroutine with a bounded queue, and one that cannot keep up is dropped rather than slowing the others; the robot behind a dropped connection stops on its own timeouts. A robot or camera that does not announce itself within five seconds is dropped too. Browsers are let in by origin, from the platform's own host on any port, from localhost, or from a host named in `-origins`, on the WebSocket endpoints and the HTTP alike; adapters send no origin and pass.
+## The platform
 
-**The transport** is WebSocket, `transport/ws`: one `Envelope` per binary frame, the Envelope being the contract's one-of over every message that crosses a seam. The same package serves the hub, the simulator and the tests; the console decodes the same frames with the generated TypeScript.
+**The hub** is a switchboard with three WebSocket endpoints. Robot adapters connect to `/robot` and announce their capabilities in their first frame, cameras to `/camera` likewise, consoles to `/console` and are told their id, every robot and camera known, and the latest state published per robot. Commands, joint commands, heartbeats and stops are routed to the robot they name; observations and acknowledgements fan out to every console; MJPEG frames go to the consoles that asked; signaling is routed by console id. The hub never looks inside a message beyond the robot id and the console id, so what sits on either side can change without it.
 
-**The simulator**, `emmi/zebes`, is a differential drive in a square arena: pose, body velocity, wheel joints whose angles and speeds follow from the drive, and a battery that drains with effort. It is stepped by an injected clock, so the tests run in no time, and runs at 50 Hz with observations at 20 Hz when connected. It connects to the platform as a client, in its own process (`cmd/zebes`) or in the platform's (`tourian -sim`), and reconnects when the platform goes away.
+**Peers and limits.** Each peer writes from its own goroutine with a bounded queue, and one that cannot keep up is dropped rather than slowing the others; the robot behind a dropped connection stops on its own timeouts. A peer that does not announce itself within five seconds is dropped. Browsers are let in by origin, from the platform's own host on any port, from localhost, or from a host named in `-origins`, on the WebSocket endpoints and the HTTP alike; adapters send no origin and pass. There is no authentication until the platform is reachable from anywhere but a laptop.
 
-**Safety lives in the simulator.** It is held still until the first heartbeat; it stops when no command has arrived within the command timeout (500 ms) or no heartbeat within the heartbeat timeout (1 s); and a stop is applied from the read loop the moment it arrives, zeroing the velocity and discarding every command queued for the next step. Every observation carries the halt reason, so the console can say why the robot is not moving. The console contributes the dead-man signal only: it sends a heartbeat with every command while the operator is engaged and the window has focus, and losing focus disengages.
+**Taps and publishing.** Every message the hub receives, from any peer, goes to the taps before routing, with its source; the recorder and the arbiter are taps, each draining an inbox on its own goroutine so the hub never waits on them. The platform's own voice is `Publish`: the message goes to every tap and every console, and the latest of its kind per robot is retained for consoles that join later, so a console always knows who holds a robot and whether it is being recorded.
 
-**The console** keeps one store (zustand) that the connection writes and the components read: the robots announced, the latest observation of the selected one, its trail, the last 120 samples of speed, turn rate, battery and latency, about six seconds, and the operator's state. A driver loop at 20 Hz reads the keyboard and the gamepad, and while engaged sends a heartbeat and a velocity command scaled to the robot's limits. Latency is the round trip of each command: the moment it is sent to the moment its acknowledgement comes back, matched by sequence number. The world is a canvas redrawn on every store change; the telemetry panel shows the figures with sparklines beside them.
+**The transport** is `transport/ws`: one `Envelope` per binary frame, its place and its ids found by reflection, so a new message needs no code. The console decodes the same frames with the generated TypeScript. `transport/httpjson` serves contract messages as JSON where things are fetched rather than streamed.
 
-### M2 — see
+## The robots
 
-**The camera is a peer like the robot.** A phone opens the console's `/camera` page, which takes the camera and connects to the hub's `/camera` endpoint, announcing which robot it is the eyes of. The hub learns cameras as it learns robots and tells every console; the console's video view, above the world, shows the camera of the selected robot over the path chosen.
+**The adapter seam.** An adapter speaks the contract for one robot: it announces capabilities, turns commands into motion, reports observations, and keeps the safety story on its side. It connects to the platform as a client and reconnects when the platform goes away; what the adapters share, the reconnect loop, the write loop and the clamp, lives in `emmi`.
 
-**WebRTC is peer to peer, the platform only signals.** The console offers a receive-only connection; the hub stamps the offer with the console's id and routes it to the robot's camera, which answers with its track; the answer and the ICE candidates route back by the same id. Candidates that arrive before their description wait for it. The platform never touches the media, which is also why nothing about it is recorded yet. There are no STUN or TURN servers: everything is on one network until the platform is reachable from elsewhere.
+**Safety lives in the adapter.** The guard in `emmi/safety` holds a robot still until the first heartbeat, stops it when no command has arrived within the command timeout (500 ms) or no heartbeat within the heartbeat timeout (1 s), and applies an emergency stop the moment it arrives, ahead of anything queued, until the next command. Every observation carries the halt reason, so the console can say why the robot is not moving. The console contributes only the dead-man signal: a heartbeat with every command while the operator is engaged and the window has focus.
 
-**MJPEG goes through the platform.** When a console asks, the camera page repaints its frames onto a canvas 640 wide, encodes each as JPEG at quality 0.7 and sends them at 15 fps as `VideoFrame` messages; the hub passes them to the consoles that asked, and the viewer shows each as it arrives. The camera stops when the last console that asked has left, which the hub tells it on the console's behalf. This path puts the frames in the platform's hands, which is what recording will need.
+**The simulator**, `emmi/zebes`, is a differential drive in a square arena: pose, body velocity, wheel joints that follow from the drive, and a battery that drains with effort. It is stepped by an injected clock, so the tests run in no time, and runs at 50 Hz with observations at 20 Hz. It runs in the platform's process (`tourian -sim`, several with `-sims`) or its own (`cmd/zebes`).
 
-**Measuring the two.** With `?clock=1` the camera page composes a band of 32 black and white blocks across the top of every frame, encoding the time it was composed, and streams the composition instead of the raw camera. With `?measure=1` the console reads the band back from every new frame on a fast timer, once per stamp, and summarizes the frames' ages; the result is the time from composition to display on the viewer's side, which covers encoding, the path, decoding and rendering but not the camera's sensor or the screen, and means something only when both pages share a clock, as they do on one machine. `make results-video` runs both pages in one headless Chrome with a fake camera, a window each so neither is throttled as a background tab, and writes the figures with date, commit and machine under `docs/results/`. The first run gave WebRTC a median of 30 ms with a spread of a few ms, and MJPEG 36 ms with a p95 near 60 ms.
+**The ROS 2 bridge**, `emmi/rosbridge`, speaks the rosbridge protocol: velocity commands become `geometry_msgs/msg/Twist` on `/cmd_vel`; odometry, joint states and battery state become observations. It publishes the twist every 50 ms, zero within that tick of the operator not being heard, and a last zero on the way out whatever the reason, since a plain ROS robot keeps doing what it was last told. `rosbridgetest` is a simulated ROS robot behind the same protocol; `cmd/rossim` runs it on a port.
 
-### M3 — record
+**The arm sidecar**, `sidecars/arm`, is Python, because the drivers of physical arms tend to be. `ArmDriver` is what it needs from an arm: named joints, positions, a target to move toward and a stop that holds; `FakeArm` stands in. It acknowledges each `JointCommand` on arrival, moves toward the target while the operator is heard and holds the arm the moment not, through a guard with the same semantics as the Go one. The hardware test waits for an arm, and the console has no joint controls yet, so an arm is driven by a controller inside the platform.
 
-**The recorder is a tap on the hub.** Every message the hub receives, from any peer, is handed to the recorder before routing, on a channel it drains from its own goroutine so the hub never waits for the disk. A console asks to record a robot; from then on each observation of that robot becomes a frame carrying the velocity command in force and the sequence of the latest picture, until the console asks to stop. Pictures come over the MJPEG path, which the recorder requests from the camera for itself, as one more peer, and releases when it stops; WebRTC stays peer to peer and is not recorded. The recorder reports what it is writing to every console once a second, and a flag marks an episode bad with a note, during or after.
+**The contract tests**, `emmi/contracttest`, are what every adapter must do, exercised through a real hub: announce, drive on command and acknowledge it, stop when commands stop, stop when heartbeats stop, stop at once on an emergency stop ahead of five queued commands. Both Go adapters pass them under `make ci`; the sidecar has the same test in pytest.
 
-**The dataset sink is a seam with three implementations, since M6.** JSONL came first: a directory per episode with `meta.json`, `frames.jsonl` of `EpisodeFrame` rows, the pictures as JPEG files and `video.jsonl` indexing them, all in the contract's own messages serialized as JSON, so the layout is readable by eye and by anything. LeRobot came second, the v3.0 layout, one dataset per robot under `data/lerobot/<name>/<robot id>/` since a dataset's state vector is laid out from one robot's joints: `meta/info.json` with the features (`observation.state` as pose, body velocity, one entry per joint and the battery; `action` as the commanded velocities; the camera as a video feature), `meta/tasks.parquet` with the pandas index metadata its reader expects, `meta/stats.json` folded across episodes the way LeRobot's own aggregation does, one Parquet data file and one episodes row per episode under `data/` and `meta/episodes/`, and one MP4 per episode under `videos/`, encoded with ffmpeg from the picture in force at each frame so the video runs at the frame rate and lines up with the rows. The layout has no place for a flag, so `meta/tourian.json` maps episode ids to indices and carries the flags. Frames are stamped at the nominal rate, as LeRobot stamps them; the true offsets stay in the JSONL layout.
+## The controllers
 
-**Browsing** is HTTP from the platform: the list, one episode's metadata, its frames and video index as written, and its pictures. The console's episodes page lists them and replays one, the world drawn by the same code as the live view beside the picture in force, scrubbed or played at the speed it happened.
+**The controller seam.** A controller inside the platform is anything that can describe itself and turn an observation into a twist. Two exist: the scripted square, which drives a leg and turns a quarter by the clock on the observations, and the policy client, which posts the observation as JSON to a policy server's `/act` and reads a twist back; `cmd/policy` stands in for a learned policy by steering home over the same protocol. The operator is the third kind and speaks through the hub.
 
-### M4 — hand over
+**The arbiter**, `motherbrain`, keeps one answer per robot to who is driving. A console hands a robot to a controller by name; the operator takes over by driving, since the hub asks the arbiter whether to admit each command, joint command and heartbeat from a console, and the first admitted one makes that console the holder and remembers who held it before; releasing hands the robot back to that controller, or to nobody. One operator at a time: while a console's operator holds a robot, another console's driving is refused before any tap sees it, and a holder silent for a second, disconnected or otherwise, leaves the robot in nobody's hands. An emergency stop from a console takes the robot out of every hand, the remembered one included.
 
-**The controller seam.** A controller inside the platform is anything that can describe itself and turn an observation into a twist: `motherbrain.Controller`. Two exist: the scripted square, which drives a leg and turns a quarter by the clock on the observations and so needs no state, and the policy client, which posts the observation as JSON to a policy server's `/act` and reads a twist back; `cmd/policy` stands in for a learned policy by steering home to the origin over the same protocol, so a real server replaces it without the platform noticing. The operator is the third kind of controller and speaks through the hub as before; nothing about driving changed for the console.
+**Acting.** While a controller inside the platform holds a robot, the arbiter calls it on every observation with a 40 ms budget, one call in flight per robot, and sends the robot a heartbeat and the command. A controller that fails or is late sends nothing, is complained about at most once a second, and the robot's own timeouts hold it still, so the safety story is unchanged by who is driving. Every change of hands is published as a `ControlState`, and the recorder stamps the holder on every frame.
 
-**The arbiter** keeps one answer per robot to who is driving. It is a tap on the hub, like the recorder, and runs on its own goroutine with its own inbox, skipping observations that piled up so a controller acts on the latest. A console hands a robot to a controller by name with a `ControlRequest`; the operator takes over by driving, since the hub asks the arbiter whether to admit each command, joint command and heartbeat from a console, and the first admitted one makes that console the holder and remembers who held it before; releasing hands the robot back to that controller, or to nobody. One operator at a time: while a console's operator holds a robot, another console's driving is refused before any tap sees it, and when the holder falls silent for a second, by disconnecting or otherwise, the robot is left in nobody's hands rather than resumed by whoever held it before. An emergency stop from a console takes the robot out of every hand, the remembered one included, so no controller drives on after it; the operator must hand it over again. While a controller inside the platform holds a robot, the arbiter calls it on every observation with a 40 ms budget, one call in flight per robot so a slow one holds up nobody else, and sends the robot a heartbeat and the command; a controller that fails or is late sends nothing, is complained about at most once a second, and the robot's own timeouts hold it still, so the safety story is unchanged by who is driving. Every change of hands is published as a `ControlState` with the holder, since when, and the controllers available.
+## Video
 
-**Publishing.** The platform's own voice is `Publish` on the hub: the message goes to every tap and every console, and the latest of its kind per robot is retained for consoles that join later, so a console always knows who holds a robot and whether it is being recorded. Taps also learn the source of each message, a robot, a camera, a console by id or the platform. The recorder sees the control states too and stamps the holder on every frame, so each change of hands is in the episode and the replay shows who was driving at any moment.
+**The camera is a peer like the robot.** A phone opens the console's `/camera` page, which takes the camera and connects to the hub's `/camera` endpoint, announcing which robot it is the eyes of. The console's video view shows the camera of the selected robot over the path chosen.
 
-**The console** is told its id in a `Welcome` when it joins, so it knows whether the operator holding a robot is its own. It shows the holder and since when in a control section, with a button per controller to hand the robot to, and explains that engaging takes over and releasing hands back; releasing sends the request along with a zero command. Engaged while another console's operator holds the robot, it says so and waits.
+**WebRTC is peer to peer; the platform only signals.** The console offers a receive-only connection, the hub stamps the offer with the console's id and routes it to the camera, which answers with its track; the answer and the ICE candidates route back by the same id. The platform never touches the media, so it is not recorded. There are no STUN or TURN servers while everything is on one network.
 
-### M5 — many
+**MJPEG goes through the platform.** When a console asks, the camera page repaints its frames onto a canvas 640 wide, encodes each as JPEG at quality 0.7 and sends them at 15 fps as `VideoFrame` messages; the hub passes them to the consoles that asked and the camera stops when the last one has left. This path puts the frames in the platform's hands, which is what recording needs.
 
-**Several robots** were never special for the platform: the hub keys robots, cameras and capabilities by robot id, and the arbiter and the recorder hold their state per robot. What M5 added is on the edges. The simulator takes a start pose, and the platform runs several (`-sims`) with their own ids, names and positions; the console's store keeps the latest observation, control state and episode status of every robot and the trail and history of the selected one only, and a fleet strip shows a card per robot with its holder, whether it is recording, its halt or driving state, its battery and its latest picture when frames are passing by. Clicking a card selects the robot for driving; the world draws the others dimly.
+**Measuring the two.** With `?clock=1` the camera page composes a band of 32 black and white blocks across the top of every frame, encoding the time it was composed. With `?measure=1` the console reads the band back from every new frame and summarizes the frames' ages: the time from composition to display, which covers encoding, the path, decoding and rendering, and means something only when both pages share a clock. `make results-video` runs both pages in one headless Chrome with a fake camera and writes the figures under `docs/results/`; the first run gave WebRTC a median of 30 ms and MJPEG 36 ms with a p95 near 60 ms.
 
-**Configurations** are versioned files: `data/config/robots/<id>/v<N>.json` and `data/config/tasks/<id>/v<N>.json`, each a `RobotConfig` or `TaskConfig` as JSON, every save a new version beside the earlier ones, so an episode can name the version it was recorded on and the file is still there to read. The platform serves them over HTTP, the current ones as lists and every version of one, and saving is a PUT. A new robot configuration is also published to consoles and retained, so the console drives within the configured limits at once: a configuration can lower a robot's limits, never raise them. The console's Config page edits both kinds; the recording controls offer the configured tasks, and the recorder stamps the robot's and the task's current versions on the episode, taking the task's name from the configuration.
+## Recording
 
-### M6 — real
+**The recorder** is a tap on the hub. A console asks to record a robot; from then on each observation of that robot becomes a frame carrying the command in force, the holder and the sequence of the latest picture, until the console asks to stop. Pictures come over the MJPEG path, which the recorder requests from the camera for itself, as one more peer. It reports what it is writing to every console once a second, and a flag marks an episode bad with a note, during or after. Episode ids are the start time and the robot's id; the robot's and the task's configuration versions are stamped on the episode.
 
-**The robot seam has its second implementation.** `emmi/rosbridge` speaks the rosbridge protocol to a ROS 2 robot: velocity commands become `geometry_msgs/msg/Twist` on `/cmd_vel`, odometry, joint states and battery state become observations. It publishes the twist every 50 ms, zero within that tick of the operator not being heard, and a last zero on the way out whatever the reason, since a plain ROS robot keeps doing what it was last told; that is the adapter's half of the safety story, and the guard that decides when is `emmi/safety`, extracted from the simulator for every adapter to share. `rosbridgetest` is a simulated ROS robot behind the same protocol, a differential drive that applies the last `/cmd_vel`; `cmd/rossim` runs it on a port for driving from the console, and the tests run it on a port of their own.
+**Three sinks** write every episode:
 
-**The contract tests** in `emmi/contracttest` are what every adapter must do, exercised through a real hub with a console client: announce, drive on command, stop when commands stop, stop when heartbeats stop, stop at once on an emergency stop ahead of five queued commands. Both Go adapters pass them, and `make contract` runs them as part of `make ci`; the Python sidecar has the same test in pytest.
+- **JSONL**, a directory per episode under `data/episodes/`: `meta.json`, `frames.jsonl` of `EpisodeFrame` rows, the pictures as JPEG files and `video.jsonl` indexing them, all the contract's own messages as JSON, readable by eye and by anything. It is also what the platform serves for browsing and the console replays.
+- **LeRobot v3.0**, one dataset per robot under `data/lerobot/<name>/<robot id>/`, since a dataset's state vector is laid out from one robot's joints: `info.json` with the features, `tasks.parquet` with the pandas metadata its reader expects, `stats.json` folded the way LeRobot's own aggregation does, one Parquet file and one episodes row per episode, and one MP4 per episode encoded with ffmpeg from the picture in force at each frame. Frames are stamped at the nominal rate, as LeRobot stamps them; `tourian.json` maps episode ids to indices and carries the flags, which the layout has no place for.
+- **MCAP**, one file per episode under `data/mcap/`: `/observation`, `/action` and `/controller` as protobuf with the schema embedded, `/camera` and `/pose` as Foxglove's JSON schemas, so Foxglove's panels show them without being told how. A metadata record names the episode and carries its flag.
 
-**MCAP is the third sink.** One file per episode: `/observation`, `/action` and `/controller` carry the contract's messages as protobuf with the FileDescriptorSet embedded as the schema, `/camera` and `/pose` carry `foxglove.CompressedImage` and `foxglove.PoseInFrame` as JSON with their schemas, so Foxglove's panels show them without being told how. Log times are the episode's start plus each frame's offset; a metadata record names the episode and carries its flag, and a flag set after the file is closed is written beside it.
+**Configurations** are versioned files under `data/config/`, every save a new version beside the earlier ones, so an episode can name the version it was recorded on and the file is still there. The platform serves them over HTTP and publishes a new robot configuration to consoles at once; a configuration can lower a robot's limits, never raise them.
 
-**The arm sidecar** is Python, under `sidecars/arm`, because the drivers of physical arms tend to be. The contract is generated for Python with buf's remote plugin under `gen/python`. `ArmDriver` is what the sidecar needs from an arm's own driver: named joints, positions, a target to move toward and a stop that holds; `FakeArm` stands in. The sidecar announces the arm, acknowledges each `JointCommand` on arrival, moves toward the target while the operator is heard and holds the arm the moment not, through a guard with the same semantics as the Go one. It is tested end to end against a stand-in platform over WebSocket. The hardware retest waits for an arm, and the console has no joint controls yet, so an arm is driven by a controller inside the platform or a console that speaks `JointCommand`.
+## The console
 
-### Layout
+Next.js with the App Router, one store (zustand) that the connection writes and the components read: the robots, cameras, control states and episode statuses of the fleet, and the trail and the last six seconds of speed, turn rate, battery and latency of the selected robot. A driver loop at 20 Hz reads the keyboard and the gamepad and, while engaged, sends a heartbeat and a command scaled to the robot's effective limits. Latency is the round trip of each command to its acknowledgement, matched by sequence number.
+
+The control room draws the world on a canvas with the picture above it, telemetry with sparklines beside it, the control panel saying who holds the robot and whether this console's driving waits, the recording controls, and a fleet strip when there is more than one robot. The other pages are `/camera` for a phone, `/episodes` with the replay, and `/config`.
+
+## Tooling
+
+`make ci` is what hosted CI runs: golangci-lint, buf lint and format, Prettier, oxlint, tsc, markdownlint, ruff, the generation check, the Go tests under the race detector, the Vitest and pytest tests, the Go and Next.js builds, and the contract tests. `make tools` installs buf, protoc-gen-go and golangci-lint into `bin/` at pinned versions. `make screenshot` and `make results-video` build and serve the console and the platform and drive headless Chrome against them.
+
+## Layout
 
 | Directory | What it holds |
 | --- | --- |
@@ -94,43 +130,27 @@ One repository, three languages, one contract. The Go module `github.com/vlumi/t
 | `motherbrain/` | the controller seam and the arbiter; `script/` the square, `policy/` the client of a policy server |
 | `transport/ws` | contract messages over WebSocket |
 | `transport/httpjson` | contract messages as JSON responses |
-| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `fleet/` the strip of robots, `config/` the configuration page, `episodes/` the list and the replay, `test/` the Vitest setup; `app/` the pages: the control room, `camera` for a phone, `episodes` and `episodes/[id]`, `config` |
+| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `fleet/` the strip of robots, `config/` the configuration page, `episodes/` the list and the replay; `app/` the pages |
 | `sidecars/arm` | the Python sidecar for a physical arm |
 | `scripts/` | what the make targets run |
 | `docs/` | screenshots, and the measurements under `results/` |
 
-### The shape of it
+## Not there yet
 
-The platform is one Go process in the middle. Robot adapters connect to it and announce their capabilities; consoles connect to it and see the fleet; controllers hold robots through it. The contract is the same on every edge, so the platform forwards, records and arbitrates without knowing what kind of robot or controller is on the other side. The camera is a phone's for now; a camera on the ROS robot or the arm is not bridged yet.
+- A second transport beside WebSocket, for comparison, under `transport/`.
+- A camera on the ROS robot or the arm; the camera is a phone's.
+- Joint controls in the console, so an arm can be driven by the operator.
+- Authentication, before the platform is reachable from anywhere but a laptop.
 
-```mermaid
-flowchart LR
-  subgraph robots [Robots, emmi]
-    sim["2D simulator<br>Go, in process or separate"]
-    ros["ROS 2 bridge<br>rosbridge"]
-    arm["Arm<br>Python sidecar"]
-  end
-  subgraph controllers [Controllers, motherbrain]
-    samus["Operator<br>the console"]
-    script["Scripted routine"]
-    policy["Learned policy<br>policy server"]
-  end
-  platform["tourian<br>arbiter, recorder, signaling"]
-  sim & ros & arm <-->|"contract over a transport"| platform
-  samus & script & policy <-->|"contract over a transport"| platform
-  camera["Camera<br>a phone"] -->|"WebRTC, or MJPEG via the platform"| samus
-  platform --> sink[("Dataset sink<br>JSONL, LeRobot, MCAP")]
-  platform <--> config[("Configurations<br>robots, tasks, versioned")]
-```
+## How it was built
 
-### The contract
+All of it landed on 2026-11-10, milestone by milestone, followed by review, cleanup and hardening rounds on 2026-11-11.
 
-One Protobuf package, `tourian.v1`, in files under `proto/tourian/v1/`: `header` and `geometry` in ROS 2 shapes, `robot` (capabilities, observations, velocity and joint commands, acknowledgements, heartbeat, stop), `video` (camera announce, signaling, frames), `control` (who holds a robot, handing over and releasing), `episode` (recording start and end, status, flags, the frame and metadata layout), `config` (robot and task configurations with versions), and `transport` (the Envelope every frame carries).
-
-## Planned
-
-### Where the rest will be
-
-| Directory | What it will hold |
-| --- | --- |
-| `transport/<other>` | the other transports beside `ws`, for comparison |
+- **M0, the toolchain and the first contract.** The repository, the three generators, the platform binary with a health endpoint, a console page listing the contract's messages, and the `make ci` gate.
+- **M1, drive.** The hub and the WebSocket transport, the simulator with the safety behaviors in it, and the control room with the world, telemetry and latency.
+- **M2, see.** The camera as a peer, WebRTC with the platform signaling, MJPEG through the platform, and the clock band that measures both.
+- **M3, record.** The recorder as a tap, the JSONL and LeRobot sinks, flags, browsing and replay.
+- **M4, hand over.** The controller seam with the square and the policy client, the arbiter, and the holder stamped into every frame.
+- **M5, many.** Several simulated robots, the fleet strip, and versioned configurations of robots and tasks.
+- **M6, real.** The rosbridge adapter with a simulated ROS robot, the safety guard extracted for every adapter, the contract tests, the MCAP sink, and the Python arm sidecar.
+- **Review, cleanup, hardening.** The code read against the documents and itself, one operator at a time with a lease, frames only to those who asked, duplication folded, and origin checks, timeouts and fuzzing added.
