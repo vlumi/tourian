@@ -55,6 +55,7 @@ type Recorder struct {
 
 type recording struct {
 	episode     *tourianv1.Episode
+	sinks       []Sink
 	startedAt   time.Time
 	lastCommand *tourianv1.VelocityCommand
 	lastJoints  *tourianv1.JointCommand
@@ -146,7 +147,7 @@ func (r *Recorder) start(request *tourianv1.RecordRequest) {
 		return
 	}
 	now := r.now()
-	id := now.UTC().Format("20060102-150405") + "-" + SafeName(robotID)
+	id := now.UTC().Format("20060102-150405.000") + "-" + SafeName(robotID)
 	rec := &recording{
 		episode: &tourianv1.Episode{
 			Id:        id,
@@ -168,9 +169,14 @@ func (r *Recorder) start(request *tourianv1.RecordRequest) {
 	}
 	for _, sink := range r.sinks {
 		if err := sink.Begin(rec.episode); err != nil {
-			log.Printf("episode: cannot start %s: %v", id, err)
-			return
+			log.Printf("episode: %s goes without %T: %v", id, sink, err)
+			continue
 		}
+		rec.sinks = append(rec.sinks, sink)
+	}
+	if len(rec.sinks) == 0 {
+		log.Printf("episode: cannot start %s: no sink could begin", id)
+		return
 	}
 	r.active[robotID] = rec
 	r.platform.RequestVideo(robotID, peerID, true)
@@ -186,7 +192,7 @@ func (r *Recorder) stop(robotID string) {
 	delete(r.active, robotID)
 	r.platform.RequestVideo(robotID, peerID, false)
 	rec.episode.EndedAt = timestamppb.New(r.now())
-	for _, sink := range r.sinks {
+	for _, sink := range rec.sinks {
 		if err := sink.End(rec.episode); err != nil {
 			log.Printf("episode: closing %s: %v", rec.episode.GetId(), err)
 		}
@@ -205,7 +211,7 @@ func (r *Recorder) observe(rec *recording, observation *tourianv1.Observation) {
 		VideoSequence: rec.lastVideo,
 		Controller:    r.holders[observation.GetRobotId()],
 	}
-	for _, sink := range r.sinks {
+	for _, sink := range rec.sinks {
 		if err := sink.Frame(rec.episode, frame); err != nil {
 			log.Printf("episode: writing frame: %v", err)
 		}
@@ -214,7 +220,7 @@ func (r *Recorder) observe(rec *recording, observation *tourianv1.Observation) {
 }
 
 func (r *Recorder) picture(rec *recording, frame *tourianv1.VideoFrame) {
-	for _, sink := range r.sinks {
+	for _, sink := range rec.sinks {
 		if err := sink.Picture(rec.episode, frame, r.offset(rec, frame.GetHeader().GetStamp())); err != nil {
 			log.Printf("episode: writing picture: %v", err)
 		}

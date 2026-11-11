@@ -64,8 +64,8 @@ func writeParquet[T any](path string, rows []T, options ...parquet.WriterOption)
 const pandasTasksMetadata = `{"index_columns": ["task"], "column_indexes": [{"name": null, "field_name": null, "pandas_type": "unicode", "numpy_type": "object", "metadata": {"encoding": "UTF-8"}}], "columns": [{"name": "task_index", "field_name": "task_index", "pandas_type": "int64", "numpy_type": "int64", "metadata": null}, {"name": "task", "field_name": "task", "pandas_type": "unicode", "numpy_type": "object", "metadata": null}], "creator": {"library": "pyarrow", "version": "17.0.0"}, "pandas_version": "2.2.2"}`
 
 // ensureTask returns the index of the task, adding it to the table when it is new.
-func (s *Sink) ensureTask(task string) (int64, error) {
-	path := filepath.Join(s.root, tasksPath)
+func (d dataset) ensureTask(task string) (int64, error) {
+	path := filepath.Join(d.root, tasksPath)
 	var tasks []taskRow
 	if _, err := os.Stat(path); err == nil {
 		tasks, err = parquet.ReadFile[taskRow](path)
@@ -107,8 +107,8 @@ type feature struct {
 }
 
 // loadInfo reads the dataset's schema, or lays it down from the first episode: the state from its joints, the camera from its pictures, the video only when ffmpeg can encode it.
-func (s *Sink) loadInfo(ep *episode) (*info, error) {
-	path := filepath.Join(s.root, infoPath)
+func (d dataset) loadInfo(s *Sink, ep *episode) (*info, error) {
+	path := filepath.Join(d.root, infoPath)
 	if data, err := os.ReadFile(path); err == nil {
 		var existing info
 		if err := json.Unmarshal(data, &existing); err != nil {
@@ -168,10 +168,10 @@ func (s *Sink) loadInfo(ep *episode) (*info, error) {
 	return created, nil
 }
 
-func (s *Sink) writeInfo(i *info) error {
-	tasks, _ := parquet.ReadFile[taskRow](filepath.Join(s.root, tasksPath))
+func (d dataset) writeInfo(i *info) error {
+	tasks, _ := parquet.ReadFile[taskRow](filepath.Join(d.root, tasksPath))
 	i.TotalTasks = int64(len(tasks))
-	return writeJSON(filepath.Join(s.root, infoPath), i)
+	return writeJSON(filepath.Join(d.root, infoPath), i)
 }
 
 func writeJSON(path string, value any) error {

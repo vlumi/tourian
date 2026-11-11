@@ -153,7 +153,7 @@ func (s *Server) publish(ctx context.Context, conn *websocket.Conn, subscribed <
 						"twist": map[string]any{"twist": s.cmd},
 					}
 				case "sensor_msgs/msg/JointState":
-					messages[topic] = map[string]any{"header": header, "name": []string{"wheel_left", "wheel_right"}, "position": s.wheels[:], "velocity": []float64{}, "effort": []float64{}}
+					messages[topic] = map[string]any{"header": header, "name": []string{"wheel_left", "wheel_right"}, "position": []float64{s.wheels[0], s.wheels[1]}, "velocity": []float64{}, "effort": []float64{}}
 				case "sensor_msgs/msg/BatteryState":
 					messages[topic] = map[string]any{"header": header, "voltage": 12.1, "percentage": 0.8}
 				}

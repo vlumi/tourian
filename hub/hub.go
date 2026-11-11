@@ -104,10 +104,15 @@ func (h *Hub) Publish(message proto.Message) {
 	h.mu.Unlock()
 }
 
-// SendToRobot delivers a message to a robot on behalf of a part of the platform, like a controller that holds it.
+// SendToRobot delivers a message to a robot on behalf of a part of the platform, like a controller that holds it; taps see it as they see a console's, so what a controller tells a robot is recorded.
 func (h *Hub) SendToRobot(robotID string, message proto.Message) {
+	env, err := ws.Wrap(message)
+	if err != nil {
+		return
+	}
+	h.tap(Source{Kind: SourcePlatform}, env)
 	if robot := h.robot(robotID); robot != nil {
-		robot.send(message)
+		robot.send(env)
 	}
 }
 

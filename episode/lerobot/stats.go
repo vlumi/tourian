@@ -103,8 +103,8 @@ func pictureStats(pictures []picture, frames int) (*featureStats, error) {
 	return columnStats(channels, int64(frames)), nil
 }
 
-func (s *Sink) foldStats(episodeStats map[string]*featureStats) error {
-	path := filepath.Join(s.root, statsPath)
+func (d dataset) foldStats(episodeStats map[string]*featureStats) error {
+	path := filepath.Join(d.root, statsPath)
 	total := map[string]*featureStats{}
 	if data, err := os.ReadFile(path); err == nil {
 		if err := json.Unmarshal(data, &total); err != nil {

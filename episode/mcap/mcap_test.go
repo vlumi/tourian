@@ -38,10 +38,11 @@ func TestWritesAReadableFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	episode.Frames, episode.VideoFrames = 4, 1
+	episode.Bad, episode.Note = true, "blurry"
 	if err := sink.End(episode); err != nil {
 		t.Fatal(err)
 	}
-	if err := sink.Flag("ep-1", true, "blurry"); err != nil {
+	if err := sink.Flag("../ep-1", true, "blurry"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -71,6 +72,10 @@ func TestWritesAReadableFile(t *testing.T) {
 	if len(info.MetadataIndexes) != 1 || info.MetadataIndexes[0].Name != "tourian" {
 		t.Errorf("metadata = %v", info.MetadataIndexes)
 	}
+	metadata, err := reader.GetMetadata(info.MetadataIndexes[0].Offset)
+	if err != nil || metadata.Metadata["bad"] != "true" || metadata.Metadata["note"] != "blurry" {
+		t.Errorf("metadata = %v, %v", metadata, err)
+	}
 
 	it, err := reader.Messages(foxmcap.WithTopics([]string{"/observation"}))
 	if err != nil {
@@ -96,7 +101,7 @@ func TestWritesAReadableFile(t *testing.T) {
 	if last.GetPose().GetPosition().GetX() != 3 {
 		t.Errorf("last observation = %v", last)
 	}
-	if _, err := os.Stat(filepath.Join(root, "ep-1.flag.json")); err != nil {
-		t.Error("the flag should sit beside the file")
+	if _, err := os.Stat(filepath.Join(root, ".._ep-1.flag.json")); err != nil {
+		t.Error("the flag should sit beside the file, under a name kept inside the directory")
 	}
 }
