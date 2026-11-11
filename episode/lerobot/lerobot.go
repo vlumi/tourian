@@ -3,7 +3,6 @@ package lerobot
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -65,6 +64,13 @@ func New(root string, fps int) *Sink {
 	return &Sink{root: root, fps: fps, ffmpeg: ffmpeg, open: map[string]*episode{}}
 }
 
+func (s *Sink) opened(meta *tourianv1.Episode) (*episode, error) {
+	if ep := s.open[meta.GetId()]; ep != nil {
+		return ep, nil
+	}
+	return nil, fmt.Errorf("lerobot: episode %s not open", meta.GetId())
+}
+
 func (s *Sink) Begin(meta *tourianv1.Episode) error {
 	dir, err := os.MkdirTemp("", "tourian-lerobot-")
 	if err != nil {
@@ -75,18 +81,18 @@ func (s *Sink) Begin(meta *tourianv1.Episode) error {
 }
 
 func (s *Sink) Frame(meta *tourianv1.Episode, frame *tourianv1.EpisodeFrame) error {
-	ep := s.open[meta.GetId()]
-	if ep == nil {
-		return errors.New("lerobot: episode not open")
+	ep, err := s.opened(meta)
+	if err != nil {
+		return err
 	}
 	ep.frames = append(ep.frames, frame)
 	return nil
 }
 
 func (s *Sink) Picture(meta *tourianv1.Episode, frame *tourianv1.VideoFrame, offset time.Duration) error {
-	ep := s.open[meta.GetId()]
-	if ep == nil {
-		return errors.New("lerobot: episode not open")
+	ep, err := s.opened(meta)
+	if err != nil {
+		return err
 	}
 	file := filepath.Join(ep.dir, fmt.Sprintf("%06d.jpg", len(ep.pictures)))
 	if err := os.WriteFile(file, frame.GetJpeg(), 0o644); err != nil {
@@ -98,9 +104,9 @@ func (s *Sink) Picture(meta *tourianv1.Episode, frame *tourianv1.VideoFrame, off
 
 // End lays the episode down: the frames as a data file, a row in an episodes file, the task in the task table, the statistics folded into the dataset's, the video encoded, and the schema's totals advanced.
 func (s *Sink) End(meta *tourianv1.Episode) error {
-	ep := s.open[meta.GetId()]
-	if ep == nil {
-		return errors.New("lerobot: episode not open")
+	ep, err := s.opened(meta)
+	if err != nil {
+		return err
 	}
 	delete(s.open, meta.GetId())
 	defer func() { _ = os.RemoveAll(ep.dir) }()

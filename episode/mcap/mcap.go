@@ -102,10 +102,17 @@ func (s *Sink) begin(file *os.File) (*foxmcap.Writer, error) {
 	return w, nil
 }
 
+func (s *Sink) opened(ep *tourianv1.Episode) (*writer, error) {
+	if w := s.open[ep.GetId()]; w != nil {
+		return w, nil
+	}
+	return nil, fmt.Errorf("mcap: episode %s not open", ep.GetId())
+}
+
 func (s *Sink) Frame(ep *tourianv1.Episode, frame *tourianv1.EpisodeFrame) error {
-	w := s.open[ep.GetId()]
-	if w == nil {
-		return fmt.Errorf("mcap: episode %s not open", ep.GetId())
+	w, err := s.opened(ep)
+	if err != nil {
+		return err
 	}
 	at := w.start.Add(frame.GetOffset().AsDuration())
 	if err := w.writeProto(observationChannel, at, frame.GetObservation()); err != nil {
@@ -134,9 +141,9 @@ func (s *Sink) Frame(ep *tourianv1.Episode, frame *tourianv1.EpisodeFrame) error
 }
 
 func (s *Sink) Picture(ep *tourianv1.Episode, frame *tourianv1.VideoFrame, offset time.Duration) error {
-	w := s.open[ep.GetId()]
-	if w == nil {
-		return fmt.Errorf("mcap: episode %s not open", ep.GetId())
+	w, err := s.opened(ep)
+	if err != nil {
+		return err
 	}
 	at := w.start.Add(offset)
 	return w.writeJSON(cameraChannel, at, map[string]any{
@@ -149,12 +156,12 @@ func (s *Sink) Picture(ep *tourianv1.Episode, frame *tourianv1.VideoFrame, offse
 
 // End closes the file with the episode's metadata, flag included, since a flag set while recording reaches no sink by itself.
 func (s *Sink) End(ep *tourianv1.Episode) error {
-	w := s.open[ep.GetId()]
-	if w == nil {
-		return fmt.Errorf("mcap: episode %s not open", ep.GetId())
+	w, err := s.opened(ep)
+	if err != nil {
+		return err
 	}
 	delete(s.open, ep.GetId())
-	err := w.mcap.WriteMetadata(&foxmcap.Metadata{Name: "tourian", Metadata: map[string]string{
+	err = w.mcap.WriteMetadata(&foxmcap.Metadata{Name: "tourian", Metadata: map[string]string{
 		"episode_id": ep.GetId(),
 		"robot_id":   ep.GetRobotId(),
 		"task":       ep.GetTask(),
