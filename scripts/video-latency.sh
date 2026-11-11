@@ -1,27 +1,17 @@
 #!/usr/bin/env sh
 # Builds and serves the console with the platform and the simulator, measures video latency on both paths with a fake
-# camera, and writes the results as Markdown with the date, commit and machine to the given file.
+# camera, and writes the results as Markdown with the date, commit and machine under docs/results/, or to OUT.
 set -eu
 
-out="$1"
-port="${PORT:-3100}"
-platform_port="${PLATFORM_PORT:-8090}"
+date="$(date +%Y-%m-%d)"
+out="${OUT:-docs/results/$date-video-latency.md}"
+mkdir -p "$(dirname "$out")"
 json="$(mktemp)"
-trap 'kill $platform $console 2>/dev/null; rm -f "$json"' EXIT
-
-NEXT_PUBLIC_TOURIAN_URL="ws://localhost:$platform_port" npm run build --workspace console >/dev/null
-go run ./cmd/tourian -sim -addr ":$platform_port" >/dev/null 2>&1 &
-platform=$!
-npm run start --workspace console -- --port "$port" >/dev/null 2>&1 &
-console=$!
-for _ in $(seq 1 50); do
-  curl -sf "http://localhost:$port/" >/dev/null 2>&1 && curl -sf "http://localhost:$platform_port/healthz" >/dev/null 2>&1 && break
-  sleep 0.2
-done
+trap 'kill $platform $console 2>/dev/null; rm -rf "$build" "$json"' EXIT
+. scripts/serve.sh
 
 node scripts/video-latency.mjs "http://localhost:$port" zebes-1 "${SCREENSHOT:-}" > "$json"
 
-date="$(date +%Y-%m-%d)"
 commit="$(git rev-parse --short HEAD)"
 machine="$(sysctl -n machdep.cpu.brand_string 2>/dev/null || uname -m), $(sw_vers -productName 2>/dev/null || uname -s) $(sw_vers -productVersion 2>/dev/null || uname -r)"
 field() { node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))[process.argv[2]])' "$json" "$1"; }
