@@ -36,102 +36,98 @@ func NewStore(root string, now func() time.Time) *Store {
 
 // PutRobot stores the configuration as the robot's next version and returns it as stored.
 func (s *Store) PutRobot(c *tourianv1.RobotConfig) (*tourianv1.RobotConfig, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	version, err := s.nextVersion("robots", c.GetRobotId())
-	if err != nil {
-		return nil, err
-	}
-	stored := proto.Clone(c).(*tourianv1.RobotConfig)
-	stored.Version = version
-	stored.UpdatedAt = timestamppb.New(s.now())
-	return stored, s.write("robots", c.GetRobotId(), version, stored)
+	return put(s, robots, c.GetRobotId(), c, func(stored *tourianv1.RobotConfig, version uint32, at *timestamppb.Timestamp) {
+		stored.Version, stored.UpdatedAt = version, at
+	})
 }
 
 func (s *Store) PutTask(c *tourianv1.TaskConfig) (*tourianv1.TaskConfig, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	version, err := s.nextVersion("tasks", c.GetTaskId())
-	if err != nil {
-		return nil, err
-	}
-	stored := proto.Clone(c).(*tourianv1.TaskConfig)
-	stored.Version = version
-	stored.UpdatedAt = timestamppb.New(s.now())
-	return stored, s.write("tasks", c.GetTaskId(), version, stored)
+	return put(s, tasks, c.GetTaskId(), c, func(stored *tourianv1.TaskConfig, version uint32, at *timestamppb.Timestamp) {
+		stored.Version, stored.UpdatedAt = version, at
+	})
 }
 
 // LatestRobot is the robot's current configuration, nil when it has none.
 func (s *Store) LatestRobot(robotID string) *tourianv1.RobotConfig {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	versions := s.versions("robots", robotID)
-	if len(versions) == 0 {
-		return nil
-	}
-	c := &tourianv1.RobotConfig{}
-	if s.read("robots", robotID, versions[len(versions)-1], c) != nil {
-		return nil
-	}
-	return c
+	return latest[tourianv1.RobotConfig](s, robots, robotID)
 }
 
 func (s *Store) LatestTask(taskID string) *tourianv1.TaskConfig {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	versions := s.versions("tasks", taskID)
-	if len(versions) == 0 {
-		return nil
-	}
-	c := &tourianv1.TaskConfig{}
-	if s.read("tasks", taskID, versions[len(versions)-1], c) != nil {
-		return nil
-	}
-	return c
+	return latest[tourianv1.TaskConfig](s, tasks, taskID)
 }
 
 // Robots lists the current configuration of every robot that has one, by id.
 func (s *Store) Robots() []*tourianv1.RobotConfig {
-	var out []*tourianv1.RobotConfig
-	for _, id := range s.ids("robots") {
-		if c := s.LatestRobot(id); c != nil {
-			out = append(out, c)
-		}
-	}
-	return out
+	return all[tourianv1.RobotConfig](s, robots)
 }
 
 func (s *Store) Tasks() []*tourianv1.TaskConfig {
-	var out []*tourianv1.TaskConfig
-	for _, id := range s.ids("tasks") {
-		if c := s.LatestTask(id); c != nil {
-			out = append(out, c)
-		}
-	}
-	return out
+	return all[tourianv1.TaskConfig](s, tasks)
 }
 
 // RobotVersions is every version of a robot's configuration, oldest first.
 func (s *Store) RobotVersions(robotID string) []*tourianv1.RobotConfig {
+	return history[tourianv1.RobotConfig](s, robots, robotID)
+}
+
+func (s *Store) TaskVersions(taskID string) []*tourianv1.TaskConfig {
+	return history[tourianv1.TaskConfig](s, tasks, taskID)
+}
+
+const (
+	robots = "robots"
+	tasks  = "tasks"
+)
+
+// A config is a generated message reached through its pointer, so that a fresh one can be made from the type alone.
+type config[M any] interface {
+	*M
+	proto.Message
+}
+
+func put[M any, C config[M]](s *Store, kind, id string, c C, stamp func(stored C, version uint32, at *timestamppb.Timestamp)) (C, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	var out []*tourianv1.RobotConfig
-	for _, v := range s.versions("robots", robotID) {
-		c := &tourianv1.RobotConfig{}
-		if s.read("robots", robotID, v, c) == nil {
+	version, err := s.nextVersion(kind, id)
+	if err != nil {
+		return nil, err
+	}
+	stored := proto.Clone(c).(C)
+	stamp(stored, version, timestamppb.New(s.now()))
+	return stored, s.write(kind, id, version, stored)
+}
+
+func latest[M any, C config[M]](s *Store, kind, id string) C {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	versions := s.versions(kind, id)
+	if len(versions) == 0 {
+		return nil
+	}
+	c := C(new(M))
+	if s.read(kind, id, versions[len(versions)-1], c) != nil {
+		return nil
+	}
+	return c
+}
+
+func all[M any, C config[M]](s *Store, kind string) []C {
+	var out []C
+	for _, id := range s.ids(kind) {
+		if c := latest[M, C](s, kind, id); c != nil {
 			out = append(out, c)
 		}
 	}
 	return out
 }
 
-func (s *Store) TaskVersions(taskID string) []*tourianv1.TaskConfig {
+func history[M any, C config[M]](s *Store, kind, id string) []C {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	var out []*tourianv1.TaskConfig
-	for _, v := range s.versions("tasks", taskID) {
-		c := &tourianv1.TaskConfig{}
-		if s.read("tasks", taskID, v, c) == nil {
+	var out []C
+	for _, v := range s.versions(kind, id) {
+		c := C(new(M))
+		if s.read(kind, id, v, c) == nil {
 			out = append(out, c)
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/vlumi/tourian/emmi"
 	"github.com/vlumi/tourian/emmi/safety"
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -129,8 +130,8 @@ func (r *Robot) Step(dt time.Duration) {
 	seconds := dt.Seconds()
 
 	for _, cmd := range r.queue {
-		r.linear = clamp(cmd.GetTwist().GetLinear().GetX(), r.cfg.MaxLinear)
-		r.angular = clamp(cmd.GetTwist().GetAngular().GetZ(), r.cfg.MaxAngular)
+		r.linear = emmi.Clamp(cmd.GetTwist().GetLinear().GetX(), r.cfg.MaxLinear)
+		r.angular = emmi.Clamp(cmd.GetTwist().GetAngular().GetZ(), r.cfg.MaxAngular)
 		r.lastSequence = cmd.GetSequence()
 		r.guard.Command(now)
 	}
@@ -142,8 +143,8 @@ func (r *Robot) Step(dt time.Duration) {
 	}
 
 	r.theta = wrapAngle(r.theta + r.angular*seconds)
-	r.x = clamp(r.x+r.linear*math.Cos(r.theta)*seconds, r.cfg.ArenaHalfWidth)
-	r.y = clamp(r.y+r.linear*math.Sin(r.theta)*seconds, r.cfg.ArenaHalfWidth)
+	r.x = emmi.Clamp(r.x+r.linear*math.Cos(r.theta)*seconds, r.cfg.ArenaHalfWidth)
+	r.y = emmi.Clamp(r.y+r.linear*math.Sin(r.theta)*seconds, r.cfg.ArenaHalfWidth)
 
 	left, right := r.wheelSpeeds()
 	r.wheelLeft += left * seconds
@@ -187,10 +188,6 @@ func (r *Robot) wheelSpeeds() (left, right float64) {
 
 func (r *Robot) header() *tourianv1.Header {
 	return &tourianv1.Header{Stamp: timestamppb.New(r.now()), FrameId: frameID}
-}
-
-func clamp(v, limit float64) float64 {
-	return math.Max(-limit, math.Min(limit, v))
 }
 
 func wrapAngle(a float64) float64 {

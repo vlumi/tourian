@@ -84,6 +84,7 @@ One repository, three languages, one contract. The Go module `github.com/vlumi/t
 | `cmd/rosbridge` | the rosbridge adapter as its own process |
 | `cmd/rossim` | a simulated ROS 2 robot behind the rosbridge protocol |
 | `config/` | the versioned configurations of robots and tasks, and their HTTP |
+| `emmi/` | what the robot adapters share: the reconnect loop, the write loop and the clamp |
 | `emmi/zebes` | the simulated robot: world and the connection to the platform |
 | `emmi/rosbridge` | the adapter for a ROS 2 robot through rosbridge; `rosbridgetest/` the simulated one |
 | `emmi/safety` | the guard every adapter shares |
@@ -92,6 +93,7 @@ One repository, three languages, one contract. The Go module `github.com/vlumi/t
 | `episode/` | the recorder, the JSONL sink, the HTTP for browsing; `lerobot/` the LeRobot v3.0 sink, `mcap/` the MCAP sink |
 | `motherbrain/` | the controller seam and the arbiter; `script/` the square, `policy/` the client of a policy server |
 | `transport/ws` | contract messages over WebSocket |
+| `transport/httpjson` | contract messages as JSON responses |
 | `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `fleet/` the strip of robots, `config/` the configuration page, `episodes/` the list and the replay, `test/` the Vitest setup; `app/` the pages: the control room, `camera` for a phone, `episodes` and `episodes/[id]`, `config` |
 | `sidecars/arm` | the Python sidecar for a physical arm |
 | `scripts/` | what the make targets run |

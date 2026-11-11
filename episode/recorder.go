@@ -9,6 +9,7 @@ import (
 
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
 	"github.com/vlumi/tourian/hub"
+	"github.com/vlumi/tourian/transport/ws"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -111,6 +112,7 @@ func (r *Recorder) Run(ctx context.Context) {
 
 // Handle applies one message; Run calls it from one goroutine, tests call it directly.
 func (r *Recorder) Handle(env *tourianv1.Envelope) {
+	rec := r.active[ws.RobotID(env)]
 	switch m := env.GetMessage().(type) {
 	case *tourianv1.Envelope_RecordRequest:
 		if m.RecordRequest.GetStart() {
@@ -121,19 +123,19 @@ func (r *Recorder) Handle(env *tourianv1.Envelope) {
 	case *tourianv1.Envelope_EpisodeFlag:
 		r.flag(m.EpisodeFlag)
 	case *tourianv1.Envelope_VelocityCommand:
-		if rec := r.active[m.VelocityCommand.GetRobotId()]; rec != nil {
+		if rec != nil {
 			rec.lastCommand = m.VelocityCommand
 		}
 	case *tourianv1.Envelope_JointCommand:
-		if rec := r.active[m.JointCommand.GetRobotId()]; rec != nil {
+		if rec != nil {
 			rec.lastJoints = m.JointCommand
 		}
 	case *tourianv1.Envelope_Observation:
-		if rec := r.active[m.Observation.GetRobotId()]; rec != nil {
+		if rec != nil {
 			r.observe(rec, m.Observation)
 		}
 	case *tourianv1.Envelope_VideoFrame:
-		if rec := r.active[m.VideoFrame.GetRobotId()]; rec != nil {
+		if rec != nil {
 			r.picture(rec, m.VideoFrame)
 		}
 	case *tourianv1.Envelope_ControlState:

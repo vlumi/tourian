@@ -14,7 +14,7 @@ import (
 
 func TestServesEpisodes(t *testing.T) {
 	root := t.TempDir()
-	writer, err := NewWriter(filepath.Join(root, "ep-1"))
+	writer, err := newWriter(filepath.Join(root, "ep-1"))
 	if err != nil {
 		t.Fatal(err)
 	}

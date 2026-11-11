@@ -22,7 +22,7 @@ func command(linear float64) *tourianv1.VelocityCommand {
 }
 
 func TestContract(t *testing.T) {
-	ros := rosbridgetest.New()
+	ros := rosbridgetest.Start()
 	defer ros.Close()
 	cfg := DefaultConfig()
 	cfg.RosbridgeURL = ros.URL()
@@ -37,7 +37,7 @@ func TestContract(t *testing.T) {
 }
 
 func TestLeavesTheRobotStoppedOnTheWayOut(t *testing.T) {
-	ros := rosbridgetest.New()
+	ros := rosbridgetest.Start()
 	defer ros.Close()
 	hubServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})

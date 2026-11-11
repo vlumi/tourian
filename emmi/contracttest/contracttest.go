@@ -1,4 +1,4 @@
-// Package contracttest is what every robot adapter must do, exercised through a real hub: announce itself, drive on command, stop when commands stop, stop when heartbeats stop, and stop at once on an emergency stop ahead of anything queued.
+// Package contracttest is what every robot adapter must do, exercised through a real hub: announce itself, drive on command and acknowledge it, stop when commands stop, stop when heartbeats stop, and stop at once on an emergency stop ahead of anything queued.
 package contracttest
 
 import (
@@ -52,6 +52,7 @@ func Run(t *testing.T, h Harness) {
 
 	observations := make(chan *tourianv1.Observation, 256)
 	capabilities := make(chan *tourianv1.Capabilities, 1)
+	var acks atomic.Int64
 	go func() {
 		for {
 			env, err := ws.Receive(ctx, console)
@@ -69,6 +70,8 @@ func Run(t *testing.T, h Harness) {
 				case observations <- m.Observation:
 				default:
 				}
+			case *tourianv1.Envelope_CommandAck:
+				acks.Add(1)
 			}
 		}
 	}()
@@ -137,6 +140,12 @@ func Run(t *testing.T, h Harness) {
 		heartbeats.Store(true)
 		commands.Store(true)
 		await("moving", 2*time.Second, moving)
+		for deadline := time.Now().Add(time.Second); acks.Load() == 0; {
+			if time.Now().After(deadline) {
+				t.Fatal("the adapter should acknowledge the commands")
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
 	})
 	t.Run("stops when commands stop", func(t *testing.T) {
 		commands.Store(false)

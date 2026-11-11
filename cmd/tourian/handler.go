@@ -17,8 +17,9 @@ func newHandler(h *hub.Hub, episodes string, configs *config.Store) http.Handler
 	mux.HandleFunc("GET /robot", h.ServeRobot)
 	mux.HandleFunc("GET /camera", h.ServeCamera)
 	mux.HandleFunc("GET /console", h.ServeConsole)
-	mux.Handle("GET /episodes", episode.Handler(episodes))
-	mux.Handle("GET /episodes/", episode.Handler(episodes))
+	browse := episode.Handler(episodes)
+	mux.Handle("GET /episodes", browse)
+	mux.Handle("GET /episodes/", browse)
 	mux.Handle("/config/", config.Handler(configs, h))
 	return allowAnyOrigin(mux)
 }

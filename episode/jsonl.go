@@ -23,15 +23,15 @@ const (
 // JSONL lays each episode out in its own directory for reading by eye and by anything: one JSON object per line for the frames and the video index, the pictures as JPEG files, and the metadata as a JSON file written when the episode ends.
 type JSONL struct {
 	root    string
-	writers map[string]*Writer
+	writers map[string]*writer
 }
 
 func NewJSONL(root string) *JSONL {
-	return &JSONL{root: root, writers: map[string]*Writer{}}
+	return &JSONL{root: root, writers: map[string]*writer{}}
 }
 
 func (s *JSONL) Begin(episode *tourianv1.Episode) error {
-	writer, err := NewWriter(filepath.Join(s.root, SafeName(episode.GetId())))
+	writer, err := newWriter(filepath.Join(s.root, SafeName(episode.GetId())))
 	if err != nil {
 		return err
 	}
@@ -61,17 +61,17 @@ func (s *JSONL) Flag(episodeID string, bad bool, note string) error {
 	}
 	episode.Bad = bad
 	episode.Note = note
-	return WriteMeta(dir, episode)
+	return writeMeta(dir, episode)
 }
 
-// A Writer is one episode under way in the JSONL layout.
-type Writer struct {
+// A writer is one episode under way in the JSONL layout.
+type writer struct {
 	dir    string
 	frames *os.File
 	video  *os.File
 }
 
-func NewWriter(dir string) (*Writer, error) {
+func newWriter(dir string) (*writer, error) {
 	if err := os.MkdirAll(filepath.Join(dir, videoDir), 0o755); err != nil {
 		return nil, err
 	}
@@ -84,14 +84,14 @@ func NewWriter(dir string) (*Writer, error) {
 		_ = frames.Close()
 		return nil, err
 	}
-	return &Writer{dir: dir, frames: frames, video: video}, nil
+	return &writer{dir: dir, frames: frames, video: video}, nil
 }
 
-func (w *Writer) WriteFrame(frame *tourianv1.EpisodeFrame) error {
+func (w *writer) WriteFrame(frame *tourianv1.EpisodeFrame) error {
 	return writeLine(w.frames, frame)
 }
 
-func (w *Writer) WriteVideo(frame *tourianv1.VideoFrame, offset time.Duration) error {
+func (w *writer) WriteVideo(frame *tourianv1.VideoFrame, offset time.Duration) error {
 	file := filepath.Join(videoDir, fmt.Sprintf("%06d.jpg", frame.GetSequence()))
 	if err := os.WriteFile(filepath.Join(w.dir, file), frame.GetJpeg(), 0o644); err != nil {
 		return err
@@ -105,14 +105,14 @@ func (w *Writer) WriteVideo(frame *tourianv1.VideoFrame, offset time.Duration) e
 	})
 }
 
-func (w *Writer) Close(episode *tourianv1.Episode) error {
+func (w *writer) Close(episode *tourianv1.Episode) error {
 	if err := w.frames.Close(); err != nil {
 		return err
 	}
 	if err := w.video.Close(); err != nil {
 		return err
 	}
-	return WriteMeta(w.dir, episode)
+	return writeMeta(w.dir, episode)
 }
 
 func writeLine(f *os.File, message proto.Message) error {
@@ -124,7 +124,7 @@ func writeLine(f *os.File, message proto.Message) error {
 	return err
 }
 
-func WriteMeta(dir string, episode *tourianv1.Episode) error {
+func writeMeta(dir string, episode *tourianv1.Episode) error {
 	data, err := protojson.MarshalOptions{Multiline: true}.Marshal(episode)
 	if err != nil {
 		return err

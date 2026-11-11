@@ -101,11 +101,9 @@ func (h *Hub) Publish(message proto.Message) {
 	}
 	h.tap(Source{Kind: SourcePlatform}, env)
 	h.mu.Lock()
+	defer h.mu.Unlock()
 	h.retained[fmt.Sprintf("%T/%s", env.GetMessage(), ws.RobotID(env))] = env
-	for _, console := range h.consoles {
-		console.send(env)
-	}
-	h.mu.Unlock()
+	h.broadcastLocked(env)
 }
 
 // SendToRobot delivers a message to a robot on behalf of a part of the platform, like a controller that holds it; taps see it as they see a console's, so what a controller tells a robot is recorded.
@@ -123,8 +121,12 @@ func (h *Hub) SendToRobot(robotID string, message proto.Message) {
 // RequestVideo asks a robot's camera for frames on behalf of a part of the platform named by peerID.
 func (h *Hub) RequestVideo(robotID, peerID string, enabled bool) {
 	if camera := h.camera(robotID); camera != nil {
-		camera.send(&tourianv1.VideoRequest{RobotId: robotID, PeerId: peerID, Kind: tourianv1.VideoKind_VIDEO_KIND_MJPEG, Enabled: enabled})
+		camera.send(mjpegRequest(robotID, peerID, enabled))
 	}
+}
+
+func mjpegRequest(robotID, peerID string, enabled bool) *tourianv1.VideoRequest {
+	return &tourianv1.VideoRequest{RobotId: robotID, PeerId: peerID, Kind: tourianv1.VideoKind_VIDEO_KIND_MJPEG, Enabled: enabled}
 }
 
 // ServeRobot accepts a robot adapter, which must announce its capabilities in its first frame.
@@ -247,9 +249,7 @@ func (h *Hub) announceRobot(id string, p *peer, env *tourianv1.Envelope) {
 	defer h.mu.Unlock()
 	replace(h.robots, id, p)
 	h.capabilities[id] = env.GetCapabilities()
-	for _, console := range h.consoles {
-		console.send(env)
-	}
+	h.broadcastLocked(env)
 }
 
 func (h *Hub) announceCamera(id string, p *peer, env *tourianv1.Envelope) {
@@ -257,9 +257,7 @@ func (h *Hub) announceCamera(id string, p *peer, env *tourianv1.Envelope) {
 	defer h.mu.Unlock()
 	replace(h.cameras, id, p)
 	h.announces[id] = env.GetCameraAnnounce()
-	for _, console := range h.consoles {
-		console.send(env)
-	}
+	h.broadcastLocked(env)
 }
 
 func replace(peers map[string]*peer, id string, p *peer) {
@@ -315,7 +313,7 @@ func (h *Hub) leaveConsole(id string, p *peer) {
 		delete(viewers, id)
 	}
 	for robotID, camera := range h.cameras {
-		camera.send(&tourianv1.VideoRequest{RobotId: robotID, PeerId: id, Kind: tourianv1.VideoKind_VIDEO_KIND_MJPEG, Enabled: false})
+		camera.send(mjpegRequest(robotID, id, false))
 	}
 }
 
@@ -363,8 +361,12 @@ func (h *Hub) console(id string) *peer {
 func (h *Hub) broadcast(env *tourianv1.Envelope) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	h.broadcastLocked(env)
+}
+
+func (h *Hub) broadcastLocked(message proto.Message) {
 	for _, console := range h.consoles {
-		console.send(env)
+		console.send(message)
 	}
 }
 
