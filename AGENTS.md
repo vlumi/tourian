@@ -36,4 +36,4 @@ The same rules as [nebulosa](https://github.com/vlumi/nebulosa) and [fiftysixty]
 ## Documentation
 
 - Markdown paragraphs are one line each; the editor wraps. `.markdownlint.jsonc` encodes this.
-- When a milestone lands, mark it done in SCOPE.md with the date, move its design from *Planned* to *Built* in ARCHITECTURE.md, and add a capture to `docs/screenshots/`.
+- When a milestone lands, mark it done in SCOPE.md with the date, describe it in the current state of ARCHITECTURE.md and add it to the history at its end, and add a capture to `docs/screenshots/`.
