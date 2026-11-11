@@ -12,7 +12,7 @@ Teleoperation is three loops running at once: a control loop from the operator's
 
 ## The seams
 
-Five interfaces, each with a first implementation and a planned second one, so that none of them stays a one-off abstraction.
+Five interfaces, each meant to have at least two implementations so that none stays a one-off abstraction. Four have them; the transport is still WebSocket alone.
 
 | Seam | What crosses it | First | Then |
 | --- | --- | --- | --- |
@@ -28,7 +28,7 @@ Safety is part of the robot seam, not the console: every adapter stops its robot
 
 ## Tech
 
-- **Platform and robots:** Go, one module, `cmd/` for the binaries, packages by feature. Pion for WebRTC. The simulator is a differential-drive robot in a 2D world with a few fake joints, a battery that drains and a camera pose.
+- **Platform and robots:** Go, one module, `cmd/` for the binaries, packages by feature. WebRTC runs between browsers; the Go platform only signals. The simulator is a differential-drive robot in a 2D world with a few fake joints, a battery that drains and a camera pose.
 - **Console:** Next.js with TypeScript and React, the generated contract types, a canvas for the world and the robot, a gamepad through the Gamepad API, a video element for the WebRTC track.
 - **Contract:** Protobuf with `buf`, generating Go and TypeScript; messages for commands, observations, capabilities, episodes, control arbitration and configuration.
 - **Datasets:** the LeRobot layout (Parquet tables plus video files plus metadata JSON) as the primary format, written from Go; JSONL as the debug sink; MCAP export for Foxglove.
@@ -46,13 +46,13 @@ Toolchain and layout: Go module, `buf` with a first contract (velocity command, 
 
 - The 2D simulator as the first robot adapter: differential-drive kinematics, pose, speed, battery, a couple of joints, capabilities announced on connect.
 - WebSocket as the first transport, carrying contract messages both ways.
-- The console: the world and the robot on a canvas, keyboard and gamepad driving, a telemetry panel with sparklines, round-trip latency of each command from stamped echoes.
+- The console: the world and the robot on a canvas, keyboard and gamepad driving, a telemetry panel with sparklines, round-trip latency of each command from its acknowledgement.
 - Safety in the simulator: command timeout stops the robot, a dead-man signal from the console, an emergency stop that preempts the command queue. Tests for all three.
 
 ### M2 — see (done 2026-11-10)
 
 - WebRTC video from a phone's camera to the console, the Go platform signaling; a page the phone opens that publishes its camera as the robot's.
-- The same frames over MJPEG on the WebSocket as the second video implementation, and a measurement of glass-to-glass latency on both paths, recorded under `docs/results/` with date, commit and machine.
+- The same frames over MJPEG on the WebSocket as the second video implementation, and a measurement of the latency of both paths from the camera page's composition to the console's display, recorded under `docs/results/` with date, commit and machine.
 
 ### M3 — record (done 2026-11-10)
 
@@ -85,5 +85,5 @@ Toolchain and layout: Go module, `buf` with a first contract (velocity command, 
 ## Known limits
 
 - The simulator is kinematic; nothing about contact, friction or weight.
-- Video is one camera per robot until M5 proves the need for more.
+- Video is one camera per robot.
 - No authentication until the platform is reachable from anywhere but a laptop; when it is, it comes before anything else.

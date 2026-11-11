@@ -6,7 +6,7 @@ before="$(mktemp -d)"
 trap 'rm -rf "$before"' EXIT
 cp -R gen/. "$before"
 
-(cd proto && buf generate)
+scripts/generate.sh
 
 if ! diff -r -x __pycache__ "$before" gen >/dev/null; then
   echo "gen/ is stale; the fresh generation is now in place, review and commit it" >&2

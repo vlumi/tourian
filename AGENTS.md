@@ -17,7 +17,7 @@ The same rules as [nebulosa](https://github.com/vlumi/nebulosa) and [fiftysixty]
 - Pull requests are sized by concern too: not padded with unrelated changes, not split into fragments that only make sense together. Squash locally *before* pushing.
 - Commit messages describe the step, not the process.
 - Every concrete chunk of work is a branch and a pull request against `main`, rebased on `main` before pushing. Rewriting and force-pushing an open PR branch to keep its history clean is fine; `main` is never rewritten. The bootstrap is committed directly; everything since goes through a PR.
-- Gate a push on `make ci`, which is what hosted CI runs: formatting, linters, generated code up to date, and unit tests for Go and the console, then the contract tests against every robot adapter.
+- Gate a push on `make ci`, which is what hosted CI runs: formatting, linters, generated code up to date, the unit tests for Go, the console and the sidecars, then the contract tests against the Go robot adapters.
 
 ## Comments
 
@@ -31,7 +31,7 @@ The same rules as [nebulosa](https://github.com/vlumi/nebulosa) and [fiftysixty]
 - Go is organized by feature, not by layer (no `controller/`, `service/`, `repository/` packages); `cmd/` holds the binaries, everything else is a package named for what it does.
 - The console is Next.js with TypeScript; it reads the generated contract types and the store, never raw messages.
 - Routine operations are make targets with a `##` description under a `##@` group, so plain `make` lists them; scripts do the work, the Makefile names it.
-- Toolchains: latest stable of Go and Node, `buf` for the contract. `make tools` installs the generators and linters.
+- Toolchains: latest stable of Go, Node and Python, `buf` for the contract. `make tools` installs buf, protoc-gen-go and golangci-lint; `make deps` the npm packages, with protoc-gen-es, and the Python environment, with ruff.
 
 ## Documentation
 

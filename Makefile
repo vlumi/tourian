@@ -28,8 +28,8 @@ deps:  ## Install the npm packages of the console and the tooling, and the Pytho
 ##@ Contract
 
 .PHONY: generate
-generate:  ## Regenerate the Go and TypeScript code from proto/ into gen/
-	cd proto && buf generate
+generate:  ## Regenerate the Go, TypeScript and Python code from proto/ into gen/
+	@scripts/generate.sh
 
 .PHONY: generate-check
 generate-check:  ## Fail if the generated code in gen/ is out of date
@@ -37,10 +37,13 @@ generate-check:  ## Fail if the generated code in gen/ is out of date
 
 ##@ Build & test
 
+# The console inlines NEXT_PUBLIC_* at build and dev start; Next reads .env from console/, so the root .env is loaded here.
+LOAD_ENV := set -a; [ -f .env ] && . ./.env; set +a;
+
 .PHONY: build
-build:  ## Build the Go binaries and the console
+build:  ## Build the Go binaries and the console, with the settings in .env
 	go build ./...
-	npm run build --workspace console
+	@$(LOAD_ENV) npm run build --workspace console
 
 .PHONY: test
 test:  ## Run the Go, console and sidecar unit tests, Go under the race detector
@@ -49,7 +52,7 @@ test:  ## Run the Go, console and sidecar unit tests, Go under the race detector
 	PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest -q -p no:cacheprovider sidecars/arm
 
 .PHONY: contract
-contract:  ## Run the contract tests against every robot adapter
+contract:  ## Run the contract tests against the Go robot adapters (the sidecar has the same in pytest)
 	go test -run TestContract -count=1 ./emmi/...
 
 .PHONY: run
@@ -57,8 +60,8 @@ run:  ## Run the platform with the simulated robot in-process
 	go run ./cmd/tourian -sim
 
 .PHONY: dev
-dev:  ## Run the console with live reload
-	npm run dev --workspace console
+dev:  ## Run the console with live reload, with the settings in .env
+	@$(LOAD_ENV) npm run dev --workspace console
 
 ##@ Quality
 
