@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { errorMessage } from '@/platform/error'
 import { heading } from '@/platform/store'
 import { renderWorld, startCanvasDrawing } from '@/world/render'
 import { loadEpisode, pictureUrl, type Recording } from './api'
@@ -19,7 +20,7 @@ export function Replay({ id }: { id: string }) {
   useEffect(() => {
     loadEpisode(id)
       .then(setRecording)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => setError(errorMessage(e)))
   }, [id])
 
   const duration = recording ? offsetSeconds(recording.frames[recording.frames.length - 1]?.offset) : 0

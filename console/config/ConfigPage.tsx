@@ -11,6 +11,7 @@ import {
 import Link from 'next/link'
 import { useEffect, useState, type FormEvent } from 'react'
 import { connect } from '@/platform/connection'
+import { errorMessage } from '@/platform/error'
 import { useStore } from '@/platform/store'
 import {
   formatParameters,
@@ -34,7 +35,7 @@ export function ConfigPage() {
         setRobotConfigs(r)
         setTasks(t)
       })
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => setError(errorMessage(e)))
   useEffect(() => {
     const disconnect = connect()
     void load()
@@ -97,7 +98,7 @@ function RobotForm({ robotId, current, onSaved, onError }: { robotId: string; cu
       }),
     )
       .then(onSaved)
-      .catch((e) => onError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => onError(errorMessage(e)))
   }
 
   return (
@@ -164,7 +165,7 @@ function TaskForm({ current, onSaved, onError }: { current?: TaskConfig } & Call
         }
         onSaved()
       })
-      .catch((e) => onError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => onError(errorMessage(e)))
   }
 
   return (

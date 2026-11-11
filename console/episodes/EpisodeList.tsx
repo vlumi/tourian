@@ -4,6 +4,7 @@ import { timestampDate } from '@bufbuild/protobuf/wkt'
 import type { Episode } from '@tourian/contract/tourian/v1/episode_pb'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { errorMessage } from '@/platform/error'
 import { listEpisodes } from './api'
 
 export function EpisodeList() {
@@ -13,7 +14,7 @@ export function EpisodeList() {
   useEffect(() => {
     listEpisodes()
       .then(setEpisodes)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => setError(errorMessage(e)))
   }, [])
 
   return (
