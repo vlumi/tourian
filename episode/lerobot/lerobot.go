@@ -281,8 +281,8 @@ func actionVector(action *tourianv1.VelocityCommand) []float32 {
 	}
 }
 
-// StateNames is the layout of observation.state: pose, body velocity, one entry per joint, and the battery.
-func StateNames(jointNames []string) []string {
+// stateLayout is the layout of observation.state: pose, body velocity, one entry per joint, and the battery.
+func stateLayout(jointNames []string) []string {
 	names := []string{"x", "y", "yaw", "linear_velocity", "angular_velocity"}
 	names = append(names, jointNames...)
 	return append(names, "battery")

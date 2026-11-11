@@ -116,7 +116,7 @@ func (d dataset) loadInfo(s *Sink, ep *episode) (*info, error) {
 		return &existing, nil
 	}
 	first := ep.frames[0].GetObservation()
-	stateNames := StateNames(first.GetJoints().GetName())
+	stateNames := stateLayout(first.GetJoints().GetName())
 	videoPath := "videos/{video_key}/chunk-{chunk_index:03d}/file-{file_index:03d}.mp4"
 	created := &info{
 		CodebaseVersion:  codebaseVersion,
