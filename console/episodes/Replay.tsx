@@ -6,7 +6,7 @@ import { errorMessage } from '@/platform/error'
 import { heading } from '@/platform/store'
 import { renderWorld, startCanvasDrawing } from '@/world/render'
 import { loadEpisode, pictureUrl, type Recording } from './api'
-import { length, started } from './EpisodeList'
+import { flag, lasted, started } from './format'
 import { indexAt, offsetSeconds } from './timeline'
 
 // One episode played back: the world as recorded on the left, the picture in force on the right, scrubbed or played at the speed it happened.
@@ -86,9 +86,9 @@ export function Replay({ id }: { id: string }) {
         <span className="episode">
           {episode.robotId}
           {episode.robotConfigVersion > 0 && ` v${episode.robotConfigVersion}`} · {episode.task || 'no task'}
-          {episode.taskConfigVersion > 0 && ` v${episode.taskConfigVersion}`} · {length(episode)} ·{' '}
+          {episode.taskConfigVersion > 0 && ` v${episode.taskConfigVersion}`} · {lasted(episode)} ·{' '}
           {String(episode.frames)} frames · {String(episode.videoFrames)} pictures
-          {episode.bad && ` · bad${episode.note ? `: ${episode.note}` : ''}`}
+          {episode.bad && ` · ${flag(episode)}`}
         </span>
       </header>
       <div className="replay-scene">

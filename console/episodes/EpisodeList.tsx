@@ -1,11 +1,11 @@
 'use client'
 
-import { timestampDate } from '@bufbuild/protobuf/wkt'
 import type { Episode } from '@tourian/contract/tourian/v1/episode_pb'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { errorMessage } from '@/platform/error'
 import { listEpisodes } from './api'
+import { flag, lasted, started } from './format'
 
 export function EpisodeList() {
   const [episodes, setEpisodes] = useState<Episode[]>()
@@ -55,10 +55,10 @@ export function EpisodeList() {
                   {episode.task || '–'}
                   {episode.taskConfigVersion > 0 && <span className="version"> v{episode.taskConfigVersion}</span>}
                 </td>
-                <td>{length(episode)}</td>
+                <td>{lasted(episode)}</td>
                 <td>{String(episode.frames)}</td>
                 <td>{String(episode.videoFrames)}</td>
-                <td>{episode.bad ? `bad${episode.note ? `: ${episode.note}` : ''}` : ''}</td>
+                <td>{flag(episode)}</td>
               </tr>
             ))}
           </tbody>
@@ -66,14 +66,4 @@ export function EpisodeList() {
       )}
     </main>
   )
-}
-
-export function started(episode: Episode): string {
-  return episode.startedAt ? timestampDate(episode.startedAt).toLocaleString() : episode.id
-}
-
-export function length(episode: Episode): string {
-  if (!episode.startedAt || !episode.endedAt) return '–'
-  const seconds = (timestampDate(episode.endedAt).getTime() - timestampDate(episode.startedAt).getTime()) / 1000
-  return `${seconds.toFixed(1)} s`
 }
