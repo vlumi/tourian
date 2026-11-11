@@ -9,6 +9,7 @@ import (
 
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
 	"github.com/vlumi/tourian/hub"
+	"github.com/vlumi/tourian/transport/ws"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -26,12 +27,13 @@ type Platform interface {
 }
 
 const (
-	inboxDepth   = 1024
-	actTimeout   = 40 * time.Millisecond
-	complainEach = time.Second
+	inboxDepth    = 1024
+	actTimeout    = 40 * time.Millisecond
+	complainEach  = time.Second
+	operatorLease = time.Second
 )
 
-// The Arbiter holds one answer per robot to the question of who is driving. The operator takes over by driving and hands back by releasing; a console hands a robot to a controller by name; an emergency stop from a console leaves the robot in nobody's hands, so no controller drives on after it. The holder's controller acts on every observation, one act in flight per robot, so a slow one holds up nobody else.
+// The Arbiter holds one answer per robot to the question of who is driving. The operator takes over by driving and hands back by releasing; while one console's operator holds a robot, another console's driving is refused, until the holder falls silent for a lease and the robot is left in nobody's hands. A console hands a robot to a controller by name; an emergency stop from a console leaves the robot in nobody's hands, so no controller drives on after it. The holder's controller acts on every observation, one act in flight per robot, so a slow one holds up nobody else.
 type Arbiter struct {
 	platform    Platform
 	now         func() time.Time
@@ -53,6 +55,7 @@ type holding struct {
 	holder       *tourianv1.Controller
 	previous     *tourianv1.Controller
 	since        time.Time
+	drivenAt     time.Time
 	acting       bool
 	complainedAt time.Time
 }
@@ -116,14 +119,6 @@ func (a *Arbiter) Handle(ctx context.Context, from hub.Source, env *tourianv1.En
 	switch m := env.GetMessage().(type) {
 	case *tourianv1.Envelope_Capabilities:
 		a.know(m.Capabilities.GetRobotId())
-	case *tourianv1.Envelope_VelocityCommand:
-		if from.Kind == hub.SourceConsole {
-			a.takeOver(m.VelocityCommand.GetRobotId(), from.ID)
-		}
-	case *tourianv1.Envelope_JointCommand:
-		if from.Kind == hub.SourceConsole {
-			a.takeOver(m.JointCommand.GetRobotId(), from.ID)
-		}
 	case *tourianv1.Envelope_ControlRequest:
 		if from.Kind == hub.SourceConsole {
 			a.request(m.ControlRequest)
@@ -163,21 +158,52 @@ func (a *Arbiter) know(robotID string) {
 	}
 }
 
-func (a *Arbiter) takeOver(robotID, consoleID string) {
+// Admit is the hub's question whether a console may drive the robot its message names: yes while that console's operator holds it, or nobody does, or a controller does, which the operator takes over from; no while another console's operator holds it and is still driving.
+func (a *Arbiter) Admit(consoleID string, env *tourianv1.Envelope) bool {
+	robotID := ws.RobotID(env)
+	now := a.now()
 	a.mu.Lock()
 	h := a.robots[robotID]
 	if h == nil {
 		h = &holding{}
 		a.robots[robotID] = h
 	}
-	if h.holder.GetKind() == tourianv1.ControllerKind_CONTROLLER_KIND_OPERATOR && h.holder.GetId() == consoleID {
+	switch {
+	case operator(h.holder) && h.holder.GetId() != consoleID:
+		if now.Sub(h.drivenAt) < operatorLease {
+			a.mu.Unlock()
+			return false
+		}
+		h.previous = nil
+	case h.holder != nil && !operator(h.holder):
+		h.previous = h.holder
+	}
+	takeover := h.holder.GetId() != consoleID
+	if takeover {
+		h.holder = &tourianv1.Controller{Id: consoleID, Kind: tourianv1.ControllerKind_CONTROLLER_KIND_OPERATOR, Name: "operator"}
+		h.since = now
+	}
+	h.drivenAt = now
+	a.mu.Unlock()
+	if takeover {
+		a.publish(robotID)
+	}
+	return true
+}
+
+func operator(c *tourianv1.Controller) bool {
+	return c.GetKind() == tourianv1.ControllerKind_CONTROLLER_KIND_OPERATOR
+}
+
+// An operator that fell silent for a lease, by disconnecting or otherwise, leaves the robot in nobody's hands; the one held before is not resumed unasked.
+func (a *Arbiter) expire(robotID string) {
+	a.mu.Lock()
+	h := a.robots[robotID]
+	if h == nil || !operator(h.holder) || a.now().Sub(h.drivenAt) < operatorLease {
 		a.mu.Unlock()
 		return
 	}
-	if h.holder != nil && h.holder.GetKind() != tourianv1.ControllerKind_CONTROLLER_KIND_OPERATOR {
-		h.previous = h.holder
-	}
-	h.holder = &tourianv1.Controller{Id: consoleID, Kind: tourianv1.ControllerKind_CONTROLLER_KIND_OPERATOR, Name: "operator"}
+	h.holder, h.previous = nil, nil
 	h.since = a.now()
 	a.mu.Unlock()
 	a.publish(robotID)
@@ -209,6 +235,7 @@ func (a *Arbiter) request(request *tourianv1.ControlRequest) {
 
 func (a *Arbiter) act(ctx context.Context, observation *tourianv1.Observation) {
 	robotID := observation.GetRobotId()
+	a.expire(robotID)
 	a.mu.Lock()
 	h := a.robots[robotID]
 	var controller Controller

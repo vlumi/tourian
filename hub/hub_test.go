@@ -30,8 +30,15 @@ func TestRoutesBetweenRobotAndConsole(t *testing.T) {
 	send(t, ctx, robot, &tourianv1.Capabilities{RobotId: "r1", Name: "Robot one"})
 
 	console := dial(t, ctx, base+"/console")
+	welcome := receive(t, ctx, console).GetWelcome()
+	if welcome.GetConsoleId() == "" {
+		t.Fatalf("console should be told its id first, got %v", welcome)
+	}
 	if caps := receive(t, ctx, console).GetCapabilities(); caps.GetName() != "Robot one" {
 		t.Fatalf("console should learn the robot on joining, got %v", caps)
+	}
+	h.Admit = func(consoleID string, env *tourianv1.Envelope) bool {
+		return consoleID == welcome.GetConsoleId() && env.GetVelocityCommand().GetSequence() != 2
 	}
 
 	send(t, ctx, console, &tourianv1.VelocityCommand{RobotId: "r1", Sequence: 1})
@@ -39,10 +46,15 @@ func TestRoutesBetweenRobotAndConsole(t *testing.T) {
 		t.Fatalf("robot should receive the console's command, got %v", cmd)
 	}
 
+	send(t, ctx, console, &tourianv1.VelocityCommand{RobotId: "r1", Sequence: 2})
 	send(t, ctx, console, &tourianv1.Stop{RobotId: "nobody"})
 	send(t, ctx, robot, &tourianv1.Observation{RobotId: "r1", LastCommandSequence: 1})
 	if obs := receive(t, ctx, console).GetObservation(); obs.GetLastCommandSequence() != 1 {
 		t.Fatalf("console should receive the robot's observation, got %v", obs)
+	}
+	send(t, ctx, console, &tourianv1.Stop{RobotId: "r1"})
+	if receive(t, ctx, robot).GetStop() == nil {
+		t.Fatal("the refused command should not have reached the robot, and a stop always does")
 	}
 }
 
@@ -61,11 +73,14 @@ func TestRelaysSignalingBetweenConsoleAndCamera(t *testing.T) {
 	send(t, ctx, camera, &tourianv1.CameraAnnounce{RobotId: "r1", Kinds: []tourianv1.VideoKind{tourianv1.VideoKind_VIDEO_KIND_WEBRTC}})
 
 	console := dial(t, ctx, base+"/console")
+	receive(t, ctx, console)
 	if announce := receive(t, ctx, console).GetCameraAnnounce(); announce.GetRobotId() != "r1" {
 		t.Fatalf("console should learn the camera on joining, got %v", announce)
 	}
 	bystander := dial(t, ctx, base+"/console")
-	receive(t, ctx, bystander)
+	for range 2 {
+		receive(t, ctx, bystander)
+	}
 
 	send(t, ctx, console, &tourianv1.SessionDescription{RobotId: "r1", Type: "offer", Sdp: "v=0"})
 	offer := receive(t, ctx, camera).GetSessionDescription()
@@ -119,6 +134,7 @@ func TestTapsAndPublishing(t *testing.T) {
 	}
 
 	console := dial(t, ctx, base+"/console")
+	receive(t, ctx, console)
 	kinds := map[string]bool{}
 	for range 2 {
 		kinds[fmt.Sprintf("%T", receive(t, ctx, console).GetMessage())] = true

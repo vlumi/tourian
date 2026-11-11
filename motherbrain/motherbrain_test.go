@@ -50,6 +50,15 @@ func (c constant) Act(context.Context, *tourianv1.Observation) (*tourianv1.Twist
 	return c.twist, c.err
 }
 
+func admit(t *testing.T, a *Arbiter, consoleID string, message proto.Message) bool {
+	t.Helper()
+	env, err := ws.Wrap(message)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return a.Admit(consoleID, env)
+}
+
 func handle(t *testing.T, a *Arbiter, from hub.Source, message proto.Message) {
 	t.Helper()
 	env, err := ws.Wrap(message)
@@ -86,11 +95,13 @@ func TestHandsOverAndBack(t *testing.T) {
 		t.Fatalf("the script should drive on each observation, sent %v", platform.sent)
 	}
 
-	handle(t, a, console, &tourianv1.VelocityCommand{RobotId: "r1"})
-	if h := a.Holder("r1"); h.GetKind() != tourianv1.ControllerKind_CONTROLLER_KIND_OPERATOR || h.GetId() != "c1" {
-		t.Fatalf("the operator takes over by driving, holder = %v", h)
+	if !admit(t, a, "c1", &tourianv1.VelocityCommand{RobotId: "r1"}) {
+		t.Fatal("the operator takes over from a script by driving")
 	}
-	handle(t, a, console, &tourianv1.VelocityCommand{RobotId: "r1"})
+	if h := a.Holder("r1"); h.GetKind() != tourianv1.ControllerKind_CONTROLLER_KIND_OPERATOR || h.GetId() != "c1" {
+		t.Fatalf("holder = %v", h)
+	}
+	admit(t, a, "c1", &tourianv1.Heartbeat{RobotId: "r1"})
 	handle(t, a, robot, &tourianv1.Observation{RobotId: "r1"})
 	if platform.sentCount() != 2 {
 		t.Fatal("while the operator holds the robot, the script must not drive")
@@ -128,7 +139,7 @@ func TestAnEmergencyStopTakesTheRobotOutOfEveryHand(t *testing.T) {
 	console := hub.Source{Kind: hub.SourceConsole, ID: "c1"}
 	handle(t, a, robot, &tourianv1.Capabilities{RobotId: "r1"})
 	handle(t, a, console, &tourianv1.ControlRequest{RobotId: "r1", ControllerId: "square"})
-	handle(t, a, console, &tourianv1.VelocityCommand{RobotId: "r1"})
+	admit(t, a, "c1", &tourianv1.VelocityCommand{RobotId: "r1"})
 	handle(t, a, console, &tourianv1.Stop{RobotId: "r1"})
 	if a.Holder("r1") != nil {
 		t.Fatalf("after a stop nobody holds the robot, got %v", a.Holder("r1"))
@@ -175,5 +186,36 @@ func TestOneActInFlightPerRobot(t *testing.T) {
 	a.Wait()
 	if platform.sentCount() != 2 {
 		t.Fatalf("five observations during one act should drive once, sent %d messages", platform.sentCount())
+	}
+}
+
+func TestOneOperatorAtATime(t *testing.T) {
+	platform := &fakePlatform{}
+	now := time.Date(2026, 11, 11, 12, 0, 0, 0, time.UTC)
+	a := NewArbiter(platform, func() time.Time { return now })
+	robot := hub.Source{Kind: hub.SourceRobot, ID: "r1"}
+	handle(t, a, robot, &tourianv1.Capabilities{RobotId: "r1"})
+
+	if !admit(t, a, "c1", &tourianv1.VelocityCommand{RobotId: "r1"}) {
+		t.Fatal("the first console to drive takes the robot")
+	}
+	now = now.Add(operatorLease / 2)
+	if admit(t, a, "c2", &tourianv1.VelocityCommand{RobotId: "r1"}) {
+		t.Fatal("another console must not drive while the first holds the robot")
+	}
+	if !admit(t, a, "c1", &tourianv1.Heartbeat{RobotId: "r1"}) || a.Holder("r1").GetId() != "c1" {
+		t.Fatalf("the holder keeps driving, holder = %v", a.Holder("r1"))
+	}
+
+	now = now.Add(operatorLease)
+	handle(t, a, robot, &tourianv1.Observation{RobotId: "r1"})
+	if a.Holder("r1") != nil {
+		t.Fatalf("a holder silent for a lease has let go, holder = %v", a.Holder("r1"))
+	}
+	if !admit(t, a, "c2", &tourianv1.VelocityCommand{RobotId: "r1"}) || a.Holder("r1").GetId() != "c2" {
+		t.Fatalf("the robot is free for the next console, holder = %v", a.Holder("r1"))
+	}
+	if len(platform.published) != 4 {
+		t.Errorf("each takeover and the expiry are published, got %d", len(platform.published))
 	}
 }
