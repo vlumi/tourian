@@ -54,7 +54,7 @@ One repository, three languages, one contract. The Go module `github.com/vlumi/t
 
 **Publishing.** The platform's own voice is `Publish` on the hub: the message goes to every tap and every console, and the latest of its kind per robot is retained for consoles that join later, so a console always knows who holds a robot and whether it is being recorded. Taps also learn the source of each message, a robot, a camera, a console by id or the platform. The recorder sees the control states too and stamps the holder on every frame, so each change of hands is in the episode and the replay shows who was driving at any moment.
 
-**The console** shows the holder and since when in a control section, with a button per controller to hand the robot to, and explains that engaging takes over and releasing hands back; releasing sends the request along with a zero command.
+**The console** is told its id in a `Welcome` when it joins, so it knows whether the operator holding a robot is its own. It shows the holder and since when in a control section, with a button per controller to hand the robot to, and explains that engaging takes over and releasing hands back; releasing sends the request along with a zero command. Engaged while another console's operator holds the robot, it says so and waits.
 
 ### M5 — many
 

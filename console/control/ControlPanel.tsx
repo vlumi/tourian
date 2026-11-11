@@ -5,11 +5,14 @@ import { ControllerKind, type Controller } from '@tourian/contract/tourian/v1/co
 import { handTo } from '@/drive/driver'
 import { useStore } from '@/platform/store'
 
-// Who holds the robot and since when, and the controllers it can be handed to. The operator takes over by engaging and hands back by releasing.
+// Who holds the robot and since when, and the controllers it can be handed to. The operator takes over by engaging and hands back by releasing; while another console's operator holds the robot, this one waits.
 export function ControlPanel() {
   const control = useStore((s) => s.control)
   const engaged = useStore((s) => s.engaged)
+  const consoleId = useStore((s) => s.consoleId)
   const holder = control?.holder
+  const mine = holder?.kind === ControllerKind.OPERATOR && holder.id === consoleId
+  const another = holder?.kind === ControllerKind.OPERATOR && !mine
 
   return (
     <section className="control">
@@ -18,10 +21,8 @@ export function ControlPanel() {
         <span className="label">holder</span>
         <span className="value">
           {holder ? (
-            <span
-              className={`status ${holder.kind === ControllerKind.OPERATOR ? (engaged ? 'status-engaged' : '') : 'status-held'}`}
-            >
-              {describe(holder, engaged)}
+            <span className={`status ${mine ? (engaged ? 'status-engaged' : '') : 'status-held'}`}>
+              {describe(holder, mine)}
             </span>
           ) : (
             'nobody'
@@ -47,14 +48,17 @@ export function ControlPanel() {
       {holder && holder.kind !== ControllerKind.OPERATOR && (
         <p className="hint">Engage to take over; release to hand back.</p>
       )}
+      {another && engaged && (
+        <p className="hint">Another operator holds the robot; your driving waits until they let go.</p>
+      )}
     </section>
   )
 }
 
-function describe(holder: Controller, engaged: boolean): string {
+function describe(holder: Controller, mine: boolean): string {
   switch (holder.kind) {
     case ControllerKind.OPERATOR:
-      return engaged ? 'you' : 'an operator'
+      return mine ? 'you' : 'another operator'
     case ControllerKind.SCRIPT:
       return `script: ${holder.name}`
     case ControllerKind.POLICY:

@@ -27,6 +27,7 @@ function FleetCard({ robotId, selected, onSelect }: { robotId: string; selected:
   const observation = useStore((s) => s.observations[robotId])
   const control = useStore((s) => s.controls[robotId])
   const episode = useStore((s) => s.episodes[robotId])
+  const consoleId = useStore((s) => s.consoleId)
   const imgRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
@@ -54,7 +55,13 @@ function FleetCard({ robotId, selected, onSelect }: { robotId: string; selected:
       <img ref={imgRef} alt="" />
       <span className="fleet-name">{robot?.name ?? robotId}</span>
       <span className="fleet-line">
-        {holder ? (holder.kind === ControllerKind.OPERATOR ? 'operator' : holder.name) : 'nobody'}
+        {holder
+          ? holder.kind === ControllerKind.OPERATOR
+            ? holder.id === consoleId
+              ? 'you'
+              : 'operator'
+            : holder.name
+          : 'nobody'}
         {episode?.recording && <span className="status status-stopped">rec</span>}
       </span>
       <span className="fleet-line">
