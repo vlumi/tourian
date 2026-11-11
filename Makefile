@@ -87,9 +87,9 @@ ci: lint generate-check test build contract  ## Everything hosted CI runs
 ##@ Docs
 
 .PHONY: results-video
-results-video:  ## Measure video latency on both paths and write docs/results/<date>-video-latency.md
-	@mkdir -p docs/results && scripts/video-latency.sh "docs/results/$$(date +%Y-%m-%d)-video-latency.md"
+results-video:  ## Measure video latency on both paths and write docs/results/<date>-video-latency.md (or OUT)
+	@scripts/video-latency.sh
 
 .PHONY: screenshot
-screenshot:  ## Build the console and capture it to OUT (default docs/screenshots/latest.png)
+screenshot:  ## Build and serve the console with the simulator and capture it to OUT (default docs/screenshots/latest.png)
 	@scripts/screenshot.sh "$(or $(OUT),docs/screenshots/latest.png)"

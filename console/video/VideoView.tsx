@@ -13,7 +13,7 @@ const paths: { path: VideoPath; label: string }[] = [
 
 declare global {
   interface Window {
-    tourianLatency?: { path: VideoPath; samples: number[] }
+    tourianLatency?: { path: VideoPath; samples: number[]; summary: () => Summary | undefined }
   }
 }
 
@@ -32,7 +32,7 @@ export function VideoView({ measure = false }: { measure?: boolean }) {
     if (!robotId || !camera || videoPath === 'off') return
     let frames = 0
     const meter = measure ? createMeter() : undefined
-    if (meter) window.tourianLatency = { path: videoPath, samples: meter.samples }
+    if (meter) window.tourianLatency = { path: videoPath, samples: meter.samples, summary: meter.summary }
     const ticker = setInterval(() => {
       setFps(meter ? meter.takeFrames() : frames)
       frames = 0
