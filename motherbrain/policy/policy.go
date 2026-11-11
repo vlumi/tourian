@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -24,7 +25,7 @@ func New(serverURL string) *Client {
 	if u, err := url.Parse(serverURL); err == nil && u.Host != "" {
 		name = u.Host
 	}
-	return &Client{url: serverURL, name: name, http: &http.Client{}}
+	return &Client{url: serverURL, name: name, http: &http.Client{Timeout: time.Second}}
 }
 
 func (c *Client) Describe() *tourianv1.Controller {

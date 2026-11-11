@@ -77,6 +77,7 @@ func main() {
 		Addr:              *addr,
 		Handler:           newHandler(h, episodes, configs),
 		ReadHeaderTimeout: 5 * time.Second,
+		IdleTimeout:       time.Minute,
 	}
 	go func() {
 		<-ctx.Done()
