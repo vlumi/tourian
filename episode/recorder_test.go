@@ -60,7 +60,7 @@ func TestRecordsAnEpisode(t *testing.T) {
 		t.Fatalf("video should be requested on start, got %v", platform.requests)
 	}
 	status := platform.broadcasts[0].(*tourianv1.EpisodeStatus)
-	if !status.GetRecording() || status.GetEpisodeId() != "20261110-120000-r1" {
+	if !status.GetRecording() || status.GetEpisodeId() != "20261110-120000.000-r1" {
 		t.Fatalf("status = %v", status)
 	}
 
@@ -80,7 +80,7 @@ func TestRecordsAnEpisode(t *testing.T) {
 		t.Fatalf("video should be released on stop, got %v", platform.requests)
 	}
 
-	dir := filepath.Join(root, "20261110-120000-r1")
+	dir := filepath.Join(root, "20261110-120000.000-r1")
 	episode, err := ReadMeta(dir)
 	if err != nil {
 		t.Fatal(err)
@@ -115,6 +115,43 @@ func TestRecordsAnEpisode(t *testing.T) {
 	listed, err := List(root)
 	if err != nil || len(listed) != 1 || listed[0].GetId() != episode.GetId() {
 		t.Errorf("list = %v, %v", listed, err)
+	}
+}
+
+type refusing struct{}
+
+func (refusing) Begin(*tourianv1.Episode) error                                         { return os.ErrPermission }
+func (refusing) Frame(*tourianv1.Episode, *tourianv1.EpisodeFrame) error                { return nil }
+func (refusing) Picture(*tourianv1.Episode, *tourianv1.VideoFrame, time.Duration) error { return nil }
+func (refusing) End(*tourianv1.Episode) error                                           { return nil }
+func (refusing) Flag(string, bool, string) error                                        { return nil }
+
+func TestASinkThatCannotBeginIsLeftOut(t *testing.T) {
+	root := t.TempDir()
+	recorder := NewRecorder(&fakePlatform{}, time.Now, refusing{}, NewJSONL(root))
+	recorder.Handle(wrap(t, &tourianv1.RecordRequest{RobotId: "r1", Start: true}))
+	if len(recorder.active) != 1 || len(recorder.active["r1"].sinks) != 1 {
+		t.Fatalf("the episode should go on with the sink that could begin, active = %v", recorder.active)
+	}
+	recorder.Handle(wrap(t, &tourianv1.Observation{RobotId: "r1"}))
+	recorder.Handle(wrap(t, &tourianv1.RecordRequest{RobotId: "r1", Start: false}))
+	episodes, _ := List(root)
+	if len(episodes) != 1 || episodes[0].GetFrames() != 1 {
+		t.Fatalf("episodes = %v", episodes)
+	}
+}
+
+func TestTwoEpisodesInOneSecondKeepApart(t *testing.T) {
+	root := t.TempDir()
+	clock := time.Date(2026, 11, 10, 12, 0, 0, 100*int(time.Millisecond), time.UTC)
+	recorder := NewRecorder(&fakePlatform{}, func() time.Time { return clock }, NewJSONL(root))
+	for range 2 {
+		recorder.Handle(wrap(t, &tourianv1.RecordRequest{RobotId: "r1", Start: true}))
+		recorder.Handle(wrap(t, &tourianv1.RecordRequest{RobotId: "r1", Start: false}))
+		clock = clock.Add(300 * time.Millisecond)
+	}
+	if episodes, _ := List(root); len(episodes) != 2 {
+		t.Fatalf("episodes = %v", episodes)
 	}
 }
 
