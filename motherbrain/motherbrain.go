@@ -26,11 +26,12 @@ type Platform interface {
 }
 
 const (
-	inboxDepth = 1024
-	actTimeout = 40 * time.Millisecond
+	inboxDepth   = 1024
+	actTimeout   = 40 * time.Millisecond
+	complainEach = time.Second
 )
 
-// The Arbiter holds one answer per robot to the question of who is driving. The operator takes over by driving and hands back by releasing; a console hands a robot to a controller by name. The holder's controller acts on every observation.
+// The Arbiter holds one answer per robot to the question of who is driving. The operator takes over by driving and hands back by releasing; a console hands a robot to a controller by name; an emergency stop from a console leaves the robot in nobody's hands, so no controller drives on after it. The holder's controller acts on every observation, one act in flight per robot, so a slow one holds up nobody else.
 type Arbiter struct {
 	platform    Platform
 	now         func() time.Time
@@ -40,6 +41,7 @@ type Arbiter struct {
 	mu          sync.Mutex
 	robots      map[string]*holding
 	sequence    uint64
+	acting      sync.WaitGroup
 }
 
 type tapped struct {
@@ -48,9 +50,11 @@ type tapped struct {
 }
 
 type holding struct {
-	holder   *tourianv1.Controller
-	previous *tourianv1.Controller
-	since    time.Time
+	holder       *tourianv1.Controller
+	previous     *tourianv1.Controller
+	since        time.Time
+	acting       bool
+	complainedAt time.Time
 }
 
 func NewArbiter(platform Platform, now func() time.Time, controllers ...Controller) *Arbiter {
@@ -124,9 +128,27 @@ func (a *Arbiter) Handle(ctx context.Context, from hub.Source, env *tourianv1.En
 		if from.Kind == hub.SourceConsole {
 			a.request(m.ControlRequest)
 		}
+	case *tourianv1.Envelope_Stop:
+		if from.Kind == hub.SourceConsole {
+			a.release(m.Stop.GetRobotId())
+		}
 	case *tourianv1.Envelope_Observation:
 		a.act(ctx, m.Observation)
 	}
+}
+
+// release takes the robot out of every hand: the operator's stop must not be undone by a controller's next command.
+func (a *Arbiter) release(robotID string) {
+	a.mu.Lock()
+	h := a.robots[robotID]
+	if h == nil || (h.holder == nil && h.previous == nil) {
+		a.mu.Unlock()
+		return
+	}
+	h.holder, h.previous = nil, nil
+	h.since = a.now()
+	a.mu.Unlock()
+	a.publish(robotID)
 }
 
 func (a *Arbiter) know(robotID string) {
@@ -190,25 +212,50 @@ func (a *Arbiter) act(ctx context.Context, observation *tourianv1.Observation) {
 	a.mu.Lock()
 	h := a.robots[robotID]
 	var controller Controller
-	if h != nil && h.holder != nil {
+	if h != nil && h.holder != nil && !h.acting {
 		controller = a.controllers[h.holder.GetId()]
 	}
+	if controller == nil {
+		a.mu.Unlock()
+		return
+	}
+	h.acting = true
 	a.sequence++
 	sequence := a.sequence
 	a.mu.Unlock()
-	if controller == nil {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, actTimeout)
-	defer cancel()
-	twist, err := controller.Act(ctx, observation)
-	if err != nil {
-		log.Printf("motherbrain: %s on %s: %v", controller.Describe().GetId(), robotID, err)
-		return
-	}
-	header := &tourianv1.Header{Stamp: timestamppb.New(a.now()), FrameId: "base_link"}
-	a.platform.SendToRobot(robotID, &tourianv1.Heartbeat{Header: header, RobotId: robotID, Sequence: sequence})
-	a.platform.SendToRobot(robotID, &tourianv1.VelocityCommand{Header: header, RobotId: robotID, Sequence: sequence, Twist: twist})
+
+	a.acting.Add(1)
+	go func() {
+		defer a.acting.Done()
+		ctx, cancel := context.WithTimeout(ctx, actTimeout)
+		defer cancel()
+		twist, err := controller.Act(ctx, observation)
+		a.mu.Lock()
+		h.acting = false
+		stillHolds := h.holder != nil && h.holder.GetId() == controller.Describe().GetId()
+		complain := err != nil && a.now().Sub(h.complainedAt) >= complainEach
+		if complain {
+			h.complainedAt = a.now()
+		}
+		a.mu.Unlock()
+		if err != nil {
+			if complain {
+				log.Printf("motherbrain: %s on %s: %v", controller.Describe().GetId(), robotID, err)
+			}
+			return
+		}
+		if !stillHolds {
+			return
+		}
+		header := &tourianv1.Header{Stamp: timestamppb.New(a.now()), FrameId: "base_link"}
+		a.platform.SendToRobot(robotID, &tourianv1.Heartbeat{Header: header, RobotId: robotID, Sequence: sequence})
+		a.platform.SendToRobot(robotID, &tourianv1.VelocityCommand{Header: header, RobotId: robotID, Sequence: sequence, Twist: twist})
+	}()
+}
+
+// Wait blocks until every act in flight has finished, for tests and shutdown.
+func (a *Arbiter) Wait() {
+	a.acting.Wait()
 }
 
 // Holder reports who holds a robot, nil for nobody.

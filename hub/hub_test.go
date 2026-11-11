@@ -128,6 +128,9 @@ func TestTapsAndPublishing(t *testing.T) {
 	}
 
 	h.SendToRobot("r1", &tourianv1.Stop{RobotId: "r1"})
+	if got := <-seen; got != "3:*tourianv1.Envelope_Stop" {
+		t.Fatalf("taps should see what the platform sends a robot, saw %s", got)
+	}
 	if receive(t, ctx, robot).GetStop() == nil {
 		t.Fatal("robot should receive what the platform sends it")
 	}
