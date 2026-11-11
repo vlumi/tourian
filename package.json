@@ -17,5 +17,9 @@
     "@bufbuild/protoc-gen-es": "^2.17.0",
     "markdownlint-cli2": "^0.24.0",
     "prettier": "^3.9.10"
+  },
+  "overrides": {
+    "re2js": "^2.9.1",
+    "katex": "^0.19.1"
   }
 }

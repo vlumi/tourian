@@ -190,3 +190,41 @@ func receive(t *testing.T, ctx context.Context, conn *websocket.Conn) *tourianv1
 	}
 	return env
 }
+
+func TestBrowsersAreLetInByOrigin(t *testing.T) {
+	h, base := serve(t)
+	h.Origins = []string{"phone.local:*"}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	for origin, allowed := range map[string]bool{
+		"http://localhost:3000":     true,
+		"http://127.0.0.1:3000":     true,
+		"http://phone.local:3000":   true,
+		"http://elsewhere.example":  false,
+		"http://phone.local.evil:1": false,
+	} {
+		conn, _, err := websocket.Dial(ctx, base+"/console", &websocket.DialOptions{HTTPHeader: http.Header{"Origin": {origin}}})
+		if conn != nil {
+			_ = conn.CloseNow()
+		}
+		if (err == nil) != allowed {
+			t.Errorf("origin %s: allowed = %v, err = %v", origin, err == nil, err)
+		}
+		request := httptest.NewRequest(http.MethodGet, "http://"+strings.TrimPrefix(base, "ws://")+"/episodes", nil)
+		if h.AllowsOrigin(request, origin) != allowed {
+			t.Errorf("origin %s: AllowsOrigin = %v", origin, !allowed)
+		}
+	}
+}
+
+func TestAPeerThatNeverAnnouncesIsDropped(t *testing.T) {
+	_, base := serve(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	robot := dial(t, ctx, base+"/robot")
+	started := time.Now()
+	if _, err := ws.Receive(ctx, robot); err == nil || time.Since(started) < announceTimeout/2 {
+		t.Fatalf("the hub should close a silent robot after the announce timeout, got %v after %s", err, time.Since(started))
+	}
+}
