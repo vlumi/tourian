@@ -16,15 +16,9 @@ import (
 )
 
 func TestRoutesBetweenRobotAndConsole(t *testing.T) {
-	h := New()
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /robot", h.ServeRobot)
-	mux.HandleFunc("GET /console", h.ServeConsole)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	h, base := serve(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	base := "ws" + strings.TrimPrefix(server.URL, "http")
 
 	robot := dial(t, ctx, base+"/robot")
 	send(t, ctx, robot, &tourianv1.Capabilities{RobotId: "r1", Name: "Robot one"})
@@ -59,15 +53,9 @@ func TestRoutesBetweenRobotAndConsole(t *testing.T) {
 }
 
 func TestRelaysSignalingBetweenConsoleAndCamera(t *testing.T) {
-	h := New()
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /camera", h.ServeCamera)
-	mux.HandleFunc("GET /console", h.ServeConsole)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	h, base := serve(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	base := "ws" + strings.TrimPrefix(server.URL, "http")
 
 	camera := dial(t, ctx, base+"/camera")
 	send(t, ctx, camera, &tourianv1.CameraAnnounce{RobotId: "r1", Kinds: []tourianv1.VideoKind{tourianv1.VideoKind_VIDEO_KIND_WEBRTC}})
@@ -113,15 +101,9 @@ func TestRelaysSignalingBetweenConsoleAndCamera(t *testing.T) {
 }
 
 func TestTapsAndPublishing(t *testing.T) {
-	h := New()
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /robot", h.ServeRobot)
-	mux.HandleFunc("GET /console", h.ServeConsole)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	h, base := serve(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	base := "ws" + strings.TrimPrefix(server.URL, "http")
 
 	seen := make(chan string, 16)
 	h.AddTap(func(from Source, env *tourianv1.Envelope) {
@@ -159,17 +141,28 @@ func TestTapsAndPublishing(t *testing.T) {
 }
 
 func TestRobotMustAnnounceFirst(t *testing.T) {
-	h := New()
-	server := httptest.NewServer(http.HandlerFunc(h.ServeRobot))
-	defer server.Close()
+	_, base := serve(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	robot := dial(t, ctx, "ws"+strings.TrimPrefix(server.URL, "http"))
+	robot := dial(t, ctx, base+"/robot")
 	send(t, ctx, robot, &tourianv1.Observation{RobotId: "r1"})
 	if _, err := ws.Receive(ctx, robot); err == nil {
 		t.Fatal("the hub should drop a robot whose first frame is not its capabilities")
 	}
+}
+
+// serve starts a hub with its three endpoints and returns it with the ws base URL to dial.
+func serve(t *testing.T) (*Hub, string) {
+	t.Helper()
+	h := New()
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /robot", h.ServeRobot)
+	mux.HandleFunc("GET /camera", h.ServeCamera)
+	mux.HandleFunc("GET /console", h.ServeConsole)
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+	return h, "ws" + strings.TrimPrefix(server.URL, "http")
 }
 
 func dial(t *testing.T, ctx context.Context, url string) *websocket.Conn {
