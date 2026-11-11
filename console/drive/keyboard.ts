@@ -10,7 +10,7 @@ const bindings: Record<string, { linear?: number; angular?: number }> = {
   ArrowRight: { angular: -1 },
 }
 
-export function isDriveKey(code: string): boolean {
+function isDriveKey(code: string): boolean {
   return code in bindings
 }
 

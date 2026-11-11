@@ -1,4 +1,4 @@
-import { fromJson, fromJsonString } from '@bufbuild/protobuf'
+import { fromJsonString } from '@bufbuild/protobuf'
 import {
   EpisodeFrameSchema,
   EpisodeSchema,
@@ -7,12 +7,10 @@ import {
   type EpisodeFrame,
   type EpisodeVideo,
 } from '@tourian/contract/tourian/v1/episode_pb'
-import { platformHttp } from '@/platform/socket'
+import { getJson, parseAll, platformHttp } from '@/platform/http'
 
 export async function listEpisodes(): Promise<Episode[]> {
-  const response = await fetch(`${platformHttp()}/episodes`)
-  const items = (await response.json()) as unknown[]
-  return items.map((item) => fromJson(EpisodeSchema, item as Parameters<typeof fromJson>[1]))
+  return parseAll(EpisodeSchema, await getJson('/episodes'))
 }
 
 export type Recording = { episode: Episode; frames: EpisodeFrame[]; video: EpisodeVideo[] }

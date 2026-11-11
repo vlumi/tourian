@@ -114,19 +114,16 @@ export async function launch({ fakeCamera = false, width = 1400, height = 900 } 
       const { data } = await send('Page.captureScreenshot', { format: 'png' }, sessionId)
       await writeFile(path, Buffer.from(data, 'base64'))
     }
-    const mouseMove = (x, y) => send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y }, sessionId)
-    return { evaluate, waitFor, screenshot, mouseMove, sessionId }
+    return { evaluate, waitFor, screenshot }
   }
 
-  const close = async () => {
-    const version = await send('Browser.getVersion').catch(() => ({ product: 'unknown' }))
+  const close = () => {
     ws.close()
     browser.kill()
-    return version.product
   }
   const version = async () => (await send('Browser.getVersion')).product
 
-  return { open, send, close, version }
+  return { open, close, version }
 }
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))

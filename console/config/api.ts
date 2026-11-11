@@ -5,7 +5,7 @@ import {
   type RobotConfig,
   type TaskConfig,
 } from '@tourian/contract/tourian/v1/config_pb'
-import { platformHttp } from '@/platform/socket'
+import { getJson, parseAll, putJson } from '@/platform/http'
 
 export async function listRobotConfigs(): Promise<RobotConfig[]> {
   return parseAll(RobotConfigSchema, await getJson('/config/robots'))
@@ -16,33 +16,13 @@ export async function listTaskConfigs(): Promise<TaskConfig[]> {
 }
 
 export async function saveRobotConfig(config: RobotConfig): Promise<RobotConfig> {
-  const body = await put(`/config/robots/${encodeURIComponent(config.robotId)}`, toJson(RobotConfigSchema, config))
-  return fromJson(RobotConfigSchema, body as Parameters<typeof fromJson>[1])
+  const body = await putJson(`/config/robots/${encodeURIComponent(config.robotId)}`, toJson(RobotConfigSchema, config))
+  return fromJson(RobotConfigSchema, body)
 }
 
 export async function saveTaskConfig(config: TaskConfig): Promise<TaskConfig> {
-  const body = await put(`/config/tasks/${encodeURIComponent(config.taskId)}`, toJson(TaskConfigSchema, config))
-  return fromJson(TaskConfigSchema, body as Parameters<typeof fromJson>[1])
-}
-
-async function getJson(path: string): Promise<unknown[]> {
-  const response = await fetch(platformHttp() + path)
-  if (!response.ok) throw new Error(`${path}: ${response.status}`)
-  return (await response.json()) as unknown[]
-}
-
-async function put(path: string, body: unknown): Promise<unknown> {
-  const response = await fetch(platformHttp() + path, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-  if (!response.ok) throw new Error(`${path}: ${response.status} ${await response.text()}`)
-  return response.json()
-}
-
-function parseAll<T>(schema: Parameters<typeof fromJson>[0], items: unknown[]): T[] {
-  return items.map((item) => fromJson(schema, item as Parameters<typeof fromJson>[1]) as T)
+  const body = await putJson(`/config/tasks/${encodeURIComponent(config.taskId)}`, toJson(TaskConfigSchema, config))
+  return fromJson(TaskConfigSchema, body)
 }
 
 // Parameters are edited as one `key = value` per line.

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { heading, useStore } from '@/platform/store'
+import { heading, positionOf, useStore } from '@/platform/store'
 import { renderWorld, startCanvasDrawing } from './render'
 
 export function WorldCanvas() {
@@ -12,13 +12,12 @@ export function WorldCanvas() {
     if (!canvas) return
     const drawing = startCanvasDrawing(canvas, (context, width, height) => {
       const { observation, observations, selected, trail, engaged } = useStore.getState()
-      const position = observation?.pose?.position
       const others = Object.entries(observations).flatMap(([id, other]) => {
-        const p = other.pose?.position
-        return id !== selected && p ? [{ position: { x: p.x, y: p.y }, heading: heading(other) }] : []
+        const position = positionOf(other)
+        return id !== selected && position ? [{ position, heading: heading(other) }] : []
       })
       renderWorld(context, width, height, {
-        position: position ? { x: position.x, y: position.y } : undefined,
+        position: positionOf(observation),
         heading: heading(observation),
         trail,
         active: engaged,

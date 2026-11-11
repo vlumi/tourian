@@ -5,7 +5,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "types": ["node", "vitest/globals", "@testing-library/jest-dom/vitest"],
+    "types": ["node", "vitest/globals"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,

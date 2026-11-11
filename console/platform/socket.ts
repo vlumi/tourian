@@ -5,7 +5,7 @@ const reconnectDelayMs = 1000
 
 export type Socket = { send: (message: Message) => void; close: () => void }
 
-export type Handlers = {
+type Handlers = {
   onOpen?: () => void
   onMessage: (envelope: Envelope) => void
   onClose?: () => void
@@ -13,11 +13,6 @@ export type Handlers = {
 
 export function platformBase(): string {
   return process.env.NEXT_PUBLIC_TOURIAN_URL ?? 'ws://localhost:8080'
-}
-
-// The same platform over HTTP, for what is fetched rather than streamed.
-export function platformHttp(): string {
-  return platformBase().replace(/^ws/, 'http')
 }
 
 // Keeps a WebSocket to the platform open, reconnecting after a pause, until closed.

@@ -1,10 +1,10 @@
 import { create } from '@bufbuild/protobuf'
-import { SessionDescriptionSchema, VideoKind, VideoRequestSchema } from '@tourian/contract/tourian/v1/video_pb'
+import { VideoKind, VideoRequestSchema } from '@tourian/contract/tourian/v1/video_pb'
 import { send } from '@/platform/connection'
-import { candidateMessage, remoteSide, rtcConfiguration } from './peer'
+import { candidateMessage, descriptionMessage, remoteSide, rtcConfiguration } from './peer'
 import { onVideoMessage } from './signals'
 
-export type Viewer = { stop: () => void }
+type Viewer = { stop: () => void }
 
 // Offers a receive-only connection to the robot's camera and shows the track that comes back.
 export function viewWebRtc(robotId: string, video: HTMLVideoElement, onFrame: () => void): Viewer {
@@ -35,12 +35,7 @@ export function viewWebRtc(robotId: string, video: HTMLVideoElement, onFrame: ()
     .createOffer()
     .then((offer) => pc.setLocalDescription(offer))
     .then(() => {
-      const local = pc.localDescription
-      if (local)
-        send({
-          case: 'sessionDescription',
-          value: create(SessionDescriptionSchema, { robotId, type: local.type, sdp: local.sdp }),
-        })
+      if (pc.localDescription) send(descriptionMessage(robotId, '', pc.localDescription))
     })
 
   return {
@@ -58,6 +53,18 @@ export function viewMjpeg(robotId: string, img: HTMLImageElement, onFrame: () =>
   const request = (enabled: boolean) =>
     send({ case: 'videoRequest', value: create(VideoRequestSchema, { robotId, kind: VideoKind.MJPEG, enabled }) })
   request(true)
+  const stop = showJpegFrames(robotId, img, onFrame)
+  return {
+    stop: () => {
+      stop()
+      request(false)
+      img.removeAttribute('src')
+    },
+  }
+}
+
+// Shows the robot's JPEG frames in img as they pass by, keeping only the one on screen alive, until the returned function is called.
+export function showJpegFrames(robotId: string, img: HTMLImageElement, onFrame?: () => void): () => void {
   let url: string | undefined
   const unsubscribe = onVideoMessage((envelope) => {
     const m = envelope.message
@@ -66,16 +73,12 @@ export function viewMjpeg(robotId: string, img: HTMLImageElement, onFrame: () =>
     img.onload = () => {
       if (url) URL.revokeObjectURL(url)
       url = next
-      onFrame()
+      onFrame?.()
     }
     img.src = next
   })
-  return {
-    stop: () => {
-      unsubscribe()
-      request(false)
-      if (url) URL.revokeObjectURL(url)
-      img.removeAttribute('src')
-    },
+  return () => {
+    unsubscribe()
+    if (url) URL.revokeObjectURL(url)
   }
 }

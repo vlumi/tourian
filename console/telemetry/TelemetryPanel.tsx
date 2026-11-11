@@ -1,8 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
-import { haltLabel, heading, useStore } from '@/platform/store'
+import { batteryLabel, haltLabel, heading, useStore } from '@/platform/store'
 import { ControlPanel } from '@/control/ControlPanel'
+import { Row } from './Row'
 import { Sparkline } from './Sparkline'
 
 export function TelemetryPanel() {
@@ -59,7 +59,7 @@ export function TelemetryPanel() {
           {format(observation?.velocity?.angular?.z, 'rad/s')}
         </Row>
         <Row label="battery" spark={<Sparkline values={history.battery} min={0} max={1} />}>
-          {observation?.battery ? `${(observation.battery.percentage * 100).toFixed(1)} %` : '–'}
+          {batteryLabel(observation)}
         </Row>
         {observation?.joints?.name.map((name, i) => (
           <Row key={name} label={name}>
@@ -87,16 +87,6 @@ export function TelemetryPanel() {
         <p>Gamepad: left stick drives, right stick turns, Start engages, B stops.</p>
       </section>
     </aside>
-  )
-}
-
-function Row({ label, children, spark }: { label: string; children: ReactNode; spark?: ReactNode }) {
-  return (
-    <div className="row">
-      <span className="label">{label}</span>
-      {spark}
-      <span className="value">{children}</span>
-    </div>
   )
 }
 

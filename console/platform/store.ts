@@ -6,8 +6,8 @@ import type { CameraAnnounce } from '@tourian/contract/tourian/v1/video_pb'
 import { HaltReason } from '@tourian/contract/tourian/v1/robot_pb'
 import { create } from 'zustand'
 
-export type Status = 'connecting' | 'connected' | 'disconnected'
-export type InputSource = 'none' | 'keyboard' | 'gamepad'
+type Status = 'connecting' | 'connected' | 'disconnected'
+type InputSource = 'none' | 'keyboard' | 'gamepad'
 export type VideoPath = 'off' | 'webrtc' | 'mjpeg'
 
 export type Input = { linear: number; angular: number; source: InputSource }
@@ -15,9 +15,9 @@ export type Input = { linear: number; angular: number; source: InputSource }
 export type Point = { x: number; y: number }
 
 export const historyLength = 120
-export const trailLength = 600
+const trailLength = 600
 
-export type State = {
+type State = {
   status: Status
   robots: Record<string, Capabilities>
   cameras: Record<string, CameraAnnounce>
@@ -57,6 +57,7 @@ export type State = {
 }
 
 const idle: Input = { linear: 0, angular: 0, source: 'none' }
+const emptyHistory: State['history'] = { speed: [], angular: [], battery: [], latency: [] }
 
 export const useStore = create<State>()((set) => ({
   status: 'connecting',
@@ -69,7 +70,7 @@ export const useStore = create<State>()((set) => ({
   videoPath: 'webrtc',
   episodeBad: false,
   trail: [],
-  history: { speed: [], angular: [], battery: [], latency: [] },
+  history: emptyHistory,
   engaged: false,
   stopped: false,
   input: idle,
@@ -97,7 +98,7 @@ export const useStore = create<State>()((set) => ({
       episode: state.episodes[robotId],
       episodeBad: false,
       trail: [],
-      history: { speed: [], angular: [], battery: [], latency: [] },
+      history: emptyHistory,
       latencyMs: undefined,
     })),
   addCamera: (announce) => set((state) => ({ cameras: { ...state.cameras, [announce.robotId]: announce } })),
@@ -120,8 +121,8 @@ export const useStore = create<State>()((set) => ({
     set((state) => {
       const observations = { ...state.observations, [observation.robotId]: observation }
       if (observation.robotId !== state.selected) return { observations }
-      const position = observation.pose?.position
-      const trail = position ? push(state.trail, { x: position.x, y: position.y }, trailLength) : state.trail
+      const position = positionOf(observation)
+      const trail = position ? push(state.trail, position, trailLength) : state.trail
       return {
         observations,
         observation,
@@ -150,6 +151,11 @@ function push<T>(list: T[], item: T, limit: number): T[] {
   return next
 }
 
+export function positionOf(observation?: Observation): Point | undefined {
+  const p = observation?.pose?.position
+  return p ? { x: p.x, y: p.y } : undefined
+}
+
 export function heading(observation?: Observation): number {
   const q = observation?.pose?.orientation
   return q ? 2 * Math.atan2(q.z, q.w) : 0
@@ -167,6 +173,10 @@ export function effectiveLimits(
     return candidates.length ? Math.min(...candidates) : 0
   }
   return { maxLinear: lower(cap?.maxLinear, cfg?.maxLinear), maxAngular: lower(cap?.maxAngular, cfg?.maxAngular) }
+}
+
+export function batteryLabel(observation: Observation | undefined, digits = 1): string {
+  return observation?.battery ? `${(observation.battery.percentage * 100).toFixed(digits)} %` : '–'
 }
 
 export function haltLabel(reason: HaltReason | undefined): string | undefined {

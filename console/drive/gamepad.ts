@@ -4,7 +4,6 @@ const buttons = { stop: 1, engage: 9 }
 
 export type GamepadReading = {
   connected: boolean
-  name?: string
   linear: number
   angular: number
   stopPressed: boolean
@@ -23,7 +22,6 @@ export function readGamepad(pads: (Gamepad | null)[] = navigator.getGamepads?.()
   const engage = pad.buttons[buttons.engage]?.pressed ?? false
   const reading = {
     connected: true,
-    name: pad.id,
     linear: axis(pad.axes[1], -1),
     angular: axis(pad.axes[2] ?? pad.axes[0], -1),
     stopPressed: stop && !previous.stop,

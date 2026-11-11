@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
+import { errorMessage } from '@/platform/error'
 import { serveCamera, type CameraState } from '@/video/camera'
 import { composeWithClock } from '@/video/compose'
 
@@ -41,7 +42,7 @@ export function CameraPage() {
       setStream(await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }))
       setError(undefined)
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(errorMessage(e))
     }
   }
   const stop = () => {

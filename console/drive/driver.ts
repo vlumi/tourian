@@ -5,17 +5,17 @@ import { HeartbeatSchema, StopSchema, VelocityCommandSchema } from '@tourian/con
 import { send } from '@/platform/connection'
 import { effectiveLimits, useStore } from '@/platform/store'
 import { readGamepad } from './gamepad'
+import { pickInput } from './input'
 import { twistFromKeys, watchKeyboard } from './keyboard'
 import { markSent } from './latency'
 
-export const commandIntervalMs = 50
+const commandIntervalMs = 50
 
 let sequence = 0n
 
 // Reads the keyboard and the gamepad at the command rate and, while the operator is engaged and the window has focus, sends a heartbeat and a command every tick. Losing focus disengages, so the robot's dead-man switch takes over.
 export function startDriver(): () => void {
   const keyboard = watchKeyboard()
-  const store = useStore
 
   const onKey = (event: KeyboardEvent) => {
     if (event.repeat) return
@@ -34,22 +34,10 @@ export function startDriver(): () => void {
     const pad = readGamepad()
     if (pad.stopPressed) emergencyStop()
     if (pad.engagePressed) toggleEngaged()
-    const keys = twistFromKeys(keyboard.held)
-    const input =
-      pad.connected && (pad.linear !== 0 || pad.angular !== 0)
-        ? { linear: pad.linear, angular: pad.angular, source: 'gamepad' as const }
-        : {
-            ...keys,
-            source:
-              keys.linear || keys.angular
-                ? ('keyboard' as const)
-                : pad.connected
-                  ? ('gamepad' as const)
-                  : ('none' as const),
-          }
-    store.getState().setInput(input)
+    const input = pickInput(pad, twistFromKeys(keyboard.held))
+    useStore.getState().setInput(input)
 
-    const { engaged, selected, robots, configs } = store.getState()
+    const { engaged, selected, robots, configs } = useStore.getState()
     if (!engaged || !selected) return
     const limits = effectiveLimits(robots[selected], configs[selected])
     sendCommand(selected, input.linear * limits.maxLinear, input.angular * limits.maxAngular)

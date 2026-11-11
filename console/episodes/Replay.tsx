@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { heading } from '@/platform/store'
-import { renderWorld, startCanvasDrawing } from '@/world/render'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { errorMessage } from '@/platform/error'
+import { heading, positionOf } from '@/platform/store'
+import { renderWorld, startCanvasDrawing, type WorldState } from '@/world/render'
 import { loadEpisode, pictureUrl, type Recording } from './api'
-import { length, started } from './EpisodeList'
+import { flag, lasted, started } from './format'
 import { indexAt, offsetSeconds } from './timeline'
 
 // One episode played back: the world as recorded on the left, the picture in force on the right, scrubbed or played at the speed it happened.
@@ -19,7 +20,7 @@ export function Replay({ id }: { id: string }) {
   useEffect(() => {
     loadEpisode(id)
       .then(setRecording)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => setError(errorMessage(e)))
   }, [id])
 
   const duration = recording ? offsetSeconds(recording.frames[recording.frames.length - 1]?.offset) : 0
@@ -48,29 +49,31 @@ export function Replay({ id }: { id: string }) {
     return () => cancelAnimationFrame(raf)
   }, [playing, duration])
 
-  const draw = useCallback(
-    (context: CanvasRenderingContext2D, width: number, height: number) => {
-      if (!recording) return
-      const trail = recording.frames.slice(0, frameIndex + 1).flatMap((f) => {
-        const p = f.observation?.pose?.position
-        return p ? [{ x: p.x, y: p.y }] : []
-      })
-      const position = frame?.observation?.pose?.position
-      renderWorld(context, width, height, {
-        position: position ? { x: position.x, y: position.y } : undefined,
-        heading: heading(frame?.observation),
-        trail,
-        active: true,
-      })
-    },
-    [recording, frameIndex, frame],
-  )
+  const positions = useMemo(() => (recording?.frames ?? []).map((f) => positionOf(f.observation)), [recording])
+  const scene = useRef<WorldState>(undefined)
+  const drawing = useRef<ReturnType<typeof startCanvasDrawing>>(undefined)
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const drawing = startCanvasDrawing(canvas, draw)
-    return drawing.stop
-  }, [draw])
+    drawing.current = startCanvasDrawing(canvas, (context, width, height) => {
+      if (scene.current) renderWorld(context, width, height, scene.current)
+    })
+    return () => {
+      drawing.current?.stop()
+      drawing.current = undefined
+    }
+  }, [recording])
+
+  useEffect(() => {
+    scene.current = {
+      position: positionOf(frame?.observation),
+      heading: heading(frame?.observation),
+      trail: positions.slice(0, frameIndex + 1).filter((p) => p !== undefined),
+      active: true,
+    }
+    drawing.current?.schedule()
+  }, [positions, frameIndex, frame])
 
   if (error) return <p className="error">{error}</p>
   if (!recording) return <p className="video-empty">Loading…</p>
@@ -85,9 +88,9 @@ export function Replay({ id }: { id: string }) {
         <span className="episode">
           {episode.robotId}
           {episode.robotConfigVersion > 0 && ` v${episode.robotConfigVersion}`} · {episode.task || 'no task'}
-          {episode.taskConfigVersion > 0 && ` v${episode.taskConfigVersion}`} · {length(episode)} ·{' '}
+          {episode.taskConfigVersion > 0 && ` v${episode.taskConfigVersion}`} · {lasted(episode)} ·{' '}
           {String(episode.frames)} frames · {String(episode.videoFrames)} pictures
-          {episode.bad && ` · bad${episode.note ? `: ${episode.note}` : ''}`}
+          {episode.bad && ` · ${flag(episode)}`}
         </span>
       </header>
       <div className="replay-scene">
