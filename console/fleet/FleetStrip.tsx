@@ -1,8 +1,8 @@
 'use client'
 
-import { ControllerKind } from '@tourian/contract/tourian/v1/control_pb'
 import { useEffect, useRef } from 'react'
-import { haltLabel, useStore } from '@/platform/store'
+import { holderLabel } from '@/control/holder'
+import { batteryLabel, haltLabel, useStore } from '@/platform/store'
 import { showJpegFrames } from '@/video/viewer'
 
 // Every robot the platform knows, one card each: its state, who holds it, whether it is being recorded, and its latest picture when one is passing by. Clicking a card selects the robot for driving.
@@ -36,23 +36,16 @@ function FleetCard({ robotId, selected, onSelect }: { robotId: string; selected:
   }, [robotId])
 
   const halt = haltLabel(observation?.haltReason)
-  const holder = control?.holder
   return (
     <button type="button" className={`fleet-card ${selected ? 'selected' : ''}`} onClick={onSelect}>
       <img ref={imgRef} alt="" />
       <span className="fleet-name">{robot?.name ?? robotId}</span>
       <span className="fleet-line">
-        {holder
-          ? holder.kind === ControllerKind.OPERATOR
-            ? holder.id === consoleId
-              ? 'you'
-              : 'operator'
-            : holder.name
-          : 'nobody'}
+        {holderLabel(control?.holder, consoleId, { brief: true })}
         {episode?.recording && <span className="status status-stopped">rec</span>}
       </span>
       <span className="fleet-line">
-        {halt ?? 'driving'} · {observation?.battery ? `${(observation.battery.percentage * 100).toFixed(0)} %` : '–'}
+        {halt ?? 'driving'} · {batteryLabel(observation, 0)}
       </span>
     </button>
   )

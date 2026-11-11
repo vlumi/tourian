@@ -174,6 +174,10 @@ export function effectiveLimits(
   return { maxLinear: lower(cap?.maxLinear, cfg?.maxLinear), maxAngular: lower(cap?.maxAngular, cfg?.maxAngular) }
 }
 
+export function batteryLabel(observation: Observation | undefined, digits = 1): string {
+  return observation?.battery ? `${(observation.battery.percentage * 100).toFixed(digits)} %` : '–'
+}
+
 export function haltLabel(reason: HaltReason | undefined): string | undefined {
   switch (reason) {
     case HaltReason.COMMAND_TIMEOUT:

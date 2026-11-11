@@ -1,10 +1,11 @@
 'use client'
 
 import { timestampDate } from '@bufbuild/protobuf/wkt'
-import { ControllerKind, type Controller } from '@tourian/contract/tourian/v1/control_pb'
+import { ControllerKind } from '@tourian/contract/tourian/v1/control_pb'
 import { handTo } from '@/drive/driver'
 import { useStore } from '@/platform/store'
 import { Row } from '@/telemetry/Row'
+import { holderLabel, ownOperator } from './holder'
 
 // Who holds the robot and since when, and the controllers it can be handed to. The operator takes over by engaging and hands back by releasing; while another console's operator holds the robot, this one waits.
 export function ControlPanel() {
@@ -12,7 +13,7 @@ export function ControlPanel() {
   const engaged = useStore((s) => s.engaged)
   const consoleId = useStore((s) => s.consoleId)
   const holder = control?.holder
-  const mine = holder?.kind === ControllerKind.OPERATOR && holder.id === consoleId
+  const mine = ownOperator(holder, consoleId)
   const another = holder?.kind === ControllerKind.OPERATOR && !mine
 
   return (
@@ -21,7 +22,7 @@ export function ControlPanel() {
       <Row label="holder">
         {holder ? (
           <span className={`status ${mine ? (engaged ? 'status-engaged' : '') : 'status-held'}`}>
-            {describe(holder, mine)}
+            {holderLabel(holder, consoleId)}
           </span>
         ) : (
           'nobody'
@@ -48,17 +49,4 @@ export function ControlPanel() {
       )}
     </section>
   )
-}
-
-function describe(holder: Controller, mine: boolean): string {
-  switch (holder.kind) {
-    case ControllerKind.OPERATOR:
-      return mine ? 'you' : 'another operator'
-    case ControllerKind.SCRIPT:
-      return `script: ${holder.name}`
-    case ControllerKind.POLICY:
-      return holder.name
-    default:
-      return holder.name || holder.id
-  }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { haltLabel, heading, useStore } from '@/platform/store'
+import { batteryLabel, haltLabel, heading, useStore } from '@/platform/store'
 import { ControlPanel } from '@/control/ControlPanel'
 import { Row } from './Row'
 import { Sparkline } from './Sparkline'
@@ -59,7 +59,7 @@ export function TelemetryPanel() {
           {format(observation?.velocity?.angular?.z, 'rad/s')}
         </Row>
         <Row label="battery" spark={<Sparkline values={history.battery} min={0} max={1} />}>
-          {observation?.battery ? `${(observation.battery.percentage * 100).toFixed(1)} %` : '–'}
+          {batteryLabel(observation)}
         </Row>
         {observation?.joints?.name.map((name, i) => (
           <Row key={name} label={name}>
