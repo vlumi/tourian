@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	episodes "github.com/vlumi/tourian/episode"
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
 )
 
@@ -33,12 +34,16 @@ const (
 
 var actionNames = []string{"linear_velocity", "angular_velocity"}
 
-// A Sink is one dataset directory. Each episode becomes its own data file, episodes file and video file, so nothing is rewritten when one ends.
+// A Sink is one dataset directory per robot under its root, since a dataset's state vector is laid out from one robot's joints. Each episode becomes its own data file, episodes file and video file, so nothing is rewritten when one ends.
 type Sink struct {
 	root   string
 	fps    int
 	ffmpeg string
 	open   map[string]*episode
+}
+
+type dataset struct {
+	root string
 }
 
 type episode struct {
@@ -103,7 +108,8 @@ func (s *Sink) End(meta *tourianv1.Episode) error {
 		return nil
 	}
 
-	info, err := s.loadInfo(ep)
+	d := s.dataset(meta.GetRobotId())
+	info, err := d.loadInfo(s, ep)
 	if err != nil {
 		return err
 	}
@@ -113,7 +119,7 @@ func (s *Sink) End(meta *tourianv1.Episode) error {
 	length := int64(len(ep.frames))
 	stateNames := info.Features[stateKey].Names.([]string)
 
-	taskIndex, err := s.ensureTask(meta.GetTask())
+	taskIndex, err := d.ensureTask(meta.GetTask())
 	if err != nil {
 		return err
 	}
@@ -130,7 +136,7 @@ func (s *Sink) End(meta *tourianv1.Episode) error {
 			TaskIndex:    taskIndex,
 		})
 	}
-	if err := writeParquet(filepath.Join(s.root, fmt.Sprintf(dataPattern, chunk, file)), rows); err != nil {
+	if err := writeParquet(filepath.Join(d.root, fmt.Sprintf(dataPattern, chunk, file)), rows); err != nil {
 		return err
 	}
 
@@ -147,7 +153,7 @@ func (s *Sink) End(meta *tourianv1.Episode) error {
 	}
 	_, hasVideo := info.Features[videoKey]
 	if hasVideo && len(ep.pictures) > 0 && s.ffmpeg != "" {
-		if err := s.encodeVideo(ep, filepath.Join(s.root, fmt.Sprintf(videoPattern, videoKey, chunk, file))); err != nil {
+		if err := s.encodeVideo(ep, filepath.Join(d.root, fmt.Sprintf(videoPattern, videoKey, chunk, file))); err != nil {
 			return err
 		}
 		to := float32(length) / float32(s.fps)
@@ -155,7 +161,7 @@ func (s *Sink) End(meta *tourianv1.Episode) error {
 		c, f := int64(chunk), int64(file)
 		row.VideoChunk, row.VideoFile, row.VideoFrom, row.VideoTo = &c, &f, &zero, &to
 	}
-	if err := writeParquet(filepath.Join(s.root, fmt.Sprintf(episodesPattern, chunk, file)), []episodeRow{row}); err != nil {
+	if err := writeParquet(filepath.Join(d.root, fmt.Sprintf(episodesPattern, chunk, file)), []episodeRow{row}); err != nil {
 		return err
 	}
 
@@ -168,29 +174,58 @@ func (s *Sink) End(meta *tourianv1.Episode) error {
 			stats[videoKey] = imageStats
 		}
 	}
-	if err := s.foldStats(stats); err != nil {
+	if err := d.foldStats(stats); err != nil {
 		return err
 	}
 
 	info.TotalEpisodes++
 	info.TotalFrames += length
 	info.Splits = map[string]string{"train": fmt.Sprintf("0:%d", info.TotalEpisodes)}
-	if err := s.writeInfo(info); err != nil {
+	if err := d.writeInfo(info); err != nil {
 		return err
 	}
-	return s.updateMapping(func(m map[string]mapping) {
+	return d.updateMapping(func(m map[string]mapping) {
 		m[meta.GetId()] = mapping{EpisodeIndex: index, Bad: meta.GetBad(), Note: meta.GetNote()}
 	})
 }
 
-// Flag keeps the flag beside the dataset, since the layout has no place for it; tourian.json maps episode ids to indices as well.
+func (s *Sink) dataset(robotID string) dataset {
+	return dataset{root: filepath.Join(s.root, episodes.SafeName(robotID))}
+}
+
+// Flag keeps the flag beside the dataset, since the layout has no place for it; tourian.json maps episode ids to indices as well. The dataset is found by the robot the id names, which is how the recorder names them.
 func (s *Sink) Flag(episodeID string, bad bool, note string) error {
-	return s.updateMapping(func(m map[string]mapping) {
-		entry := m[episodeID]
-		entry.Bad = bad
-		entry.Note = note
-		m[episodeID] = entry
-	})
+	for _, d := range s.datasets() {
+		var found bool
+		err := d.updateMapping(func(m map[string]mapping) {
+			entry, ok := m[episodeID]
+			if !ok {
+				return
+			}
+			found = true
+			entry.Bad = bad
+			entry.Note = note
+			m[episodeID] = entry
+		})
+		if err != nil || found {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Sink) datasets() []dataset {
+	entries, err := os.ReadDir(s.root)
+	if err != nil {
+		return nil
+	}
+	var out []dataset
+	for _, entry := range entries {
+		if entry.IsDir() {
+			out = append(out, dataset{root: filepath.Join(s.root, entry.Name())})
+		}
+	}
+	return out
 }
 
 type mapping struct {
@@ -199,8 +234,8 @@ type mapping struct {
 	Note         string `json:"note,omitempty"`
 }
 
-func (s *Sink) updateMapping(change func(map[string]mapping)) error {
-	path := filepath.Join(s.root, mappingPath)
+func (d dataset) updateMapping(change func(map[string]mapping)) error {
+	path := filepath.Join(d.root, mappingPath)
 	m := map[string]mapping{}
 	if data, err := os.ReadFile(path); err == nil {
 		if err := json.Unmarshal(data, &m); err != nil {

@@ -84,6 +84,7 @@ func TestWritesTheLayout(t *testing.T) {
 	record(t, sink, "ep-b", "drive a circle", 6, 10)
 	record(t, sink, "ep-c", "drive a square", 2, 20)
 
+	root = filepath.Join(root, "zebes-1")
 	var info info
 	readJSON(t, filepath.Join(root, "meta/info.json"), &info)
 	if info.CodebaseVersion != "v3.0" || info.TotalEpisodes != 3 || info.TotalFrames != 12 || info.TotalTasks != 2 || info.Splits["train"] != "0:3" || info.Fps != 20 {
@@ -144,12 +145,44 @@ func TestWithoutFfmpegThereIsNoVideo(t *testing.T) {
 	root := t.TempDir()
 	record(t, New(root, 20), "ep-a", "look", 3, 0)
 	var info info
-	readJSON(t, filepath.Join(root, "meta/info.json"), &info)
+	readJSON(t, filepath.Join(root, "zebes-1/meta/info.json"), &info)
 	if _, ok := info.Features["observation.images.front"]; ok || info.VideoPath != nil {
 		t.Errorf("no video feature expected, got %+v", info)
 	}
-	if _, err := os.Stat(filepath.Join(root, "videos")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(root, "zebes-1/videos")); !os.IsNotExist(err) {
 		t.Error("no videos directory expected")
+	}
+}
+
+func TestEachRobotHasItsOwnDataset(t *testing.T) {
+	fakeFfmpeg(t)
+	root := t.TempDir()
+	sink := New(root, 20)
+	record(t, sink, "ep-a", "look", 2, 0)
+	arm := &tourianv1.Episode{Id: "ep-arm", RobotId: "arm-1", Task: "reach"}
+	if err := sink.Begin(arm); err != nil {
+		t.Fatal(err)
+	}
+	for i := range 2 {
+		frame := &tourianv1.EpisodeFrame{
+			Index:  uint64(i),
+			Offset: durationpb.New(time.Duration(i) * 50 * time.Millisecond),
+			Observation: &tourianv1.Observation{
+				Pose:   &tourianv1.Pose{Position: &tourianv1.Point{}, Orientation: &tourianv1.Quaternion{W: 1}},
+				Joints: &tourianv1.JointState{Name: []string{"shoulder", "elbow", "wrist"}, Position: []float64{1, 2, 3}},
+			},
+		}
+		if err := sink.Frame(arm, frame); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := sink.End(arm); err != nil {
+		t.Fatal(err)
+	}
+	var info info
+	readJSON(t, filepath.Join(root, "arm-1/meta/info.json"), &info)
+	if info.RobotType != "arm-1" || info.Features["observation.state"].Shape[0] != 9 || info.TotalEpisodes != 1 {
+		t.Errorf("the arm's dataset is laid out from the arm's joints, got %+v", info)
 	}
 }
 

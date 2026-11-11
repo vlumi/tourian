@@ -10,6 +10,7 @@ import (
 	"time"
 
 	foxmcap "github.com/foxglove/mcap/go/mcap"
+	"github.com/vlumi/tourian/episode"
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -51,21 +52,30 @@ func New(root string) *Sink {
 	return &Sink{root: root, open: map[string]*writer{}}
 }
 
-func (s *Sink) Begin(episode *tourianv1.Episode) error {
+func (s *Sink) Begin(ep *tourianv1.Episode) error {
 	if err := os.MkdirAll(s.root, 0o755); err != nil {
 		return err
 	}
-	file, err := os.Create(filepath.Join(s.root, episode.GetId()+".mcap"))
+	file, err := os.Create(filepath.Join(s.root, episode.SafeName(ep.GetId())+".mcap"))
 	if err != nil {
 		return err
 	}
-	w, err := foxmcap.NewWriter(file, &foxmcap.WriterOptions{Chunked: true, Compression: foxmcap.CompressionZSTD, ChunkSize: 4 << 20})
+	w, err := s.begin(file)
 	if err != nil {
 		_ = file.Close()
 		return err
 	}
+	s.open[ep.GetId()] = &writer{file: file, mcap: w, start: ep.GetStartedAt().AsTime()}
+	return nil
+}
+
+func (s *Sink) begin(file *os.File) (*foxmcap.Writer, error) {
+	w, err := foxmcap.NewWriter(file, &foxmcap.WriterOptions{Chunked: true, Compression: foxmcap.CompressionZSTD, ChunkSize: 4 << 20})
+	if err != nil {
+		return nil, err
+	}
 	if err := w.WriteHeader(&foxmcap.Header{Library: "tourian"}); err != nil {
-		return err
+		return nil, err
 	}
 	for _, schema := range []*foxmcap.Schema{
 		{ID: observationSchema, Name: "tourian.v1.Observation", Encoding: "protobuf", Data: descriptorSet((&tourianv1.Observation{}).ProtoReflect().Descriptor())},
@@ -75,7 +85,7 @@ func (s *Sink) Begin(episode *tourianv1.Episode) error {
 		{ID: poseSchema, Name: "foxglove.PoseInFrame", Encoding: "jsonschema", Data: []byte(poseInFrameSchema)},
 	} {
 		if err := w.WriteSchema(schema); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	for _, channel := range []*foxmcap.Channel{
@@ -86,17 +96,16 @@ func (s *Sink) Begin(episode *tourianv1.Episode) error {
 		{ID: poseChannel, SchemaID: poseSchema, Topic: "/pose", MessageEncoding: "json"},
 	} {
 		if err := w.WriteChannel(channel); err != nil {
-			return err
+			return nil, err
 		}
 	}
-	s.open[episode.GetId()] = &writer{file: file, mcap: w, start: episode.GetStartedAt().AsTime()}
-	return nil
+	return w, nil
 }
 
-func (s *Sink) Frame(episode *tourianv1.Episode, frame *tourianv1.EpisodeFrame) error {
-	w := s.open[episode.GetId()]
+func (s *Sink) Frame(ep *tourianv1.Episode, frame *tourianv1.EpisodeFrame) error {
+	w := s.open[ep.GetId()]
 	if w == nil {
-		return fmt.Errorf("mcap: episode %s not open", episode.GetId())
+		return fmt.Errorf("mcap: episode %s not open", ep.GetId())
 	}
 	at := w.start.Add(frame.GetOffset().AsDuration())
 	if err := w.writeProto(observationChannel, at, frame.GetObservation()); err != nil {
@@ -124,10 +133,10 @@ func (s *Sink) Frame(episode *tourianv1.Episode, frame *tourianv1.EpisodeFrame) 
 	})
 }
 
-func (s *Sink) Picture(episode *tourianv1.Episode, frame *tourianv1.VideoFrame, offset time.Duration) error {
-	w := s.open[episode.GetId()]
+func (s *Sink) Picture(ep *tourianv1.Episode, frame *tourianv1.VideoFrame, offset time.Duration) error {
+	w := s.open[ep.GetId()]
 	if w == nil {
-		return fmt.Errorf("mcap: episode %s not open", episode.GetId())
+		return fmt.Errorf("mcap: episode %s not open", ep.GetId())
 	}
 	at := w.start.Add(offset)
 	return w.writeJSON(cameraChannel, at, map[string]any{
@@ -138,19 +147,22 @@ func (s *Sink) Picture(episode *tourianv1.Episode, frame *tourianv1.VideoFrame, 
 	})
 }
 
-func (s *Sink) End(episode *tourianv1.Episode) error {
-	w := s.open[episode.GetId()]
+// End closes the file with the episode's metadata, flag included, since a flag set while recording reaches no sink by itself.
+func (s *Sink) End(ep *tourianv1.Episode) error {
+	w := s.open[ep.GetId()]
 	if w == nil {
-		return fmt.Errorf("mcap: episode %s not open", episode.GetId())
+		return fmt.Errorf("mcap: episode %s not open", ep.GetId())
 	}
-	delete(s.open, episode.GetId())
+	delete(s.open, ep.GetId())
 	err := w.mcap.WriteMetadata(&foxmcap.Metadata{Name: "tourian", Metadata: map[string]string{
-		"episode_id": episode.GetId(),
-		"robot_id":   episode.GetRobotId(),
-		"task":       episode.GetTask(),
-		"task_id":    episode.GetTaskId(),
-		"frames":     fmt.Sprint(episode.GetFrames()),
-		"pictures":   fmt.Sprint(episode.GetVideoFrames()),
+		"episode_id": ep.GetId(),
+		"robot_id":   ep.GetRobotId(),
+		"task":       ep.GetTask(),
+		"task_id":    ep.GetTaskId(),
+		"frames":     fmt.Sprint(ep.GetFrames()),
+		"pictures":   fmt.Sprint(ep.GetVideoFrames()),
+		"bad":        fmt.Sprint(ep.GetBad()),
+		"note":       ep.GetNote(),
 	}})
 	if closeErr := w.mcap.Close(); err == nil {
 		err = closeErr
@@ -161,10 +173,10 @@ func (s *Sink) End(episode *tourianv1.Episode) error {
 	return err
 }
 
-// Flag keeps the flag beside the file, since a closed MCAP is not rewritten.
+// Flag keeps a flag set after the fact beside the file, since a closed MCAP is not rewritten.
 func (s *Sink) Flag(episodeID string, bad bool, note string) error {
 	data, _ := json.Marshal(map[string]any{"bad": bad, "note": note})
-	return os.WriteFile(filepath.Join(s.root, episodeID+".flag.json"), append(data, '\n'), 0o644)
+	return os.WriteFile(filepath.Join(s.root, episode.SafeName(episodeID)+".flag.json"), append(data, '\n'), 0o644)
 }
 
 func (w *writer) writeProto(channel uint16, at time.Time, message proto.Message) error {
