@@ -35,15 +35,15 @@ type twist struct {
 	Angular vector3 `json:"angular"`
 }
 
-// New starts the robot on a port of its own, for tests.
-func New() *Server {
-	s := NewRobot()
+// Start runs the robot on a port of its own, for tests.
+func Start() *Server {
+	s := New()
 	s.server = httptest.NewServer(s)
 	return s
 }
 
-// NewRobot is the robot without a listener; it serves HTTP wherever it is mounted.
-func NewRobot() *Server {
+// New is the robot without a listener; it serves HTTP wherever it is mounted.
+func New() *Server {
 	return &Server{topics: map[string]string{}}
 }
 
@@ -55,8 +55,6 @@ func (s *Server) Close() {
 	}
 }
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) { s.serve(w, r) }
-
 // Command is the last twist received on /cmd_vel.
 func (s *Server) Command() (linear, angular float64) {
 	s.mu.Lock()
@@ -64,7 +62,7 @@ func (s *Server) Command() (linear, angular float64) {
 	return s.cmd.Linear.X, s.cmd.Angular.Z
 }
 
-func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
 	if err != nil {
 		return

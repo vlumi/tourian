@@ -14,5 +14,5 @@ func main() {
 	addr := flag.String("addr", ":9090", "address the rosbridge listens on")
 	flag.Parse()
 	log.Printf("rossim: rosbridge listening on %s", *addr)
-	log.Fatal((&http.Server{Addr: *addr, Handler: rosbridgetest.NewRobot(), ReadHeaderTimeout: 5 * time.Second}).ListenAndServe())
+	log.Fatal((&http.Server{Addr: *addr, Handler: rosbridgetest.New(), ReadHeaderTimeout: 5 * time.Second}).ListenAndServe())
 }
