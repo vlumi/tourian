@@ -1,14 +1,9 @@
 import { create } from '@bufbuild/protobuf'
 import { timestampNow } from '@bufbuild/protobuf/wkt'
 import type { Envelope } from '@tourian/contract/tourian/v1/transport_pb'
-import {
-  CameraAnnounceSchema,
-  SessionDescriptionSchema,
-  VideoFrameSchema,
-  VideoKind,
-} from '@tourian/contract/tourian/v1/video_pb'
+import { CameraAnnounceSchema, VideoFrameSchema, VideoKind } from '@tourian/contract/tourian/v1/video_pb'
 import { openSocket, platformBase, type Socket } from '@/platform/socket'
-import { candidateMessage, remoteSide, rtcConfiguration } from './peer'
+import { candidateMessage, descriptionMessage, remoteSide, rtcConfiguration } from './peer'
 
 export const mjpegIntervalMs = 66
 export const mjpegWidth = 640
@@ -78,13 +73,7 @@ export function serveCamera(
       }
       await remote.setDescription(m.value)
       await pc.setLocalDescription(await pc.createAnswer())
-      const local = pc.localDescription
-      if (local) {
-        socket.send({
-          case: 'sessionDescription',
-          value: create(SessionDescriptionSchema, { robotId, peerId, type: local.type, sdp: local.sdp }),
-        })
-      }
+      if (pc.localDescription) socket.send(descriptionMessage(robotId, peerId, pc.localDescription))
       update()
     } else if (m.case === 'iceCandidate' && m.value.robotId === robotId) {
       await peers.get(m.value.peerId)?.remote.addCandidate(m.value)

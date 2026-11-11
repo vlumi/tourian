@@ -1,5 +1,10 @@
 import { create } from '@bufbuild/protobuf'
-import { IceCandidateSchema, type IceCandidate, type SessionDescription } from '@tourian/contract/tourian/v1/video_pb'
+import {
+  IceCandidateSchema,
+  SessionDescriptionSchema,
+  type IceCandidate,
+  type SessionDescription,
+} from '@tourian/contract/tourian/v1/video_pb'
 import type { Message } from '@/platform/codec'
 
 export type PeerLike = Pick<RTCPeerConnection, 'setRemoteDescription' | 'addIceCandidate'> & {
@@ -37,6 +42,13 @@ export function candidateMessage(robotId: string, peerId: string, candidate: RTC
       sdpMid: candidate.sdpMid ?? '',
       sdpMlineIndex: candidate.sdpMLineIndex ?? 0,
     }),
+  }
+}
+
+export function descriptionMessage(robotId: string, peerId: string, local: RTCSessionDescription): Message {
+  return {
+    case: 'sessionDescription',
+    value: create(SessionDescriptionSchema, { robotId, peerId, type: local.type, sdp: local.sdp }),
   }
 }
 

@@ -1,7 +1,7 @@
 import { create } from '@bufbuild/protobuf'
-import { SessionDescriptionSchema, VideoKind, VideoRequestSchema } from '@tourian/contract/tourian/v1/video_pb'
+import { VideoKind, VideoRequestSchema } from '@tourian/contract/tourian/v1/video_pb'
 import { send } from '@/platform/connection'
-import { candidateMessage, remoteSide, rtcConfiguration } from './peer'
+import { candidateMessage, descriptionMessage, remoteSide, rtcConfiguration } from './peer'
 import { onVideoMessage } from './signals'
 
 export type Viewer = { stop: () => void }
@@ -35,12 +35,7 @@ export function viewWebRtc(robotId: string, video: HTMLVideoElement, onFrame: ()
     .createOffer()
     .then((offer) => pc.setLocalDescription(offer))
     .then(() => {
-      const local = pc.localDescription
-      if (local)
-        send({
-          case: 'sessionDescription',
-          value: create(SessionDescriptionSchema, { robotId, type: local.type, sdp: local.sdp }),
-        })
+      if (pc.localDescription) send(descriptionMessage(robotId, '', pc.localDescription))
     })
 
   return {
