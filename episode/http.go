@@ -1,13 +1,12 @@
 package episode
 
 import (
-	"bytes"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 
-	"google.golang.org/protobuf/encoding/protojson"
+	"github.com/vlumi/tourian/transport/httpjson"
 )
 
 var (
@@ -24,18 +23,7 @@ func Handler(root string) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		var body bytes.Buffer
-		body.WriteByte('[')
-		for i, episode := range episodes {
-			if i > 0 {
-				body.WriteByte(',')
-			}
-			data, _ := protojson.Marshal(episode)
-			body.Write(data)
-		}
-		body.WriteByte(']')
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(body.Bytes())
+		httpjson.WriteList(w, episodes)
 	})
 	mux.HandleFunc("GET /episodes/{id}", func(w http.ResponseWriter, r *http.Request) {
 		serveFile(w, r, root, r.PathValue("id"), metaFile, "application/json")

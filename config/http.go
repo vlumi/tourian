@@ -1,12 +1,12 @@
 package config
 
 import (
-	"bytes"
 	"errors"
 	"io"
 	"net/http"
 
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
+	"github.com/vlumi/tourian/transport/httpjson"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -20,10 +20,10 @@ type Publisher interface {
 func Handler(store *Store, publisher Publisher) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /config/robots", func(w http.ResponseWriter, _ *http.Request) {
-		writeList(w, messages(store.Robots()))
+		httpjson.WriteList(w, store.Robots())
 	})
 	mux.HandleFunc("GET /config/robots/{id}", func(w http.ResponseWriter, r *http.Request) {
-		writeList(w, messages(store.RobotVersions(r.PathValue("id"))))
+		httpjson.WriteList(w, store.RobotVersions(r.PathValue("id")))
 	})
 	mux.HandleFunc("PUT /config/robots/{id}", func(w http.ResponseWriter, r *http.Request) {
 		c := &tourianv1.RobotConfig{}
@@ -38,13 +38,13 @@ func Handler(store *Store, publisher Publisher) http.Handler {
 		if publisher != nil {
 			publisher.Publish(stored)
 		}
-		writeOne(w, stored)
+		httpjson.WriteOne(w, stored)
 	})
 	mux.HandleFunc("GET /config/tasks", func(w http.ResponseWriter, _ *http.Request) {
-		writeList(w, messages(store.Tasks()))
+		httpjson.WriteList(w, store.Tasks())
 	})
 	mux.HandleFunc("GET /config/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
-		writeList(w, messages(store.TaskVersions(r.PathValue("id"))))
+		httpjson.WriteList(w, store.TaskVersions(r.PathValue("id")))
 	})
 	mux.HandleFunc("PUT /config/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
 		c := &tourianv1.TaskConfig{}
@@ -56,17 +56,9 @@ func Handler(store *Store, publisher Publisher) http.Handler {
 		if !ok(w, err) {
 			return
 		}
-		writeOne(w, stored)
+		httpjson.WriteOne(w, stored)
 	})
 	return mux
-}
-
-func messages[T proto.Message](items []T) []proto.Message {
-	out := make([]proto.Message, len(items))
-	for i, item := range items {
-		out[i] = item
-	}
-	return out
 }
 
 func readBody(w http.ResponseWriter, r *http.Request, into proto.Message) bool {
@@ -91,25 +83,4 @@ func ok(w http.ResponseWriter, err error) bool {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	return false
-}
-
-func writeOne(w http.ResponseWriter, message proto.Message) {
-	data, _ := protojson.Marshal(message)
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(data)
-}
-
-func writeList(w http.ResponseWriter, items []proto.Message) {
-	var body bytes.Buffer
-	body.WriteByte('[')
-	for i, item := range items {
-		if i > 0 {
-			body.WriteByte(',')
-		}
-		data, _ := protojson.Marshal(item)
-		body.Write(data)
-	}
-	body.WriteByte(']')
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(body.Bytes())
 }
