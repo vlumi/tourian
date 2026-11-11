@@ -44,6 +44,7 @@ test('losing the link releases control and forgets the robots and cameras', () =
   store.setStatus('disconnected')
   expect(useStore.getState()).toMatchObject({ engaged: false, selected: undefined, consoleId: undefined })
   expect(useStore.getState().robots).toEqual({})
+  expect(useStore.getState().cameras).toEqual({})
 })
 
 test('the fleet is known as a whole, the selected robot in detail', () => {

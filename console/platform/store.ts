@@ -78,7 +78,7 @@ export const useStore = create<State>()((set) => ({
     set(
       status === 'connected'
         ? { status }
-        : { status, engaged: false, robots: {}, selected: undefined, consoleId: undefined },
+        : { status, engaged: false, robots: {}, cameras: {}, selected: undefined, consoleId: undefined },
     ),
   welcome: (consoleId) => set({ consoleId }),
   addRobot: (capabilities) =>
