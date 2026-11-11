@@ -4,7 +4,7 @@ import { send } from '@/platform/connection'
 import { candidateMessage, descriptionMessage, remoteSide, rtcConfiguration } from './peer'
 import { onVideoMessage } from './signals'
 
-export type Viewer = { stop: () => void }
+type Viewer = { stop: () => void }
 
 // Offers a receive-only connection to the robot's camera and shows the track that comes back.
 export function viewWebRtc(robotId: string, video: HTMLVideoElement, onFrame: () => void): Viewer {

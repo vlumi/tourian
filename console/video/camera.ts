@@ -5,9 +5,9 @@ import { CameraAnnounceSchema, VideoFrameSchema, VideoKind } from '@tourian/cont
 import { openSocket, platformBase, type Socket } from '@/platform/socket'
 import { candidateMessage, descriptionMessage, remoteSide, rtcConfiguration } from './peer'
 
-export const mjpegIntervalMs = 66
-export const mjpegWidth = 640
-export const mjpegQuality = 0.7
+const mjpegIntervalMs = 66
+const mjpegWidth = 640
+const mjpegQuality = 0.7
 
 export type CameraState = {
   connected: boolean
@@ -16,7 +16,7 @@ export type CameraState = {
   framesSent: number
 }
 
-export type Camera = { stop: () => void }
+type Camera = { stop: () => void }
 
 // Lends this device's camera to a robot: answers every console that offers a WebRTC connection, and sends JPEG frames over the platform while any console asks for them.
 export function serveCamera(

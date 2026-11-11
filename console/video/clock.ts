@@ -1,7 +1,7 @@
 // A clock painted into the picture: a band of black and white blocks across the top encoding the time the frame was composed, so a viewer on the same machine can read how old each frame is when it is shown.
 
 export const blocks = 32
-export const bandHeight = 24
+const bandHeight = 24
 const stampBitCount = blocks - 2
 const modulus = 2 ** stampBitCount
 

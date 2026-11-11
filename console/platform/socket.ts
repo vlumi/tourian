@@ -5,7 +5,7 @@ const reconnectDelayMs = 1000
 
 export type Socket = { send: (message: Message) => void; close: () => void }
 
-export type Handlers = {
+type Handlers = {
   onOpen?: () => void
   onMessage: (envelope: Envelope) => void
   onClose?: () => void

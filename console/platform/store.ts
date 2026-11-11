@@ -6,8 +6,8 @@ import type { CameraAnnounce } from '@tourian/contract/tourian/v1/video_pb'
 import { HaltReason } from '@tourian/contract/tourian/v1/robot_pb'
 import { create } from 'zustand'
 
-export type Status = 'connecting' | 'connected' | 'disconnected'
-export type InputSource = 'none' | 'keyboard' | 'gamepad'
+type Status = 'connecting' | 'connected' | 'disconnected'
+type InputSource = 'none' | 'keyboard' | 'gamepad'
 export type VideoPath = 'off' | 'webrtc' | 'mjpeg'
 
 export type Input = { linear: number; angular: number; source: InputSource }
@@ -15,9 +15,9 @@ export type Input = { linear: number; angular: number; source: InputSource }
 export type Point = { x: number; y: number }
 
 export const historyLength = 120
-export const trailLength = 600
+const trailLength = 600
 
-export type State = {
+type State = {
   status: Status
   robots: Record<string, Capabilities>
   cameras: Record<string, CameraAnnounce>

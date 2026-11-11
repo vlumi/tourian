@@ -9,7 +9,7 @@ import { pickInput } from './input'
 import { twistFromKeys, watchKeyboard } from './keyboard'
 import { markSent } from './latency'
 
-export const commandIntervalMs = 50
+const commandIntervalMs = 50
 
 let sequence = 0n
 
