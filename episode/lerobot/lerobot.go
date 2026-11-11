@@ -117,12 +117,13 @@ func (s *Sink) End(meta *tourianv1.Episode) error {
 	chunk, file := int(index/chunkSize), int(index%chunkSize)
 	from := info.TotalFrames
 	length := int64(len(ep.frames))
-	stateNames := info.Features[stateKey].Names.([]string)
+	stateNames := info.Features[stateKey].Names
 
-	taskIndex, err := d.ensureTask(meta.GetTask())
+	taskIndex, tasks, err := d.ensureTask(meta.GetTask())
 	if err != nil {
 		return err
 	}
+	info.TotalTasks = tasks
 
 	rows := make([]frameRow, 0, len(ep.frames))
 	for i, frame := range ep.frames {

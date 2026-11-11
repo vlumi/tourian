@@ -2,7 +2,6 @@ package lerobot
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -63,24 +62,24 @@ func writeParquet[T any](path string, rows []T, options ...parquet.WriterOption)
 // The task table is read with pandas, which keeps the task text as the index; this metadata is what pandas writes so that it reads it back the same way.
 const pandasTasksMetadata = `{"index_columns": ["task"], "column_indexes": [{"name": null, "field_name": null, "pandas_type": "unicode", "numpy_type": "object", "metadata": {"encoding": "UTF-8"}}], "columns": [{"name": "task_index", "field_name": "task_index", "pandas_type": "int64", "numpy_type": "int64", "metadata": null}, {"name": "task", "field_name": "task", "pandas_type": "unicode", "numpy_type": "object", "metadata": null}], "creator": {"library": "pyarrow", "version": "17.0.0"}, "pandas_version": "2.2.2"}`
 
-// ensureTask returns the index of the task, adding it to the table when it is new.
-func (d dataset) ensureTask(task string) (int64, error) {
+// ensureTask returns the index of the task, adding it to the table when it is new, and how many tasks the table then holds.
+func (d dataset) ensureTask(task string) (index, count int64, err error) {
 	path := filepath.Join(d.root, tasksPath)
 	var tasks []taskRow
 	if _, err := os.Stat(path); err == nil {
 		tasks, err = parquet.ReadFile[taskRow](path)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 	}
 	for _, row := range tasks {
 		if row.Task == task {
-			return row.TaskIndex, nil
+			return row.TaskIndex, int64(len(tasks)), nil
 		}
 	}
-	index := int64(len(tasks))
+	index = int64(len(tasks))
 	tasks = append(tasks, taskRow{TaskIndex: index, Task: task})
-	return index, writeParquet(path, tasks, parquet.KeyValueMetadata("pandas", pandasTasksMetadata))
+	return index, int64(len(tasks)), writeParquet(path, tasks, parquet.KeyValueMetadata("pandas", pandasTasksMetadata))
 }
 
 type info struct {
@@ -102,7 +101,7 @@ type info struct {
 type feature struct {
 	Dtype string         `json:"dtype"`
 	Shape []int          `json:"shape"`
-	Names any            `json:"names"`
+	Names []string       `json:"names"`
 	Info  map[string]any `json:"info,omitempty"`
 }
 
@@ -113,15 +112,6 @@ func (d dataset) loadInfo(s *Sink, ep *episode) (*info, error) {
 		var existing info
 		if err := json.Unmarshal(data, &existing); err != nil {
 			return nil, err
-		}
-		if names, ok := existing.Features[stateKey].Names.([]any); ok {
-			strs := make([]string, len(names))
-			for i, n := range names {
-				strs[i] = fmt.Sprint(n)
-			}
-			f := existing.Features[stateKey]
-			f.Names = strs
-			existing.Features[stateKey] = f
 		}
 		return &existing, nil
 	}
@@ -169,8 +159,6 @@ func (d dataset) loadInfo(s *Sink, ep *episode) (*info, error) {
 }
 
 func (d dataset) writeInfo(i *info) error {
-	tasks, _ := parquet.ReadFile[taskRow](filepath.Join(d.root, tasksPath))
-	i.TotalTasks = int64(len(tasks))
 	return writeJSON(filepath.Join(d.root, infoPath), i)
 }
 
