@@ -1,8 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
 import { haltLabel, heading, useStore } from '@/platform/store'
 import { ControlPanel } from '@/control/ControlPanel'
+import { Row } from './Row'
 import { Sparkline } from './Sparkline'
 
 export function TelemetryPanel() {
@@ -87,16 +87,6 @@ export function TelemetryPanel() {
         <p>Gamepad: left stick drives, right stick turns, Start engages, B stops.</p>
       </section>
     </aside>
-  )
-}
-
-function Row({ label, children, spark }: { label: string; children: ReactNode; spark?: ReactNode }) {
-  return (
-    <div className="row">
-      <span className="label">{label}</span>
-      {spark}
-      <span className="value">{children}</span>
-    </div>
   )
 }
 

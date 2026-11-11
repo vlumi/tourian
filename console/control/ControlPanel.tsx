@@ -4,6 +4,7 @@ import { timestampDate } from '@bufbuild/protobuf/wkt'
 import { ControllerKind, type Controller } from '@tourian/contract/tourian/v1/control_pb'
 import { handTo } from '@/drive/driver'
 import { useStore } from '@/platform/store'
+import { Row } from '@/telemetry/Row'
 
 // Who holds the robot and since when, and the controllers it can be handed to. The operator takes over by engaging and hands back by releasing; while another console's operator holds the robot, this one waits.
 export function ControlPanel() {
@@ -17,22 +18,16 @@ export function ControlPanel() {
   return (
     <section className="control">
       <h2>Control</h2>
-      <div className="row">
-        <span className="label">holder</span>
-        <span className="value">
-          {holder ? (
-            <span className={`status ${mine ? (engaged ? 'status-engaged' : '') : 'status-held'}`}>
-              {describe(holder, mine)}
-            </span>
-          ) : (
-            'nobody'
-          )}
-        </span>
-      </div>
-      <div className="row">
-        <span className="label">since</span>
-        <span className="value">{control?.since ? timestampDate(control.since).toLocaleTimeString() : '–'}</span>
-      </div>
+      <Row label="holder">
+        {holder ? (
+          <span className={`status ${mine ? (engaged ? 'status-engaged' : '') : 'status-held'}`}>
+            {describe(holder, mine)}
+          </span>
+        ) : (
+          'nobody'
+        )}
+      </Row>
+      <Row label="since">{control?.since ? timestampDate(control.since).toLocaleTimeString() : '–'}</Row>
       <div className="hand">
         {control?.available.map((controller) => (
           <button
