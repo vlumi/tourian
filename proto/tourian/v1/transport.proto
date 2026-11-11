@@ -29,5 +29,6 @@ message Envelope {
     ControlRequest control_request = 16;
     RobotConfig robot_config = 17;
     JointCommand joint_command = 18;
+    Welcome welcome = 19;
   }
 }

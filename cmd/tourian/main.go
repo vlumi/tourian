@@ -65,6 +65,7 @@ func main() {
 	}
 	arbiter := motherbrain.NewArbiter(h, time.Now, controllers...)
 	h.AddTap(arbiter.Tap)
+	h.Admit = arbiter.Admit
 	go arbiter.Run(ctx)
 
 	server := &http.Server{

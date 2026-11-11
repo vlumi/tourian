@@ -44,6 +44,7 @@ type Envelope struct {
 	//	*Envelope_ControlRequest
 	//	*Envelope_RobotConfig
 	//	*Envelope_JointCommand
+	//	*Envelope_Welcome
 	Message       isEnvelope_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -248,6 +249,15 @@ func (x *Envelope) GetJointCommand() *JointCommand {
 	return nil
 }
 
+func (x *Envelope) GetWelcome() *Welcome {
+	if x != nil {
+		if x, ok := x.Message.(*Envelope_Welcome); ok {
+			return x.Welcome
+		}
+	}
+	return nil
+}
+
 type isEnvelope_Message interface {
 	isEnvelope_Message()
 }
@@ -324,6 +334,10 @@ type Envelope_JointCommand struct {
 	JointCommand *JointCommand `protobuf:"bytes,18,opt,name=joint_command,json=jointCommand,proto3,oneof"`
 }
 
+type Envelope_Welcome struct {
+	Welcome *Welcome `protobuf:"bytes,19,opt,name=welcome,proto3,oneof"`
+}
+
 func (*Envelope_Capabilities) isEnvelope_Message() {}
 
 func (*Envelope_VelocityCommand) isEnvelope_Message() {}
@@ -360,12 +374,14 @@ func (*Envelope_RobotConfig) isEnvelope_Message() {}
 
 func (*Envelope_JointCommand) isEnvelope_Message() {}
 
+func (*Envelope_Welcome) isEnvelope_Message() {}
+
 var File_tourian_v1_transport_proto protoreflect.FileDescriptor
 
 const file_tourian_v1_transport_proto_rawDesc = "" +
 	"\n" +
 	"\x1atourian/v1/transport.proto\x12\n" +
-	"tourian.v1\x1a\x17tourian/v1/config.proto\x1a\x18tourian/v1/control.proto\x1a\x18tourian/v1/episode.proto\x1a\x16tourian/v1/robot.proto\x1a\x16tourian/v1/video.proto\"\x9a\t\n" +
+	"tourian.v1\x1a\x17tourian/v1/config.proto\x1a\x18tourian/v1/control.proto\x1a\x18tourian/v1/episode.proto\x1a\x16tourian/v1/robot.proto\x1a\x16tourian/v1/video.proto\"\xcb\t\n" +
 	"\bEnvelope\x12>\n" +
 	"\fcapabilities\x18\x01 \x01(\v2\x18.tourian.v1.CapabilitiesH\x00R\fcapabilities\x12H\n" +
 	"\x10velocity_command\x18\x02 \x01(\v2\x1b.tourian.v1.VelocityCommandH\x00R\x0fvelocityCommand\x129\n" +
@@ -387,7 +403,8 @@ const file_tourian_v1_transport_proto_rawDesc = "" +
 	"\rcontrol_state\x18\x0f \x01(\v2\x18.tourian.v1.ControlStateH\x00R\fcontrolState\x12E\n" +
 	"\x0fcontrol_request\x18\x10 \x01(\v2\x1a.tourian.v1.ControlRequestH\x00R\x0econtrolRequest\x12<\n" +
 	"\frobot_config\x18\x11 \x01(\v2\x17.tourian.v1.RobotConfigH\x00R\vrobotConfig\x12?\n" +
-	"\rjoint_command\x18\x12 \x01(\v2\x18.tourian.v1.JointCommandH\x00R\fjointCommandB\t\n" +
+	"\rjoint_command\x18\x12 \x01(\v2\x18.tourian.v1.JointCommandH\x00R\fjointCommand\x12/\n" +
+	"\awelcome\x18\x13 \x01(\v2\x13.tourian.v1.WelcomeH\x00R\awelcomeB\t\n" +
 	"\amessageB\x9f\x01\n" +
 	"\x0ecom.tourian.v1B\x0eTransportProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\n" +
 	"Tourian.V1\xca\x02\n" +
@@ -426,6 +443,7 @@ var file_tourian_v1_transport_proto_goTypes = []any{
 	(*ControlRequest)(nil),     // 16: tourian.v1.ControlRequest
 	(*RobotConfig)(nil),        // 17: tourian.v1.RobotConfig
 	(*JointCommand)(nil),       // 18: tourian.v1.JointCommand
+	(*Welcome)(nil),            // 19: tourian.v1.Welcome
 }
 var file_tourian_v1_transport_proto_depIdxs = []int32{
 	1,  // 0: tourian.v1.Envelope.capabilities:type_name -> tourian.v1.Capabilities
@@ -446,11 +464,12 @@ var file_tourian_v1_transport_proto_depIdxs = []int32{
 	16, // 15: tourian.v1.Envelope.control_request:type_name -> tourian.v1.ControlRequest
 	17, // 16: tourian.v1.Envelope.robot_config:type_name -> tourian.v1.RobotConfig
 	18, // 17: tourian.v1.Envelope.joint_command:type_name -> tourian.v1.JointCommand
-	18, // [18:18] is the sub-list for method output_type
-	18, // [18:18] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	19, // 18: tourian.v1.Envelope.welcome:type_name -> tourian.v1.Welcome
+	19, // [19:19] is the sub-list for method output_type
+	19, // [19:19] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_tourian_v1_transport_proto_init() }
@@ -482,6 +501,7 @@ func file_tourian_v1_transport_proto_init() {
 		(*Envelope_ControlRequest)(nil),
 		(*Envelope_RobotConfig)(nil),
 		(*Envelope_JointCommand)(nil),
+		(*Envelope_Welcome)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

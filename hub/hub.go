@@ -23,6 +23,8 @@ const (
 )
 
 type Hub struct {
+	// Admit says whether a console may drive the robot its command, joint command or heartbeat names; nil admits everyone. What it refuses is dropped before the taps see it.
+	Admit        func(consoleID string, env *tourianv1.Envelope) bool
 	mu           sync.Mutex
 	robots       map[string]*peer
 	cameras      map[string]*peer
@@ -196,7 +198,7 @@ func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ServeConsole accepts a console, tells it about every robot known, and routes what it sends to the robot it names.
+// ServeConsole accepts a console, tells it its id and about every robot known, and routes what it sends to the robot it names; driving is routed only when admitted.
 func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
 	p, err := accept(w, r)
 	if err != nil {
@@ -213,6 +215,12 @@ func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("hub: console %s disconnected: %v", id, err)
 			return
+		}
+		switch env.GetMessage().(type) {
+		case *tourianv1.Envelope_VelocityCommand, *tourianv1.Envelope_JointCommand, *tourianv1.Envelope_Heartbeat:
+			if h.Admit != nil && !h.Admit(id, env) {
+				continue
+			}
 		}
 		h.tap(Source{Kind: SourceConsole, ID: id}, env)
 		switch env.GetMessage().(type) {
@@ -278,6 +286,7 @@ func (h *Hub) join(id string, p *peer) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.consoles[id] = p
+	p.send(&tourianv1.Welcome{ConsoleId: id})
 	for _, caps := range h.capabilities {
 		p.send(caps)
 	}

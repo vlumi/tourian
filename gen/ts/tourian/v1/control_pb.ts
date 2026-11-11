@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file tourian/v1/control.proto.
  */
 export const file_tourian_v1_control: GenFile = /*@__PURE__*/
-  fileDesc("Chh0b3VyaWFuL3YxL2NvbnRyb2wucHJvdG8SCnRvdXJpYW4udjEiUAoKQ29udHJvbGxlchIKCgJpZBgBIAEoCRIoCgRraW5kGAIgASgOMhoudG91cmlhbi52MS5Db250cm9sbGVyS2luZBIMCgRuYW1lGAMgASgJIp4BCgxDb250cm9sU3RhdGUSEAoIcm9ib3RfaWQYASABKAkSJgoGaG9sZGVyGAIgASgLMhYudG91cmlhbi52MS5Db250cm9sbGVyEikKBXNpbmNlGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIpCglhdmFpbGFibGUYBCADKAsyFi50b3VyaWFuLnYxLkNvbnRyb2xsZXIiSgoOQ29udHJvbFJlcXVlc3QSEAoIcm9ib3RfaWQYASABKAkSFQoNY29udHJvbGxlcl9pZBgCIAEoCRIPCgdyZWxlYXNlGAMgASgIKocBCg5Db250cm9sbGVyS2luZBIfChtDT05UUk9MTEVSX0tJTkRfVU5TUEVDSUZJRUQQABIcChhDT05UUk9MTEVSX0tJTkRfT1BFUkFUT1IQARIaChZDT05UUk9MTEVSX0tJTkRfU0NSSVBUEAISGgoWQ09OVFJPTExFUl9LSU5EX1BPTElDWRADQp0BCg5jb20udG91cmlhbi52MUIMQ29udHJvbFByb3RvUAFaNGdpdGh1Yi5jb20vdmx1bWkvdG91cmlhbi9nZW4vZ28vdG91cmlhbi92MTt0b3VyaWFudjGiAgNUWFiqAgpUb3VyaWFuLlYxygIKVG91cmlhblxWMeICFlRvdXJpYW5cVjFcR1BCTWV0YWRhdGHqAgtUb3VyaWFuOjpWMWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("Chh0b3VyaWFuL3YxL2NvbnRyb2wucHJvdG8SCnRvdXJpYW4udjEiUAoKQ29udHJvbGxlchIKCgJpZBgBIAEoCRIoCgRraW5kGAIgASgOMhoudG91cmlhbi52MS5Db250cm9sbGVyS2luZBIMCgRuYW1lGAMgASgJIh0KB1dlbGNvbWUSEgoKY29uc29sZV9pZBgBIAEoCSKeAQoMQ29udHJvbFN0YXRlEhAKCHJvYm90X2lkGAEgASgJEiYKBmhvbGRlchgCIAEoCzIWLnRvdXJpYW4udjEuQ29udHJvbGxlchIpCgVzaW5jZRgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASKQoJYXZhaWxhYmxlGAQgAygLMhYudG91cmlhbi52MS5Db250cm9sbGVyIkoKDkNvbnRyb2xSZXF1ZXN0EhAKCHJvYm90X2lkGAEgASgJEhUKDWNvbnRyb2xsZXJfaWQYAiABKAkSDwoHcmVsZWFzZRgDIAEoCCqHAQoOQ29udHJvbGxlcktpbmQSHwobQ09OVFJPTExFUl9LSU5EX1VOU1BFQ0lGSUVEEAASHAoYQ09OVFJPTExFUl9LSU5EX09QRVJBVE9SEAESGgoWQ09OVFJPTExFUl9LSU5EX1NDUklQVBACEhoKFkNPTlRST0xMRVJfS0lORF9QT0xJQ1kQA0KdAQoOY29tLnRvdXJpYW4udjFCDENvbnRyb2xQcm90b1ABWjRnaXRodWIuY29tL3ZsdW1pL3RvdXJpYW4vZ2VuL2dvL3RvdXJpYW4vdjE7dG91cmlhbnYxogIDVFhYqgIKVG91cmlhbi5WMcoCClRvdXJpYW5cVjHiAhZUb3VyaWFuXFYxXEdQQk1ldGFkYXRh6gILVG91cmlhbjo6VjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message tourian.v1.Controller
@@ -40,6 +40,25 @@ export type Controller = Message<"tourian.v1.Controller"> & {
  */
 export const ControllerSchema: GenMessage<Controller> = /*@__PURE__*/
   messageDesc(file_tourian_v1_control, 0);
+
+/**
+ * The platform's first word to a console: the id it is known by, which is the holder's id while its operator holds a robot.
+ *
+ * @generated from message tourian.v1.Welcome
+ */
+export type Welcome = Message<"tourian.v1.Welcome"> & {
+  /**
+   * @generated from field: string console_id = 1;
+   */
+  consoleId: string;
+};
+
+/**
+ * Describes the message tourian.v1.Welcome.
+ * Use `create(WelcomeSchema)` to create a new message.
+ */
+export const WelcomeSchema: GenMessage<Welcome> = /*@__PURE__*/
+  messageDesc(file_tourian_v1_control, 1);
 
 /**
  * Who holds a robot, since when, and who else could; sent to every console on each change of hands.
@@ -73,7 +92,7 @@ export type ControlState = Message<"tourian.v1.ControlState"> & {
  * Use `create(ControlStateSchema)` to create a new message.
  */
 export const ControlStateSchema: GenMessage<ControlState> = /*@__PURE__*/
-  messageDesc(file_tourian_v1_control, 1);
+  messageDesc(file_tourian_v1_control, 2);
 
 /**
  * A console asking for a robot to be handed to a controller, or released back to whoever held it before the operator took over.
@@ -102,7 +121,7 @@ export type ControlRequest = Message<"tourian.v1.ControlRequest"> & {
  * Use `create(ControlRequestSchema)` to create a new message.
  */
 export const ControlRequestSchema: GenMessage<ControlRequest> = /*@__PURE__*/
-  messageDesc(file_tourian_v1_control, 2);
+  messageDesc(file_tourian_v1_control, 3);
 
 /**
  * What kind of thing is at the controls.
