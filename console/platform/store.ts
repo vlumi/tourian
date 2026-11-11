@@ -120,8 +120,8 @@ export const useStore = create<State>()((set) => ({
     set((state) => {
       const observations = { ...state.observations, [observation.robotId]: observation }
       if (observation.robotId !== state.selected) return { observations }
-      const position = observation.pose?.position
-      const trail = position ? push(state.trail, { x: position.x, y: position.y }, trailLength) : state.trail
+      const position = positionOf(observation)
+      const trail = position ? push(state.trail, position, trailLength) : state.trail
       return {
         observations,
         observation,
@@ -148,6 +148,11 @@ function push<T>(list: T[], item: T, limit: number): T[] {
   const next = list.length >= limit ? list.slice(list.length - limit + 1) : list.slice()
   next.push(item)
   return next
+}
+
+export function positionOf(observation?: Observation): Point | undefined {
+  const p = observation?.pose?.position
+  return p ? { x: p.x, y: p.y } : undefined
 }
 
 export function heading(observation?: Observation): number {

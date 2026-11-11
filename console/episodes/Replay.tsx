@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { errorMessage } from '@/platform/error'
-import { heading } from '@/platform/store'
+import { heading, positionOf } from '@/platform/store'
 import { renderWorld, startCanvasDrawing } from '@/world/render'
 import { loadEpisode, pictureUrl, type Recording } from './api'
 import { flag, lasted, started } from './format'
@@ -53,12 +53,11 @@ export function Replay({ id }: { id: string }) {
     (context: CanvasRenderingContext2D, width: number, height: number) => {
       if (!recording) return
       const trail = recording.frames.slice(0, frameIndex + 1).flatMap((f) => {
-        const p = f.observation?.pose?.position
-        return p ? [{ x: p.x, y: p.y }] : []
+        const p = positionOf(f.observation)
+        return p ? [p] : []
       })
-      const position = frame?.observation?.pose?.position
       renderWorld(context, width, height, {
-        position: position ? { x: position.x, y: position.y } : undefined,
+        position: positionOf(frame?.observation),
         heading: heading(frame?.observation),
         trail,
         active: true,
