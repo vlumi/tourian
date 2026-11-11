@@ -1,12 +1,12 @@
 # Screenshots
 
-One capture per milestone, taken with `make screenshot` (which builds and serves the console and runs [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs) against it), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates.
+One capture per milestone, taken with `make screenshot OUT=<file>` (which builds and serves the platform with the simulator and the console, and runs [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs) against it), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates.
 
 ## 2026-11-10 · Real
 
 ![Three kinds of robot in the fleet](006-real.png)
 
-Three kinds of robot under one platform, each behind the same contract: the arm through its Python sidecar, the simulated ROS 2 robot through the rosbridge adapter, and the simulator. The ROS robot is selected and driven by the operator; its odometry, joint and battery topics show in the panel like any robot's.
+Three kinds of robot under one platform, each behind the same contract: the arm through its Python sidecar, the simulated ROS 2 robot through the rosbridge adapter, and the simulator. The ROS robot is selected and driven by the operator; its odometry and battery topics show in the panel like any robot's, and its joints are listed, without speeds, since the simulated robot publishes none.
 
 ## 2026-11-10 · Many
 
@@ -54,4 +54,4 @@ The console engaged and driving the simulated robot over WebSocket: the arena wi
 
 ![The console after M0](000-bootstrap.png)
 
-The console's first page: the name, the tagline and the seven messages of the first contract, read from the generated TypeScript schemas at render time.
+The console's first page: the name, the tagline and seven of the first contract's eight messages, read from the generated TypeScript schemas at render time.
