@@ -5,11 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"math"
 	"sync"
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/vlumi/tourian/emmi"
 	"github.com/vlumi/tourian/emmi/safety"
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
 	"github.com/vlumi/tourian/transport/ws"
@@ -50,25 +50,11 @@ func DefaultConfig() Config {
 	}
 }
 
-const (
-	publishInterval = 50 * time.Millisecond
-	reconnectDelay  = time.Second
-)
+const publishInterval = 50 * time.Millisecond
 
 // Run keeps the adapter connected to the robot's rosbridge and to the platform until ctx ends, reconnecting whenever either side drops.
 func Run(ctx context.Context, platformURL string, cfg Config) error {
-	for {
-		err := connect(ctx, platformURL, cfg)
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-		log.Printf("rosbridge: %q: %v; retrying in %s", cfg.RobotID, err, reconnectDelay)
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(reconnectDelay):
-		}
-	}
+	return emmi.Reconnect(ctx, "rosbridge", func(ctx context.Context) error { return connect(ctx, platformURL, cfg) })
 }
 
 func connect(ctx context.Context, platformURL string, cfg Config) error {
@@ -109,7 +95,7 @@ func connect(ctx context.Context, platformURL string, cfg Config) error {
 	go func() { failed <- a.readPlatform(ctx, platform, toPlatform) }()
 	// The ROS side is read with a context of its own, so that cancelling ours does not close that socket before the last zero has gone out; closing it on the way out ends the read.
 	go func() { failed <- a.readRos(context.Background(), ros, toPlatform) }()
-	go func() { failed <- writePlatform(ctx, platform, toPlatform) }()
+	go func() { failed <- emmi.WriteLoop(ctx, platform, toPlatform) }()
 
 	ticker := time.NewTicker(publishInterval)
 	defer ticker.Stop()
@@ -120,8 +106,7 @@ func connect(ctx context.Context, platformURL string, cfg Config) error {
 		case err := <-failed:
 			return err
 		case now := <-ticker.C:
-			msg, _ := json.Marshal(a.tick(now))
-			if err := writeJSON(ctx, ros, operation{Op: "publish", Topic: cfg.CmdVelTopic, Msg: msg}); err != nil {
+			if err := publishTwist(ctx, ros, cfg.CmdVelTopic, a.tick(now)); err != nil {
 				return err
 			}
 		}
@@ -132,8 +117,12 @@ func connect(ctx context.Context, platformURL string, cfg Config) error {
 func leaveStopped(ros *websocket.Conn, topic string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
-	msg, _ := json.Marshal(twist{})
-	_ = writeJSON(ctx, ros, operation{Op: "publish", Topic: topic, Msg: msg})
+	_ = publishTwist(ctx, ros, topic, twist{})
+}
+
+func publishTwist(ctx context.Context, ros *websocket.Conn, topic string, t twist) error {
+	msg, _ := json.Marshal(t)
+	return writeJSON(ctx, ros, operation{Op: "publish", Topic: topic, Msg: msg})
 }
 
 type adapter struct {
@@ -174,8 +163,8 @@ func (a *adapter) command(cmd *tourianv1.VelocityCommand) *tourianv1.CommandAck 
 	now := a.now()
 	a.mu.Lock()
 	a.commanded = twist{
-		Linear:  vector3{X: clamp(cmd.GetTwist().GetLinear().GetX(), a.cfg.MaxLinear)},
-		Angular: vector3{Z: clamp(cmd.GetTwist().GetAngular().GetZ(), a.cfg.MaxAngular)},
+		Linear:  vector3{X: emmi.Clamp(cmd.GetTwist().GetLinear().GetX(), a.cfg.MaxLinear)},
+		Angular: vector3{Z: emmi.Clamp(cmd.GetTwist().GetAngular().GetZ(), a.cfg.MaxAngular)},
 	}
 	a.lastSequence = cmd.GetSequence()
 	a.mu.Unlock()
@@ -292,27 +281,10 @@ func (a *adapter) readRos(ctx context.Context, conn *websocket.Conn, out chan<- 
 	}
 }
 
-func writePlatform(ctx context.Context, conn *websocket.Conn, out <-chan proto.Message) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case message := <-out:
-			if err := ws.Send(ctx, conn, message); err != nil {
-				return err
-			}
-		}
-	}
-}
-
 func writeJSON(ctx context.Context, conn *websocket.Conn, value any) error {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
 	return conn.Write(ctx, websocket.MessageText, data)
-}
-
-func clamp(v, limit float64) float64 {
-	return math.Max(-limit, math.Min(limit, v))
 }

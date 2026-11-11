@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/vlumi/tourian/emmi"
 	tourianv1 "github.com/vlumi/tourian/gen/go/tourian/v1"
 	"github.com/vlumi/tourian/transport/ws"
 	"google.golang.org/protobuf/proto"
@@ -14,23 +15,11 @@ import (
 const (
 	stepInterval    = 20 * time.Millisecond
 	observeInterval = 50 * time.Millisecond
-	reconnectDelay  = time.Second
 )
 
 // Run keeps a robot connected to the platform until ctx ends, reconnecting whenever the connection drops. The world is reset on each connection.
 func Run(ctx context.Context, platformURL string, cfg Config) error {
-	for {
-		err := connect(ctx, platformURL, cfg)
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-		log.Printf("zebes: connection to %s ended: %v; retrying in %s", platformURL, err, reconnectDelay)
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(reconnectDelay):
-		}
-	}
+	return emmi.Reconnect(ctx, "zebes", func(ctx context.Context) error { return connect(ctx, platformURL, cfg) })
 }
 
 func connect(ctx context.Context, platformURL string, cfg Config) error {
@@ -52,7 +41,7 @@ func connect(ctx context.Context, platformURL string, cfg Config) error {
 	out := make(chan proto.Message, 64)
 	failed := make(chan error, 2)
 	go func() { failed <- readLoop(ctx, conn, robot, out) }()
-	go func() { failed <- writeLoop(ctx, conn, out) }()
+	go func() { failed <- emmi.WriteLoop(ctx, conn, out) }()
 
 	step := time.NewTicker(stepInterval)
 	defer step.Stop()
@@ -96,19 +85,6 @@ func readLoop(ctx context.Context, conn *websocket.Conn, robot *Robot, out chan<
 			robot.Heartbeat(m.Heartbeat)
 		case *tourianv1.Envelope_Stop:
 			robot.Stop(m.Stop)
-		}
-	}
-}
-
-func writeLoop(ctx context.Context, conn *websocket.Conn, out <-chan proto.Message) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case message := <-out:
-			if err := ws.Send(ctx, conn, message); err != nil {
-				return err
-			}
 		}
 	}
 }
