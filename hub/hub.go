@@ -31,6 +31,7 @@ type Hub struct {
 	consoles     map[string]*peer
 	capabilities map[string]*tourianv1.Capabilities
 	announces    map[string]*tourianv1.CameraAnnounce
+	viewers      map[string]map[string]bool
 	retained     map[string]*tourianv1.Envelope
 	taps         map[int]Tap
 	nextTap      int
@@ -61,6 +62,7 @@ func New() *Hub {
 		consoles:     map[string]*peer{},
 		capabilities: map[string]*tourianv1.Capabilities{},
 		announces:    map[string]*tourianv1.CameraAnnounce{},
+		viewers:      map[string]map[string]bool{},
 		retained:     map[string]*tourianv1.Envelope{},
 		taps:         map[int]Tap{},
 	}
@@ -160,7 +162,7 @@ func (h *Hub) ServeRobot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ServeCamera accepts a robot's camera, which must announce itself in its first frame. Frames fan out to every console; signaling goes to the console it names.
+// ServeCamera accepts a robot's camera, which must announce itself in its first frame. Frames go to the consoles that asked for them; signaling goes to the console it names.
 func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
 	p, err := accept(w, r)
 	if err != nil {
@@ -187,7 +189,7 @@ func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
 		h.tap(Source{Kind: SourceCamera, ID: id}, env)
 		switch env.GetMessage().(type) {
 		case *tourianv1.Envelope_VideoFrame:
-			h.broadcast(env)
+			h.show(id, env)
 		case *tourianv1.Envelope_SessionDescription, *tourianv1.Envelope_IceCandidate:
 			if console := h.console(ws.PeerID(env)); console != nil {
 				console.send(env)
@@ -230,6 +232,9 @@ func (h *Hub) ServeConsole(w http.ResponseWriter, r *http.Request) {
 			}
 		case *tourianv1.Envelope_VideoRequest, *tourianv1.Envelope_SessionDescription, *tourianv1.Envelope_IceCandidate:
 			ws.SetPeerID(env, id)
+			if request := env.GetVideoRequest(); request.GetKind() == tourianv1.VideoKind_VIDEO_KIND_MJPEG {
+				h.watch(request.GetRobotId(), id, request.GetEnabled())
+			}
 			if camera := h.camera(ws.RobotID(env)); camera != nil {
 				camera.send(env)
 			}
@@ -306,8 +311,34 @@ func (h *Hub) leaveConsole(id string, p *peer) {
 		return
 	}
 	delete(h.consoles, id)
+	for _, viewers := range h.viewers {
+		delete(viewers, id)
+	}
 	for robotID, camera := range h.cameras {
 		camera.send(&tourianv1.VideoRequest{RobotId: robotID, PeerId: id, Kind: tourianv1.VideoKind_VIDEO_KIND_MJPEG, Enabled: false})
+	}
+}
+
+func (h *Hub) watch(robotID, consoleID string, enabled bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if enabled {
+		if h.viewers[robotID] == nil {
+			h.viewers[robotID] = map[string]bool{}
+		}
+		h.viewers[robotID][consoleID] = true
+	} else {
+		delete(h.viewers[robotID], consoleID)
+	}
+}
+
+func (h *Hub) show(robotID string, frame *tourianv1.Envelope) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for consoleID := range h.viewers[robotID] {
+		if console := h.consoles[consoleID]; console != nil {
+			console.send(frame)
+		}
 	}
 }
 

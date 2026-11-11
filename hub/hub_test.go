@@ -93,11 +93,17 @@ func TestRelaysSignalingBetweenConsoleAndCamera(t *testing.T) {
 		t.Fatalf("the offering console should receive the answer, got %v", answer)
 	}
 
+	send(t, ctx, console, &tourianv1.VideoRequest{RobotId: "r1", Kind: tourianv1.VideoKind_VIDEO_KIND_MJPEG, Enabled: true})
+	if request := receive(t, ctx, camera).GetVideoRequest(); !request.GetEnabled() || request.GetPeerId() != offer.GetPeerId() {
+		t.Fatalf("camera should receive the request stamped with the console's id, got %v", request)
+	}
 	send(t, ctx, camera, &tourianv1.VideoFrame{RobotId: "r1", Sequence: 1})
-	for _, c := range []*websocket.Conn{console, bystander} {
-		if frame := receive(t, ctx, c).GetVideoFrame(); frame.GetSequence() != 1 {
-			t.Fatalf("every console should receive the frame, got %v", frame)
-		}
+	if frame := receive(t, ctx, console).GetVideoFrame(); frame.GetSequence() != 1 {
+		t.Fatalf("the console that asked should receive the frame, got %v", frame)
+	}
+	h.Publish(&tourianv1.ControlState{RobotId: "r1"})
+	if env := receive(t, ctx, bystander); env.GetControlState() == nil {
+		t.Fatalf("a console that did not ask should not receive the frame, got %v", env)
 	}
 
 	_ = console.CloseNow()
