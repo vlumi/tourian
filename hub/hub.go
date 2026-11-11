@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	outboundDepth = 256
-	writeTimeout  = time.Second
+	outboundDepth   = 256
+	writeTimeout    = time.Second
+	announceTimeout = 5 * time.Second
 )
 
 type Hub struct {
@@ -143,7 +144,7 @@ func (h *Hub) ServeRobot(w http.ResponseWriter, r *http.Request) {
 	}
 	defer p.close()
 
-	env, err := ws.Receive(r.Context(), p.conn)
+	env, err := receiveAnnounce(r.Context(), p.conn)
 	if err != nil || env.GetCapabilities() == nil {
 		log.Printf("hub: robot from %s did not announce itself", r.RemoteAddr)
 		return
@@ -178,7 +179,7 @@ func (h *Hub) ServeCamera(w http.ResponseWriter, r *http.Request) {
 	}
 	defer p.close()
 
-	env, err := ws.Receive(r.Context(), p.conn)
+	env, err := receiveAnnounce(r.Context(), p.conn)
 	if err != nil || env.GetCameraAnnounce() == nil {
 		log.Printf("hub: camera from %s did not announce itself", r.RemoteAddr)
 		return
@@ -424,6 +425,13 @@ func (h *Hub) accept(w http.ResponseWriter, r *http.Request) (*peer, error) {
 	p := &peer{conn: conn, out: make(chan proto.Message, outboundDepth), closed: make(chan struct{})}
 	go p.writeLoop()
 	return p, nil
+}
+
+// A peer that does not announce itself within the timeout is not kept waiting for.
+func receiveAnnounce(ctx context.Context, conn *websocket.Conn) (*tourianv1.Envelope, error) {
+	ctx, cancel := context.WithTimeout(ctx, announceTimeout)
+	defer cancel()
+	return ws.Receive(ctx, conn)
 }
 
 func (p *peer) writeLoop() {

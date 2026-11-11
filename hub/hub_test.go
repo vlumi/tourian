@@ -217,3 +217,14 @@ func TestBrowsersAreLetInByOrigin(t *testing.T) {
 		}
 	}
 }
+
+func TestAPeerThatNeverAnnouncesIsDropped(t *testing.T) {
+	_, base := serve(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	robot := dial(t, ctx, base+"/robot")
+	started := time.Now()
+	if _, err := ws.Receive(ctx, robot); err == nil || time.Since(started) < announceTimeout/2 {
+		t.Fatalf("the hub should close a silent robot after the announce timeout, got %v after %s", err, time.Since(started))
+	}
+}
