@@ -6,43 +6,78 @@ import { onVideoMessage } from './signals'
 
 type Viewer = { stop: () => void }
 
-// Offers a receive-only connection to the robot's camera and shows the track that comes back.
-export function viewWebRtc(robotId: string, video: HTMLVideoElement, onFrame: () => void): Viewer {
-  const pc = new RTCPeerConnection(rtcConfiguration)
-  const remote = remoteSide(pc)
-  pc.addTransceiver('video', { direction: 'recvonly' })
-  pc.ontrack = (event) => {
-    video.srcObject = event.streams[0] ?? new MediaStream([event.track])
-    video.play().catch(() => {})
-  }
-  pc.onicecandidate = (event) => {
-    if (event.candidate) send(candidateMessage(robotId, '', event.candidate))
-  }
+export type LinkState = RTCPeerConnectionState
+
+const connectWithinMs = 8000
+
+// Offers a receive-only connection to the robot's camera and shows the track that comes back. A link that fails, or is not up within a few seconds, is offered again from scratch; the camera takes a new offer from the same console as a replacement.
+export function viewWebRtc(
+  robotId: string,
+  video: HTMLVideoElement,
+  onFrame: () => void,
+  onLink?: (state: LinkState) => void,
+): Viewer {
+  let pc: RTCPeerConnection | undefined
+  let remote: ReturnType<typeof remoteSide> | undefined
+  let watchdog: ReturnType<typeof setTimeout> | undefined
+  let stopped = false
+
   const unsubscribe = onVideoMessage((envelope) => {
     const m = envelope.message
     if (m.case === 'sessionDescription' && m.value.robotId === robotId && m.value.type === 'answer')
-      void remote.setDescription(m.value)
-    if (m.case === 'iceCandidate' && m.value.robotId === robotId) void remote.addCandidate(m.value)
+      void remote?.setDescription(m.value)
+    if (m.case === 'iceCandidate' && m.value.robotId === robotId) void remote?.addCandidate(m.value)
   })
+
+  const connect = () => {
+    pc?.close()
+    clearTimeout(watchdog)
+    const current = new RTCPeerConnection(rtcConfiguration)
+    pc = current
+    remote = remoteSide(current)
+    current.addTransceiver('video', { direction: 'recvonly' })
+    current.ontrack = (event) => {
+      video.srcObject = event.streams[0] ?? new MediaStream([event.track])
+      video.play().catch(() => {})
+    }
+    current.onicecandidate = (event) => {
+      if (event.candidate) send(candidateMessage(robotId, '', event.candidate))
+    }
+    current.onconnectionstatechange = () => {
+      if (pc !== current) return
+      onLink?.(current.connectionState)
+      if (current.connectionState === 'connected') clearTimeout(watchdog)
+      if (current.connectionState === 'failed') retry()
+    }
+    onLink?.('connecting')
+    watchdog = setTimeout(retry, connectWithinMs)
+    void current
+      .createOffer()
+      .then((offer) => current.setLocalDescription(offer))
+      .then(() => {
+        if (pc === current && current.localDescription) send(descriptionMessage(robotId, '', current.localDescription))
+      })
+      .catch(() => {})
+  }
+  const retry = () => {
+    if (!stopped) connect()
+  }
+
   let frame = 0
   const count = () => {
     onFrame()
     frame = video.requestVideoFrameCallback(count)
   }
   frame = video.requestVideoFrameCallback(count)
-
-  void pc
-    .createOffer()
-    .then((offer) => pc.setLocalDescription(offer))
-    .then(() => {
-      if (pc.localDescription) send(descriptionMessage(robotId, '', pc.localDescription))
-    })
+  connect()
 
   return {
     stop: () => {
+      stopped = true
+      clearTimeout(watchdog)
       unsubscribe()
       video.cancelVideoFrameCallback(frame)
-      pc.close()
+      pc?.close()
       video.srcObject = null
     },
   }

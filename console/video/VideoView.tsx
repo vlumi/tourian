@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore, type VideoPath } from '@/platform/store'
 import { LendCamera } from './LendCamera'
 import { createMeter, sampleIntervalMs, type Summary } from './measure'
-import { viewMjpeg, viewWebRtc } from './viewer'
+import { viewMjpeg, viewWebRtc, type LinkState } from './viewer'
 
 const paths: { path: VideoPath; label: string }[] = [
   { path: 'webrtc', label: 'WebRTC' },
@@ -28,6 +28,7 @@ export function VideoView({ measure = false }: { measure?: boolean }) {
   const imgRef = useRef<HTMLImageElement>(null)
   const [fps, setFps] = useState<number>()
   const [latency, setLatency] = useState<Summary>()
+  const [link, setLink] = useState<LinkState>()
 
   useEffect(() => {
     if (!robotId || !camera || videoPath === 'off') return
@@ -48,7 +49,7 @@ export function VideoView({ measure = false }: { measure?: boolean }) {
       }, sampleIntervalMs)
     const viewer =
       videoPath === 'webrtc' && videoRef.current
-        ? viewWebRtc(robotId, videoRef.current, onFrame)
+        ? viewWebRtc(robotId, videoRef.current, onFrame, setLink)
         : videoPath === 'mjpeg' && imgRef.current
           ? viewMjpeg(robotId, imgRef.current, onFrame)
           : undefined
@@ -58,6 +59,7 @@ export function VideoView({ measure = false }: { measure?: boolean }) {
       viewer?.stop()
       setFps(undefined)
       setLatency(undefined)
+      setLink(undefined)
     }
   }, [robotId, camera, videoPath, measure])
 
@@ -80,6 +82,7 @@ export function VideoView({ measure = false }: { measure?: boolean }) {
         </span>
         <span className="value">
           {latency && `age ${latency.median.toFixed(0)} ms, p95 ${latency.p95.toFixed(0)} ms, n=${latency.count} · `}
+          {link && link !== 'connected' && `link ${link} · `}
           {fps === undefined ? '' : `${fps} fps`}
         </span>
       </div>

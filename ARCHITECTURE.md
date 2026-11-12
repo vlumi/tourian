@@ -82,7 +82,7 @@ One Protobuf package, `tourian.v1`, under `proto/tourian/v1/`:
 
 **The camera is a peer like the robot.** A phone opens the console's `/camera` page, from the QR code the console shows where the picture will be, which takes the camera and connects to the hub's `/api/camera` endpoint, announcing which robot it is the eyes of. The console's video view shows the camera of the selected robot over the path chosen.
 
-**WebRTC is peer to peer; the platform only signals.** The console offers a receive-only connection, the hub stamps the offer with the console's id and routes it to the camera, which answers with its track; the answer and the ICE candidates route back by the same id. The platform never touches the media, so it is not recorded. There are no STUN or TURN servers while everything is on one network.
+**WebRTC is peer to peer; the platform only signals.** The console offers a receive-only connection, the hub stamps the offer with the console's id and routes it to the camera, which answers with its track; the answer and the ICE candidates route back by the same id. The platform never touches the media, so it is not recorded. A link that fails, or is not up within eight seconds, is offered again from scratch, and the console shows the link's state beside the frame rate until it is up. There are no STUN or TURN servers while everything is on one network.
 
 **MJPEG goes through the platform.** When a console asks, the camera page repaints its frames onto a canvas 640 wide, encodes each as JPEG at quality 0.7 and sends them at 15 fps as `VideoFrame` messages; the hub passes them to the consoles that asked and the camera stops when the last one has left. This path puts the frames in the platform's hands, which is what recording needs.
 
