@@ -40,7 +40,7 @@ test('losing the link releases control and forgets the robots and cameras', () =
   store.addCamera(create(CameraAnnounceSchema, { robotId: 'r1', name: 'phone' }))
   expect(useStore.getState().cameras.r1?.name).toBe('phone')
   store.engage()
-  store.welcome('c1')
+  store.welcome('c1', 'https://laptop:8443')
   store.setStatus('disconnected')
   expect(useStore.getState()).toMatchObject({ engaged: false, selected: undefined, consoleId: undefined })
   expect(useStore.getState().robots).toEqual({})

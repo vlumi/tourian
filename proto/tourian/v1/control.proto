@@ -18,9 +18,10 @@ message Controller {
   string name = 3;
 }
 
-// The platform's first word to a console: the id it is known by, which is the holder's id while its operator holds a robot.
+// The platform's first word to a console: the id it is known by, which is the holder's id while its operator holds a robot, and where the platform is reachable on the local network, for a phone to open.
 message Welcome {
   string console_id = 1;
+  string lan_url = 2;
 }
 
 // Who holds a robot, since when, and who else could; sent to every console on each change of hands.

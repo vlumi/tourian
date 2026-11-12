@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18tourian/v1/control.proto\x12\ntourian.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"`\n\nController\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12.\n\x04kind\x18\x02 \x01(\x0e\x32\x1a.tourian.v1.ControllerKindR\x04kind\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\"(\n\x07Welcome\x12\x1d\n\nconsole_id\x18\x01 \x01(\tR\tconsoleId\"\xc1\x01\n\x0c\x43ontrolState\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12.\n\x06holder\x18\x02 \x01(\x0b\x32\x16.tourian.v1.ControllerR\x06holder\x12\x30\n\x05since\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05since\x12\x34\n\tavailable\x18\x04 \x03(\x0b\x32\x16.tourian.v1.ControllerR\tavailable\"j\n\x0e\x43ontrolRequest\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12#\n\rcontroller_id\x18\x02 \x01(\tR\x0c\x63ontrollerId\x12\x18\n\x07release\x18\x03 \x01(\x08R\x07release*\x87\x01\n\x0e\x43ontrollerKind\x12\x1f\n\x1b\x43ONTROLLER_KIND_UNSPECIFIED\x10\x00\x12\x1c\n\x18\x43ONTROLLER_KIND_OPERATOR\x10\x01\x12\x1a\n\x16\x43ONTROLLER_KIND_SCRIPT\x10\x02\x12\x1a\n\x16\x43ONTROLLER_KIND_POLICY\x10\x03\x42\x9d\x01\n\x0e\x63om.tourian.v1B\x0c\x43ontrolProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\nTourian.V1\xca\x02\nTourian\\V1\xe2\x02\x16Tourian\\V1\\GPBMetadata\xea\x02\x0bTourian::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18tourian/v1/control.proto\x12\ntourian.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"`\n\nController\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12.\n\x04kind\x18\x02 \x01(\x0e\x32\x1a.tourian.v1.ControllerKindR\x04kind\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\"A\n\x07Welcome\x12\x1d\n\nconsole_id\x18\x01 \x01(\tR\tconsoleId\x12\x17\n\x07lan_url\x18\x02 \x01(\tR\x06lanUrl\"\xc1\x01\n\x0c\x43ontrolState\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12.\n\x06holder\x18\x02 \x01(\x0b\x32\x16.tourian.v1.ControllerR\x06holder\x12\x30\n\x05since\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05since\x12\x34\n\tavailable\x18\x04 \x03(\x0b\x32\x16.tourian.v1.ControllerR\tavailable\"j\n\x0e\x43ontrolRequest\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12#\n\rcontroller_id\x18\x02 \x01(\tR\x0c\x63ontrollerId\x12\x18\n\x07release\x18\x03 \x01(\x08R\x07release*\x87\x01\n\x0e\x43ontrollerKind\x12\x1f\n\x1b\x43ONTROLLER_KIND_UNSPECIFIED\x10\x00\x12\x1c\n\x18\x43ONTROLLER_KIND_OPERATOR\x10\x01\x12\x1a\n\x16\x43ONTROLLER_KIND_SCRIPT\x10\x02\x12\x1a\n\x16\x43ONTROLLER_KIND_POLICY\x10\x03\x42\x9d\x01\n\x0e\x63om.tourian.v1B\x0c\x43ontrolProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\nTourian.V1\xca\x02\nTourian\\V1\xe2\x02\x16Tourian\\V1\\GPBMetadata\xea\x02\x0bTourian::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,14 +33,14 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'tourian.v1.control_pb2', _g
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\016com.tourian.v1B\014ControlProtoP\001Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\242\002\003TXX\252\002\nTourian.V1\312\002\nTourian\\V1\342\002\026Tourian\\V1\\GPBMetadata\352\002\013Tourian::V1'
-  _globals['_CONTROLLERKIND']._serialized_start=518
-  _globals['_CONTROLLERKIND']._serialized_end=653
+  _globals['_CONTROLLERKIND']._serialized_start=543
+  _globals['_CONTROLLERKIND']._serialized_end=678
   _globals['_CONTROLLER']._serialized_start=73
   _globals['_CONTROLLER']._serialized_end=169
   _globals['_WELCOME']._serialized_start=171
-  _globals['_WELCOME']._serialized_end=211
-  _globals['_CONTROLSTATE']._serialized_start=214
-  _globals['_CONTROLSTATE']._serialized_end=407
-  _globals['_CONTROLREQUEST']._serialized_start=409
-  _globals['_CONTROLREQUEST']._serialized_end=515
+  _globals['_WELCOME']._serialized_end=236
+  _globals['_CONTROLSTATE']._serialized_start=239
+  _globals['_CONTROLSTATE']._serialized_end=432
+  _globals['_CONTROLREQUEST']._serialized_start=434
+  _globals['_CONTROLREQUEST']._serialized_end=540
 # @@protoc_insertion_point(module_scope)
