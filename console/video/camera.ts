@@ -12,6 +12,7 @@ const mjpegQuality = 0.7
 export type CameraState = {
   connected: boolean
   peers: number
+  linked: number
   mjpegViewers: number
   framesSent: number
 }
@@ -26,14 +27,20 @@ export function serveCamera(
   onState: (state: CameraState) => void,
   url = platformBase() + '/api/camera',
 ): Camera {
-  const state: CameraState = { connected: false, peers: 0, mjpegViewers: 0, framesSent: 0 }
+  const state: CameraState = { connected: false, peers: 0, linked: 0, mjpegViewers: 0, framesSent: 0 }
   const peers = new Map<string, { pc: RTCPeerConnection; remote: ReturnType<typeof remoteSide> }>()
   const mjpegPeers = new Set<string>()
   let sequence = 0n
   let capture: ReturnType<typeof setInterval> | undefined
   const canvas = document.createElement('canvas')
 
-  const update = () => onState({ ...state, peers: peers.size, mjpegViewers: mjpegPeers.size })
+  const update = () =>
+    onState({
+      ...state,
+      peers: peers.size,
+      linked: [...peers.values()].filter(({ pc }) => pc.connectionState === 'connected').length,
+      mjpegViewers: mjpegPeers.size,
+    })
 
   const socket: Socket = openSocket(url, {
     onOpen: () => {
@@ -68,8 +75,8 @@ export function serveCamera(
         if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) {
           pc.close()
           if (peers.get(peerId)?.pc === pc) peers.delete(peerId)
-          update()
         }
+        update()
       }
       await remote.setDescription(m.value)
       await pc.setLocalDescription(await pc.createAnswer())

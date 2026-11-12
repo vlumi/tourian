@@ -74,7 +74,9 @@ export function CameraPage() {
           <dt>platform</dt>
           <dd>{state.connected ? 'connected' : 'connecting'}</dd>
           <dt>WebRTC viewers</dt>
-          <dd>{state.peers}</dd>
+          <dd>
+            {state.linked} linked of {state.peers}
+          </dd>
           <dt>MJPEG viewers</dt>
           <dd>{state.mjpegViewers}</dd>
           <dt>frames sent</dt>
