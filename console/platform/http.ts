@@ -3,7 +3,7 @@ import { platformBase } from './socket'
 
 // The same platform over HTTP, for what is fetched rather than streamed.
 export function platformHttp(): string {
-  return platformBase().replace(/^ws/, 'http')
+  return platformBase().replace(/^ws/, 'http') + '/api'
 }
 
 export async function getJson(path: string): Promise<JsonValue> {

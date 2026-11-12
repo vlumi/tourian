@@ -135,10 +135,11 @@ func (x *Controller) GetName() string {
 	return ""
 }
 
-// The platform's first word to a console: the id it is known by, which is the holder's id while its operator holds a robot.
+// The platform's first word to a console: the id it is known by, which is the holder's id while its operator holds a robot, and where the platform is reachable on the local network, for a phone to open.
 type Welcome struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ConsoleId     string                 `protobuf:"bytes,1,opt,name=console_id,json=consoleId,proto3" json:"console_id,omitempty"`
+	LanUrl        string                 `protobuf:"bytes,2,opt,name=lan_url,json=lanUrl,proto3" json:"lan_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -176,6 +177,13 @@ func (*Welcome) Descriptor() ([]byte, []int) {
 func (x *Welcome) GetConsoleId() string {
 	if x != nil {
 		return x.ConsoleId
+	}
+	return ""
+}
+
+func (x *Welcome) GetLanUrl() string {
+	if x != nil {
+		return x.LanUrl
 	}
 	return ""
 }
@@ -320,10 +328,11 @@ const file_tourian_v1_control_proto_rawDesc = "" +
 	"Controller\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12.\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x1a.tourian.v1.ControllerKindR\x04kind\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\"(\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"A\n" +
 	"\aWelcome\x12\x1d\n" +
 	"\n" +
-	"console_id\x18\x01 \x01(\tR\tconsoleId\"\xc1\x01\n" +
+	"console_id\x18\x01 \x01(\tR\tconsoleId\x12\x17\n" +
+	"\alan_url\x18\x02 \x01(\tR\x06lanUrl\"\xc1\x01\n" +
 	"\fControlState\x12\x19\n" +
 	"\brobot_id\x18\x01 \x01(\tR\arobotId\x12.\n" +
 	"\x06holder\x18\x02 \x01(\v2\x16.tourian.v1.ControllerR\x06holder\x120\n" +

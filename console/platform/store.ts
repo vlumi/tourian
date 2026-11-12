@@ -29,6 +29,7 @@ type State = {
   episode?: EpisodeStatus
   episodeBad: boolean
   consoleId?: string
+  lanUrl?: string
   control?: ControlState
   selected?: string
   observation?: Observation
@@ -40,7 +41,7 @@ type State = {
   input: Input
 
   setStatus: (status: Status) => void
-  welcome: (consoleId: string) => void
+  welcome: (consoleId: string, lanUrl: string) => void
   addRobot: (capabilities: Capabilities) => void
   select: (robotId: string) => void
   addCamera: (announce: CameraAnnounce) => void
@@ -81,7 +82,7 @@ export const useStore = create<State>()((set) => ({
         ? { status }
         : { status, engaged: false, robots: {}, cameras: {}, selected: undefined, consoleId: undefined },
     ),
-  welcome: (consoleId) => set({ consoleId }),
+  welcome: (consoleId, lanUrl) => set({ consoleId, lanUrl }),
   addRobot: (capabilities) =>
     set((state) => ({
       robots: { ...state.robots, [capabilities.robotId]: capabilities },

@@ -8,7 +8,7 @@ import { useStore } from './store'
 let socket: Socket | undefined
 
 // Keeps the console's connection to the platform open until the returned function is called.
-export function connect(url = platformBase() + '/console'): () => void {
+export function connect(url = platformBase() + '/api/console'): () => void {
   useStore.getState().setStatus('connecting')
   socket = openSocket(url, {
     onOpen: () => useStore.getState().setStatus('connected'),
@@ -29,7 +29,7 @@ function receive(envelope: Envelope): void {
   const store = useStore.getState()
   switch (envelope.message.case) {
     case 'welcome':
-      store.welcome(envelope.message.value.consoleId)
+      store.welcome(envelope.message.value.consoleId, envelope.message.value.lanUrl)
       break
     case 'capabilities':
       store.addRobot(envelope.message.value)

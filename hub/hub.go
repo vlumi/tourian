@@ -28,6 +28,8 @@ const (
 )
 
 type Hub struct {
+	// LANURL is where the platform is reachable on the local network, told to every console for a phone to open.
+	LANURL string
 	// Origins are host patterns, like "phone.local:*", whose browsers may connect and fetch besides those on the platform's own host or localhost; clients that send no Origin, like the adapters, are not browsers and pass.
 	Origins []string
 	// Admit says whether a console may drive the robot its command, joint command or heartbeat names; nil admits everyone. What it refuses is dropped before the taps see it.
@@ -296,7 +298,7 @@ func (h *Hub) join(id string, p *peer) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.consoles[id] = p
-	p.send(&tourianv1.Welcome{ConsoleId: id})
+	p.send(&tourianv1.Welcome{ConsoleId: id, LanUrl: h.LANURL})
 	for _, caps := range h.capabilities {
 		p.send(caps)
 	}

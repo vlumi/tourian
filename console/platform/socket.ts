@@ -11,8 +11,15 @@ type Handlers = {
   onClose?: () => void
 }
 
+const platformPort = 8080
+
+// Where the platform is: served over https, the console is behind the platform and it is the page's own origin; otherwise it is on the page's host at its own port, unless NEXT_PUBLIC_TOURIAN_URL names it.
 export function platformBase(): string {
-  return process.env.NEXT_PUBLIC_TOURIAN_URL ?? 'ws://localhost:8080'
+  const page = typeof window === 'undefined' ? undefined : window.location
+  if (page?.protocol === 'https:') return `wss://${page.host}`
+  const configured = process.env.NEXT_PUBLIC_TOURIAN_URL
+  if (configured) return configured.replace(/^http/, 'ws').replace(/\/+$/, '')
+  return `ws://${page?.hostname ?? 'localhost'}:${platformPort}`
 }
 
 // Keeps a WebSocket to the platform open, reconnecting after a pause, until closed.

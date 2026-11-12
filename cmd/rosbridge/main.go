@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	platform := flag.String("platform", "ws://localhost:8080/robot", "the platform's robot endpoint")
+	platform := flag.String("platform", "ws://localhost:8080/api/robot", "the platform's robot endpoint")
 	cfg := rosbridge.DefaultConfig()
 	flag.StringVar(&cfg.RosbridgeURL, "rosbridge", cfg.RosbridgeURL, "the robot's rosbridge websocket")
 	flag.StringVar(&cfg.RobotID, "id", cfg.RobotID, "robot id")

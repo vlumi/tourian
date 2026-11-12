@@ -11,14 +11,14 @@ build="$(mktemp -d)"
 
 NEXT_PUBLIC_TOURIAN_URL="ws://localhost:$platform_port" npm run build --workspace console >/dev/null
 go build -o "$build/tourian" ./cmd/tourian
-"$build/tourian" -sim -addr ":$platform_port" -data "$build/data" >/dev/null 2>&1 &
+"$build/tourian" -sim -addr ":$platform_port" -https "" -console "" -data "$build/data" >/dev/null 2>&1 &
 platform=$!
 (cd console && exec ../node_modules/.bin/next start --port "$port" >/dev/null 2>&1) &
 console=$!
 
 up=0
 for _ in $(seq 1 100); do
-  if curl -sf "http://localhost:$port/" >/dev/null 2>&1 && curl -sf "http://localhost:$platform_port/healthz" >/dev/null 2>&1; then
+  if curl -sf "http://localhost:$port/" >/dev/null 2>&1 && curl -sf "http://localhost:$platform_port/api/healthz" >/dev/null 2>&1; then
     up=1
     break
   fi
