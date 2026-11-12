@@ -24,7 +24,7 @@ export function serveCamera(
   stream: MediaStream,
   source: HTMLVideoElement,
   onState: (state: CameraState) => void,
-  url = platformBase() + '/camera',
+  url = platformBase() + '/api/camera',
 ): Camera {
   const state: CameraState = { connected: false, peers: 0, mjpegViewers: 0, framesSent: 0 }
   const peers = new Map<string, { pc: RTCPeerConnection; remote: ReturnType<typeof remoteSide> }>()

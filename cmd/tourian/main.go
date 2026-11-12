@@ -3,12 +3,14 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os/signal"
 	"path/filepath"
 	"strings"
@@ -31,6 +33,9 @@ const observationsPerSecond = 20
 
 func main() {
 	addr := flag.String("addr", ":8080", "address the platform listens on")
+	httpsAddr := flag.String("https", ":8443", "address the platform also listens on with its own certificate, kept under the data directory; empty for none")
+	consoleURL := flag.String("console", "http://localhost:1499", "the console's server, served behind the platform so a phone needs one address; empty for none")
+	lan := flag.String("lan", "", "the host phones reach the platform by, default the first address on the local network")
 	sim := flag.Bool("sim", false, "also run the simulated robot in this process, connected to this platform")
 	sims := flag.Int("sims", 1, "how many simulated robots -sim runs, each with its own id and start pose")
 	data := flag.String("data", "data", "directory the episodes are recorded under")
@@ -47,6 +52,18 @@ func main() {
 	if *origins != "" {
 		h.Origins = strings.Split(*origins, ",")
 	}
+	var console *url.URL
+	if *consoleURL != "" {
+		var err error
+		if console, err = url.Parse(*consoleURL); err != nil {
+			log.Fatalf("-console: %v", err)
+		}
+	}
+	certs := ""
+	if *httpsAddr != "" {
+		certs = filepath.Join(*data, "tls")
+	}
+	h.LANURL = lanURL(*lan, *addr, *httpsAddr, console != nil)
 	episodes := filepath.Join(*data, "episodes")
 	sinks := []episode.Sink{episode.NewJSONL(episodes)}
 	if *dataset != "" {
@@ -73,17 +90,40 @@ func main() {
 	h.Admit = arbiter.Admit
 	go arbiter.Run(ctx)
 
+	handler := newHandler(h, episodes, configs, console, certs)
 	server := &http.Server{
 		Addr:              *addr,
-		Handler:           newHandler(h, episodes, configs),
+		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       time.Minute,
+	}
+	servers := []*http.Server{server}
+	if *httpsAddr != "" {
+		cert, err := certificate(certs, lanHosts())
+		if err != nil {
+			log.Fatalf("tls: %v", err)
+		}
+		secure := &http.Server{
+			Addr:              *httpsAddr,
+			Handler:           handler,
+			TLSConfig:         &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12},
+			ReadHeaderTimeout: 5 * time.Second,
+			IdleTimeout:       time.Minute,
+		}
+		servers = append(servers, secure)
+		go func() {
+			if err := secure.ListenAndServeTLS("", ""); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Fatal(err)
+			}
+		}()
 	}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
-		_ = server.Shutdown(shutdownCtx)
+		for _, s := range servers {
+			_ = s.Shutdown(shutdownCtx)
+		}
 	}()
 
 	if *sim {
@@ -102,7 +142,7 @@ func main() {
 		}
 	}
 
-	log.Printf("tourian listening on %s", *addr)
+	log.Printf("tourian listening on %s, phones at %s", *addr, h.LANURL)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
@@ -114,13 +154,38 @@ func main() {
 	}
 }
 
+// lanURL is where a phone reaches the platform: over https when it serves one, else over http on the platform's port, which serves the console too when it is behind the platform, else the console's own port.
+func lanURL(host, addr, httpsAddr string, console bool) string {
+	if host == "" {
+		if ips := lanAddresses(); len(ips) > 0 {
+			host = ips[0].String()
+		} else {
+			host = "localhost"
+		}
+	}
+	if httpsAddr != "" {
+		return "https://" + net.JoinHostPort(host, port(httpsAddr, "8443"))
+	}
+	if console {
+		return "http://" + net.JoinHostPort(host, port(addr, "8080"))
+	}
+	return "http://" + net.JoinHostPort(host, "1499")
+}
+
+func port(addr, fallback string) string {
+	if _, p, err := net.SplitHostPort(addr); err == nil && p != "" {
+		return p
+	}
+	return fallback
+}
+
 func robotURL(addr string) string {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		return "ws://" + addr + "/robot"
+		return "ws://" + addr + "/api/robot"
 	}
 	if host == "" {
 		host = "localhost"
 	}
-	return "ws://" + net.JoinHostPort(host, port) + "/robot"
+	return "ws://" + net.JoinHostPort(host, port) + "/api/robot"
 }

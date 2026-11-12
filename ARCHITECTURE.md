@@ -46,7 +46,9 @@ One Protobuf package, `tourian.v1`, under `proto/tourian/v1/`:
 
 ## The platform
 
-**The hub** is a switchboard with three WebSocket endpoints. Robot adapters connect to `/robot` and announce their capabilities in their first frame, cameras to `/camera` likewise, consoles to `/console` and are told their id, every robot and camera known, and the latest state published per robot. Commands, joint commands, heartbeats and stops are routed to the robot they name; observations and acknowledgements fan out to every console; MJPEG frames go to the consoles that asked; signaling is routed by console id. The hub never looks inside a message beyond the robot id and the console id, so what sits on either side can change without it.
+**The hub** is a switchboard with three WebSocket endpoints. Robot adapters connect to `/api/robot` and announce their capabilities in their first frame, cameras to `/api/camera` likewise, consoles to `/api/console` and are told their id, where the platform is reachable on the local network, every robot and camera known, and the latest state published per robot. Commands, joint commands, heartbeats and stops are routed to the robot they name; observations and acknowledgements fan out to every console; MJPEG frames go to the consoles that asked; signaling is routed by console id. The hub never looks inside a message beyond the robot id and the console id, so what sits on either side can change without it.
+
+**One address for a phone.** The platform's endpoints live under `/api`; every other path is handed to the console's own server, so a phone reaches the page, the WebSocket and the fetches at one origin. The platform also listens over https with a certificate it makes for itself: a local authority, made once under `data/tls/` and served at `/api/ca.pem` for a phone to install, signs a server certificate for the machine's hosts and addresses, made again when they change. Over https the console takes the platform to be its own origin; over http it takes the page's host at the platform's port.
 
 **Peers and limits.** Each peer writes from its own goroutine with a bounded queue, and one that cannot keep up is dropped rather than slowing the others; the robot behind a dropped connection stops on its own timeouts. A peer that does not announce itself within five seconds is dropped. Browsers are let in by origin, from the platform's own host on any port, from localhost, or from a host named in `-origins`, on the WebSocket endpoints and the HTTP alike; adapters send no origin and pass. There is no authentication until the platform is reachable from anywhere but a laptop.
 
@@ -78,7 +80,7 @@ One Protobuf package, `tourian.v1`, under `proto/tourian/v1/`:
 
 ## Video
 
-**The camera is a peer like the robot.** A phone opens the console's `/camera` page, which takes the camera and connects to the hub's `/camera` endpoint, announcing which robot it is the eyes of. The console's video view shows the camera of the selected robot over the path chosen.
+**The camera is a peer like the robot.** A phone opens the console's `/camera` page, which takes the camera and connects to the hub's `/api/camera` endpoint, announcing which robot it is the eyes of. The console's video view shows the camera of the selected robot over the path chosen.
 
 **WebRTC is peer to peer; the platform only signals.** The console offers a receive-only connection, the hub stamps the offer with the console's id and routes it to the camera, which answers with its track; the answer and the ICE candidates route back by the same id. The platform never touches the media, so it is not recorded. There are no STUN or TURN servers while everything is on one network.
 

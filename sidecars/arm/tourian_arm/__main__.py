@@ -10,7 +10,7 @@ from .sidecar import Sidecar
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="A physical arm behind the tourian contract")
-    parser.add_argument("--platform", default="ws://localhost:8080/robot", help="the platform's robot endpoint")
+    parser.add_argument("--platform", default="ws://localhost:8080/api/robot", help="the platform's robot endpoint")
     parser.add_argument("--id", default="arm-1", help="robot id")
     parser.add_argument("--name", default="Arm", help="robot name")
     parser.add_argument("--command-timeout", type=float, default=0.5)

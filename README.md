@@ -25,19 +25,19 @@ Setup, once:
 
 1. `make tools` installs buf, protoc-gen-go and golangci-lint into `bin/`.
 2. `make deps` installs the npm packages and the Python environment.
-3. `cp .env.example .env` and keep `NEXT_PUBLIC_TOURIAN_URL` at `ws://localhost:8080` for a laptop alone.
+3. `cp .env.example .env`; nothing in it needs changing on one machine.
 
 Drive the simulator:
 
-1. `make run` starts the platform on port 8080 with a simulated robot in-process.
-2. `make dev` serves the console on port 1499; open it.
+1. `make run` starts the platform on port 8080 with a simulated robot in-process, and on 8443 over https with a certificate of its own.
+2. `make dev` serves the console on port 1499; open it there, or through the platform at `https://localhost:8443`.
 3. Enter engages, W, A, S, D or the arrows drive, Space is the emergency stop. On a gamepad the left stick drives, the right stick turns, Start engages, B stops. Losing the window's focus releases.
 
 Lend a phone's camera:
 
-1. Set `NEXT_PUBLIC_TOURIAN_URL` in `.env` to the laptop's address on the local network and restart `make dev`, since the value is inlined at start.
-2. On the phone, add `http://<laptop>:1499` at `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, since browsers hand out the camera only to secure origins.
-3. Open `http://<laptop>:1499/camera?robot=zebes-1` on the phone. The console shows it over WebRTC or MJPEG, chosen above the picture.
+1. The platform logs the https address phones use, such as `https://192.168.1.5:8443`.
+2. The first time on a phone, open `/api/ca.pem` at that address, install it, and on iOS turn it on under Settings › General › About › Certificate Trust Settings. Browsers hand out the camera only to secure origins, and the platform's certificate is its own.
+3. Open `/camera?robot=zebes-1` at that address on the phone. The console shows the picture over WebRTC or MJPEG, chosen above it.
 
 Hand over control:
 
@@ -56,7 +56,7 @@ More robots:
 - `go run ./cmd/rossim` runs a simulated ROS 2 robot behind the rosbridge protocol on port 9090, and `go run ./cmd/rosbridge -joints wheel_left,wheel_right` bridges it, or a real `rosbridge_server`, to the platform.
 - `cd sidecars/arm && PYTHONPATH=../../gen/python ../../.venv/bin/python -m tourian_arm` runs the arm sidecar with its stand-in arm.
 
-Platform flags: `-addr`, `-data` for where recordings go, `-lerobot` and `-mcap` for the dataset layouts, `-policy` for a policy server, `-sim` and `-sims`, `-origins` for browser origins to let in besides the platform's own host and localhost.
+Platform flags: `-addr` and `-https` for where it listens, `-console` for the console server it serves behind itself, `-lan` for the address phones use, `-data` for where recordings go, `-lerobot` and `-mcap` for the dataset layouts, `-policy` for a policy server, `-sim` and `-sims`, `-origins` for browser origins to let in besides the platform's own host and localhost.
 
 The platform listens on every interface and has no authentication, so it stays on a network you trust until that arrives. `make ci` is the gate; `make` lists the rest, including `make screenshot` and `make results-video`.
 
