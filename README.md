@@ -35,9 +35,9 @@ Drive the simulator:
 
 Lend a phone's camera:
 
-1. The platform logs the https address phones use, such as `https://192.168.1.5:8443`.
-2. The first time on a phone, open `/api/ca.pem` at that address, install it, and on iOS turn it on under Settings › General › About › Certificate Trust Settings. Browsers hand out the camera only to secure origins, and the platform's certificate is its own.
-3. Open `/camera?robot=zebes-1` at that address on the phone. The console shows the picture over WebRTC or MJPEG, chosen above it.
+1. The console shows a QR code where the picture will be; it opens the camera page on the platform's https address on the local network.
+2. The first time on a phone, open the certificate link beside the code, install it, and on iOS turn it on under Settings › General › About › Certificate Trust Settings. Browsers hand out the camera only to secure origins, and the platform's certificate is its own.
+3. Scan the code. The console shows the picture over WebRTC or MJPEG, chosen above it.
 
 Hand over control:
 

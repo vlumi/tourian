@@ -377,6 +377,19 @@ button.bad {
   color: var(--dim);
 }
 
+.lend {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  max-width: 32rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.lend a {
+  color: var(--accent);
+}
+
 .camera {
   max-width: 28rem;
   margin: 0 auto;

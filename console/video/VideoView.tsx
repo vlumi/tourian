@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useStore, type VideoPath } from '@/platform/store'
+import { LendCamera } from './LendCamera'
 import { createMeter, sampleIntervalMs, type Summary } from './measure'
 import { viewMjpeg, viewWebRtc } from './viewer'
 
@@ -85,7 +86,7 @@ export function VideoView({ measure = false }: { measure?: boolean }) {
       <div className="video-frame">
         <video ref={videoRef} autoPlay playsInline muted hidden={videoPath !== 'webrtc' || !camera} />
         <img ref={imgRef} alt="" hidden={videoPath !== 'mjpeg' || !camera} />
-        {!camera && <p className="video-empty">No camera. Open /camera on a phone to lend it one.</p>}
+        {!camera && robotId && <LendCamera robotId={robotId} />}
       </div>
     </section>
   )
