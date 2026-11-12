@@ -198,9 +198,9 @@ func TestBrowsersAreLetInByOrigin(t *testing.T) {
 	defer cancel()
 
 	for origin, allowed := range map[string]bool{
-		"http://localhost:3000":     true,
-		"http://127.0.0.1:3000":     true,
-		"http://phone.local:3000":   true,
+		"http://localhost:1499":     true,
+		"http://127.0.0.1:1499":     true,
+		"http://phone.local:1499":   true,
 		"http://elsewhere.example":  false,
 		"http://phone.local.evil:1": false,
 	} {

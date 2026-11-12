@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 1499",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 1499",
     "lint": "oxlint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

@@ -30,14 +30,14 @@ Setup, once:
 Drive the simulator:
 
 1. `make run` starts the platform on port 8080 with a simulated robot in-process.
-2. `make dev` serves the console on port 3000; open it.
+2. `make dev` serves the console on port 1499; open it.
 3. Enter engages, W, A, S, D or the arrows drive, Space is the emergency stop. On a gamepad the left stick drives, the right stick turns, Start engages, B stops. Losing the window's focus releases.
 
 Lend a phone's camera:
 
 1. Set `NEXT_PUBLIC_TOURIAN_URL` in `.env` to the laptop's address on the local network and restart `make dev`, since the value is inlined at start.
-2. On the phone, add `http://<laptop>:3000` at `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, since browsers hand out the camera only to secure origins.
-3. Open `http://<laptop>:3000/camera?robot=zebes-1` on the phone. The console shows it over WebRTC or MJPEG, chosen above the picture.
+2. On the phone, add `http://<laptop>:1499` at `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, since browsers hand out the camera only to secure origins.
+3. Open `http://<laptop>:1499/camera?robot=zebes-1` on the phone. The console shows it over WebRTC or MJPEG, chosen above the picture.
 
 Hand over control:
 
