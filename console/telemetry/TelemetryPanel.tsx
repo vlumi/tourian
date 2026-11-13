@@ -1,5 +1,6 @@
 'use client'
 
+import { platformBase } from '@/platform/socket'
 import { batteryLabel, haltLabel, heading, takesJoints, useStore } from '@/platform/store'
 import { ControlPanel } from '@/control/ControlPanel'
 import { JointPanel } from '@/control/JointPanel'
@@ -27,6 +28,7 @@ export function TelemetryPanel() {
         <Row label="link">
           <span className={`status status-${status}`}>{status}</span>
         </Row>
+        {status !== 'connected' && <p className="hint">trying {platformBase()}</p>}
         <Row label="robot">{robot ? robot.name : 'none'}</Row>
         <Row label="control">
           {stopped ? (
