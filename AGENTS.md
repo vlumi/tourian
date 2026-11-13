@@ -9,7 +9,7 @@ The same rules as [nebulosa](https://github.com/vlumi/nebulosa) and [fiftysixty]
 - Every seam (robot, transport, video, dataset sink, controller) is an interface with at least two implementations before it is called an abstraction. One implementation behind an interface is a premature interface: write the concrete thing and extract the seam when the second one arrives.
 - Safety lives in the robot adapter, never in the console: command timeouts, the dead-man switch and the emergency stop must work with the console gone. A robot that has not heard a command within its timeout stops.
 - Recorded episodes and media are data, never committed; `data/` is gitignored.
-- No secrets in the repository. Local settings live in `.env`, documented in `.env.example`.
+- No secrets in the repository, and no settings files: the platform's flags are the configuration, and the console finds the platform by the page it was served from.
 
 ## Commits and pull requests
 

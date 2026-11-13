@@ -10,7 +10,7 @@ json="$(mktemp)"
 trap 'kill $platform $console 2>/dev/null; rm -rf "$build" "$json"' EXIT
 . scripts/serve.sh
 
-node scripts/video-latency.mjs "http://localhost:$port" zebes-1 "${SCREENSHOT:-}" > "$json"
+node scripts/video-latency.mjs "$base" zebes-1 "${SCREENSHOT:-}" > "$json"
 
 commit="$(git rev-parse --short HEAD)"
 machine="$(sysctl -n machdep.cpu.brand_string 2>/dev/null || uname -m), $(sw_vers -productName 2>/dev/null || uname -s) $(sw_vers -productVersion 2>/dev/null || uname -r)"

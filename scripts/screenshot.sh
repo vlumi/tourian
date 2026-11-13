@@ -7,4 +7,4 @@ mkdir -p "$(dirname "$out")"
 trap 'kill $platform $console 2>/dev/null; rm -rf "$build"' EXIT
 . scripts/serve.sh
 
-node scripts/screenshot.mjs "$out" "http://localhost:$port/"
+node scripts/screenshot.mjs "$out" "$base/"
