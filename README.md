@@ -12,7 +12,7 @@ It is an experiment for learning the domain by building it, not a product. One P
 
 ## What it does
 
-- **Drive.** A simulated robot in a 2D world, from a keyboard or a gamepad, with its state streamed back and drawn live, the round trip of every command on screen, and a command timeout, a dead-man switch and an emergency stop in the robot.
+- **Drive.** A simulated robot in a 2D world, from a keyboard or a gamepad, and an arm from a slider per joint, with the state streamed back and drawn live, the round trip of every command on screen, and a command timeout, a dead-man switch and an emergency stop in the robot.
 - **See.** The robot's camera over WebRTC or over MJPEG through the platform, a phone or the simulated robot's own view of its arena standing in for the camera, and both paths measured.
 - **Record.** Episodes of synchronized observations and actions as JSONL, in the LeRobot layout and as MCAP; a flag for a bad episode; replay against the recorded pictures.
 - **Hand over.** The operator, a scripted routine or a policy server at the controls, an arbiter that says who holds each robot, and every change of hands in the recording.
@@ -58,7 +58,7 @@ More robots:
 
 - `go run ./cmd/tourian -sim -sims 3` runs three simulated robots; `go run ./cmd/zebes -id zebes-2 -y 2` adds one from another process. A fleet strip appears with more than one.
 - `go run ./cmd/rossim` runs a simulated ROS 2 robot behind the rosbridge protocol on port 9090, and `go run ./cmd/rosbridge -joints wheel_left,wheel_right` bridges it, or a real `rosbridge_server`, to the platform.
-- `.venv/bin/python -m tourian_arm` runs the arm sidecar with its stand-in arm.
+- `.venv/bin/python -m tourian_arm` runs the arm sidecar with its stand-in arm; selected on the console, it is driven by a slider per joint while engaged.
 
 Platform flags: `-addr` and `-https` for where it listens, `-console` for the console server it serves behind itself, `-lan` for the address phones use, `-data` for where recordings go, `-lerobot` and `-mcap` for the dataset layouts, `-policy` for a policy server, `-sim` and `-sims`, `-origins` for browser origins to let in besides the platform's own host and localhost.
 
