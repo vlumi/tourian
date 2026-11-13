@@ -1,5 +1,6 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import { platformBase } from '@/platform/socket'
 import { batteryLabel, haltLabel, heading, takesJoints, useStore } from '@/platform/store'
 import { ControlPanel } from '@/control/ControlPanel'
@@ -17,6 +18,7 @@ export function TelemetryPanel() {
   const stopped = useStore((s) => s.stopped)
   const input = useStore((s) => s.input)
 
+  const tried = useSyncExternalStore(subscribeToNothing, platformBase, () => '')
   const halt = haltLabel(observation?.haltReason)
   const limits = robot?.velocityLimits
   const arm = takesJoints(robot)
@@ -28,7 +30,7 @@ export function TelemetryPanel() {
         <Row label="link">
           <span className={`status status-${status}`}>{status}</span>
         </Row>
-        {status !== 'connected' && <p className="hint">trying {platformBase()}</p>}
+        {status !== 'connected' && tried && <p className="hint">trying {tried}</p>}
         <Row label="robot">{robot ? robot.name : 'none'}</Row>
         <Row label="control">
           {stopped ? (
@@ -100,3 +102,6 @@ export function TelemetryPanel() {
 function format(value: number | undefined, unit: string, digits = 2): string {
   return value === undefined ? '–' : `${value.toFixed(digits)} ${unit}`
 }
+
+// The address depends on the page, which the server rendering the page does not know; it is shown once the page is in a browser.
+const subscribeToNothing = () => () => {}
