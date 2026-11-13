@@ -23,7 +23,7 @@ tools:  ## Install buf, protoc-gen-go and golangci-lint into bin/ at the pinned 
 .PHONY: deps
 deps:  ## Install the npm packages of the console and the tooling, and the Python environment of the sidecars
 	npm ci
-	python3 -m venv .venv && .venv/bin/pip install -q -e 'sidecars/arm[dev]'
+	python3 -m venv .venv && .venv/bin/pip install -q -e 'sidecars/arm[dev]' -e 'sidecars/script[dev]'
 
 ##@ Contract
 
@@ -50,6 +50,7 @@ test:  ## Run the Go, console and sidecar unit tests, Go under the race detector
 	go test -race ./...
 	npm test --workspace console
 	PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest -q -p no:cacheprovider sidecars/arm
+	PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest -q -p no:cacheprovider sidecars/script
 
 .PHONY: contract
 contract:  ## Run the contract tests against the Go robot adapters (the sidecar has the same in pytest)

@@ -1,0 +1,31 @@
+[project]
+name = "tourian-script"
+version = "0.0.0"
+description = "Write a controller for tourian as one Python function"
+requires-python = ">=3.12"
+dependencies = ["protobuf>=5.29"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.8"]
+
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["tourian_script*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["../../gen/python", "."]
+testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["../../gen"]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tourian_script", "tourian"]
