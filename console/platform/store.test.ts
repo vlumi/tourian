@@ -89,3 +89,23 @@ test('heading comes from the yaw quaternion', () => {
   expect(haltLabel(HaltReason.DEAD_MAN)).toBe('dead man')
   expect(haltLabel(HaltReason.UNSPECIFIED)).toBeUndefined()
 })
+
+test("an arm's targets start where its joints are and follow the sliders", () => {
+  const store = useStore.getState()
+  store.addRobot(create(CapabilitiesSchema, { robotId: 'arm-1', jointNames: ['shoulder', 'elbow'] }))
+  store.select('arm-1')
+  expect(useStore.getState().targets).toBeUndefined()
+  store.observe(
+    create(ObservationSchema, { robotId: 'arm-1', joints: { name: ['shoulder', 'elbow'], position: [0.5, -1] } }),
+  )
+  expect(useStore.getState().targets).toEqual([0.5, -1])
+  store.setTarget(1, 0.25)
+  store.observe(
+    create(ObservationSchema, { robotId: 'arm-1', joints: { name: ['shoulder', 'elbow'], position: [0.5, -0.9] } }),
+  )
+  expect(useStore.getState().targets).toEqual([0.5, 0.25])
+  store.addRobot(create(CapabilitiesSchema, { robotId: 'r1', jointNames: ['wheel'], velocityLimits: { maxLinear: 1 } }))
+  store.select('r1')
+  store.observe(create(ObservationSchema, { robotId: 'r1', joints: { name: ['wheel'], position: [3] } }))
+  expect(useStore.getState().targets).toBeUndefined()
+})

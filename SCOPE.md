@@ -74,7 +74,7 @@ Toolchain and layout: Go module, `buf` with a first contract (velocity command, 
 
 - A ROS 2 robot through rosbridge as the second robot adapter, against a simulated ROS 2 robot first. Done against a simulated robot behind the rosbridge protocol; not yet run against `rosbridge_server` and a ROS 2 robot.
 - Episodes exported as MCAP and opened in Foxglove. The files are written and read back by the MCAP library; opening them in Foxglove is not yet confirmed.
-- A physical arm behind the contract through a Python sidecar that uses the arm's own driver; safety behavior retested on hardware before any driving. The sidecar is done against a stand-in arm; **the hardware retest is open**, since no arm has been attached, and the console has no joint controls yet.
+- A physical arm behind the contract through a Python sidecar that uses the arm's own driver; safety behavior retested on hardware before any driving. The sidecar is done against a stand-in arm and driven from the console's joint sliders since 2026-11-13; **the hardware retest is open**, since no arm has been attached.
 
 ### Later
 

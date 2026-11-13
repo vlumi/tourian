@@ -1,9 +1,14 @@
 import { create } from '@bufbuild/protobuf'
 import { timestampNow } from '@bufbuild/protobuf/wkt'
 import { ControlRequestSchema } from '@tourian/contract/tourian/v1/control_pb'
-import { HeartbeatSchema, StopSchema, VelocityCommandSchema } from '@tourian/contract/tourian/v1/robot_pb'
+import {
+  HeartbeatSchema,
+  JointCommandSchema,
+  StopSchema,
+  VelocityCommandSchema,
+} from '@tourian/contract/tourian/v1/robot_pb'
 import { send } from '@/platform/connection'
-import { effectiveLimits, useStore } from '@/platform/store'
+import { effectiveLimits, takesJoints, useStore } from '@/platform/store'
 import { readGamepad } from './gamepad'
 import { pickInput } from './input'
 import { twistFromKeys, watchKeyboard } from './keyboard'
@@ -13,7 +18,7 @@ const commandIntervalMs = 50
 
 let sequence = 0n
 
-// Reads the keyboard and the gamepad at the command rate and, while the operator is engaged and the window has focus, sends a heartbeat and a command every tick. Losing focus disengages, so the robot's dead-man switch takes over.
+// Reads the keyboard and the gamepad at the command rate and, while the operator is engaged and the window has focus, sends a heartbeat and a command every tick: a twist from the inputs, or for an arm the joint targets from its sliders. Losing focus disengages, so the robot's dead-man switch takes over.
 export function startDriver(): () => void {
   const keyboard = watchKeyboard()
 
@@ -37,8 +42,12 @@ export function startDriver(): () => void {
     const input = pickInput(pad, twistFromKeys(keyboard.held))
     useStore.getState().setInput(input)
 
-    const { engaged, selected, robots, configs } = useStore.getState()
+    const { engaged, selected, robots, configs, targets } = useStore.getState()
     if (!engaged || !selected) return
+    if (takesJoints(robots[selected])) {
+      if (targets) sendTargets(selected, robots[selected].jointNames, targets)
+      return
+    }
     const limits = effectiveLimits(robots[selected], configs[selected])
     sendCommand(selected, input.linear * limits.maxLinear, input.angular * limits.maxAngular)
   }, commandIntervalMs)
@@ -59,9 +68,9 @@ export function toggleEngaged(): void {
 
 // Releasing hands the robot back to whoever held it before the operator took over, if anyone.
 function disengage(): void {
-  const { engaged, selected } = useStore.getState()
+  const { engaged, selected, robots } = useStore.getState()
   if (engaged && selected) {
-    sendCommand(selected, 0, 0)
+    if (!takesJoints(robots[selected])) sendCommand(selected, 0, 0)
     send({ case: 'controlRequest', value: create(ControlRequestSchema, { robotId: selected, release: true }) })
   }
   useStore.getState().disengage()
@@ -81,11 +90,16 @@ export function emergencyStop(): void {
   useStore.getState().disengage(true)
 }
 
+function sendTargets(robotId: string, names: string[], positions: number[]): void {
+  const { header } = beat(robotId)
+  send({
+    case: 'jointCommand',
+    value: create(JointCommandSchema, { header, robotId, sequence, target: { name: names, position: positions } }),
+  })
+}
+
 function sendCommand(robotId: string, linear: number, angular: number): void {
-  sequence += 1n
-  const header = { stamp: timestampNow(), frameId: 'base_link' }
-  send({ case: 'heartbeat', value: create(HeartbeatSchema, { header, robotId, sequence }) })
-  markSent(sequence)
+  const { header } = beat(robotId)
   send({
     case: 'velocityCommand',
     value: create(VelocityCommandSchema, {
@@ -95,4 +109,13 @@ function sendCommand(robotId: string, linear: number, angular: number): void {
       twist: { linear: { x: linear }, angular: { z: angular } },
     }),
   })
+}
+
+// Every command rides with a heartbeat under the next sequence number, whose acknowledgement measures the round trip.
+function beat(robotId: string) {
+  sequence += 1n
+  const header = { stamp: timestampNow(), frameId: 'base_link' }
+  send({ case: 'heartbeat', value: create(HeartbeatSchema, { header, robotId, sequence }) })
+  markSent(sequence)
+  return { header }
 }

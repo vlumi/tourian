@@ -66,7 +66,7 @@ One Protobuf package, `tourian.v1`, under `proto/tourian/v1/`:
 
 **The ROS 2 bridge**, `emmi/rosbridge`, speaks the rosbridge protocol: velocity commands become `geometry_msgs/msg/Twist` on `/cmd_vel`; odometry, joint states and battery state become observations. It publishes the twist every 50 ms, zero within that tick of the operator not being heard, and a last zero on the way out whatever the reason, since a plain ROS robot keeps doing what it was last told. `rosbridgetest` is a simulated ROS robot behind the same protocol; `cmd/rossim` runs it on a port.
 
-**The arm sidecar**, `sidecars/arm`, is Python, because the drivers of physical arms tend to be. `ArmDriver` is what it needs from an arm: named joints, positions, a target to move toward and a stop that holds; `FakeArm` stands in. It acknowledges each `JointCommand` on arrival, moves toward the target while the operator is heard and holds the arm the moment not, through a guard with the same semantics as the Go one. The hardware test waits for an arm, and the console has no joint controls yet, so an arm is driven by a controller inside the platform.
+**The arm sidecar**, `sidecars/arm`, is Python, because the drivers of physical arms tend to be. `ArmDriver` is what it needs from an arm: named joints, positions, a target to move toward and a stop that holds; `FakeArm` stands in. It acknowledges each `JointCommand` on arrival, moves toward the target while the operator is heard and holds the arm the moment not, through a guard with the same semantics as the Go one. The hardware test waits for an arm.
 
 **The contract tests**, `emmi/contracttest`, are what every adapter must do, exercised through a real hub: announce, drive on command and acknowledge it, stop when commands stop, stop when heartbeats stop, stop at once on an emergency stop ahead of five queued commands. Both Go adapters pass them under `make ci`; the sidecar has the same test in pytest.
 
@@ -104,7 +104,7 @@ One Protobuf package, `tourian.v1`, under `proto/tourian/v1/`:
 
 ## The console
 
-Next.js with the App Router, one store (zustand) that the connection writes and the components read: the robots, cameras, control states and episode statuses of the fleet, and the trail and the last six seconds of speed, turn rate, battery and latency of the selected robot. A driver loop at 20 Hz reads the keyboard and the gamepad and, while engaged, sends a heartbeat and a command scaled to the robot's effective limits. Latency is the round trip of each command to its acknowledgement, matched by sequence number.
+Next.js with the App Router, one store (zustand) that the connection writes and the components read: the robots, cameras, control states and episode statuses of the fleet, and the trail and the last six seconds of speed, turn rate, battery and latency of the selected robot. A driver loop at 20 Hz reads the keyboard and the gamepad and, while engaged, sends a heartbeat and a command scaled to the robot's effective limits; for an arm, a robot with joints and no velocity limits, it sends the joint targets from a slider per joint instead, which start where the joints are so engaging moves nothing. Latency is the round trip of each command to its acknowledgement, matched by sequence number.
 
 The control room draws the world on a canvas with the picture above it, telemetry with sparklines beside it, the control panel saying who holds the robot and whether this console's driving waits, the recording controls, and a fleet strip when there is more than one robot. The other pages are `/camera` for a phone, `/episodes` with the replay, and `/config`.
 
@@ -145,7 +145,6 @@ The control room draws the world on a canvas with the picture above it, telemetr
 - A second transport beside WebSocket, for comparison, under `transport/`.
 - A camera on the ROS robot or the arm; the camera is a phone's or the simulated robot's.
 - Contact in the simulator: the furniture the camera sees is not in the robot's way.
-- Joint controls in the console, so an arm can be driven by the operator.
 - Authentication, before the platform is reachable from anywhere but a laptop.
 
 ## How it was built
