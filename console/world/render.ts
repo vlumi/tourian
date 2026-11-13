@@ -1,4 +1,5 @@
 import type { Point } from '@/platform/store'
+import { arenaHalf, landmarks } from './arena'
 
 const viewMeters = 12
 const robotRadius = 0.25
@@ -11,7 +12,7 @@ export type WorldState = {
   others?: { position: Point; heading: number }[]
 }
 
-// The arena from above: a meter grid centered on the origin, the trail driven and the robot with its heading.
+// The arena from above: a meter grid centered on the origin, the walls and the furniture, the trail driven and the robot with its heading.
 export function renderWorld(context: CanvasRenderingContext2D, width: number, height: number, state: WorldState): void {
   const scale = Math.min(width, height) / viewMeters
   const toScreen = (p: Point) => ({ x: width / 2 + p.x * scale, y: height / 2 - p.y * scale })
@@ -42,6 +43,16 @@ export function renderWorld(context: CanvasRenderingContext2D, width: number, he
   context.moveTo(0, origin.y)
   context.lineTo(width, origin.y)
   context.stroke()
+
+  const corner = toScreen({ x: -arenaHalf, y: arenaHalf })
+  context.strokeRect(corner.x, corner.y, 2 * arenaHalf * scale, 2 * arenaHalf * scale)
+  for (const mark of landmarks) {
+    const at = toScreen({ x: mark.x - mark.size / 2, y: mark.y + mark.size / 2 })
+    context.fillStyle = mark.color
+    context.globalAlpha = 0.5
+    context.fillRect(at.x, at.y, mark.size * scale, mark.size * scale)
+    context.globalAlpha = 1
+  }
 
   if (state.trail.length > 1) {
     context.strokeStyle = color('--trail')
