@@ -1,4 +1,4 @@
-// Package policy is a controller that asks a policy server what to do: the observation goes out as JSON over HTTP, a twist comes back. Whatever learned policy sits behind that server is its business.
+// Package policy is a controller that asks a server what to do: the observation goes out as JSON over HTTP, a twist comes back. Whatever sits behind that server, a learned policy or a script in any language, is its business; a server that describes itself at its root is offered under that name.
 package policy
 
 import (
@@ -15,21 +15,45 @@ import (
 )
 
 type Client struct {
-	url  string
-	name string
-	http *http.Client
+	url         string
+	description *tourianv1.Controller
+	http        *http.Client
 }
 
+// New makes the client, asking the server at serverURL to describe itself; one that does not answer is offered as a policy named by its host.
 func New(serverURL string) *Client {
-	name := serverURL
-	if u, err := url.Parse(serverURL); err == nil && u.Host != "" {
-		name = u.Host
+	c := &Client{url: serverURL, http: &http.Client{Timeout: time.Second}}
+	c.description = c.describe()
+	return c
+}
+
+func (c *Client) describe() *tourianv1.Controller {
+	host := c.url
+	if u, err := url.Parse(c.url); err == nil && u.Host != "" {
+		host = u.Host
 	}
-	return &Client{url: serverURL, name: name, http: &http.Client{Timeout: time.Second}}
+	fallback := &tourianv1.Controller{Id: "policy@" + host, Kind: tourianv1.ControllerKind_CONTROLLER_KIND_POLICY, Name: "Policy at " + host}
+	response, err := c.http.Get(c.url + "/")
+	if err != nil {
+		return fallback
+	}
+	defer func() { _ = response.Body.Close() }()
+	data, err := io.ReadAll(io.LimitReader(response.Body, 1<<16))
+	if err != nil || response.StatusCode != http.StatusOK {
+		return fallback
+	}
+	description := &tourianv1.Controller{}
+	if protojson.Unmarshal(data, description) != nil || description.GetId() == "" {
+		return fallback
+	}
+	if description.GetKind() == tourianv1.ControllerKind_CONTROLLER_KIND_UNSPECIFIED {
+		description.Kind = tourianv1.ControllerKind_CONTROLLER_KIND_POLICY
+	}
+	return description
 }
 
 func (c *Client) Describe() *tourianv1.Controller {
-	return &tourianv1.Controller{Id: "policy", Kind: tourianv1.ControllerKind_CONTROLLER_KIND_POLICY, Name: "Policy at " + c.name}
+	return c.description
 }
 
 func (c *Client) Act(ctx context.Context, observation *tourianv1.Observation) (*tourianv1.Twist, error) {

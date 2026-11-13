@@ -72,7 +72,7 @@ One Protobuf package, `tourian.v1`, under `proto/tourian/v1/`:
 
 ## The controllers
 
-**The controller seam.** A controller inside the platform is anything that can describe itself and turn an observation into a twist. Two exist: the scripted square, which drives a leg and turns a quarter by the clock on the observations, and the policy client, which posts the observation as JSON to a policy server's `/act` and reads a twist back; `cmd/policy` stands in for a learned policy by steering home over the same protocol. The operator is the third kind and speaks through the hub.
+**The controller seam.** A controller inside the platform is anything that can describe itself and turn an observation into a twist. Two exist: the scripted square, which drives a leg and turns a quarter by the clock on the observations, and the policy client, which posts the observation as JSON to a server's `/act` and reads a twist back, having asked the server at its root to describe itself; a server that does not is offered as a policy named by its host. `cmd/policy` stands in for a learned policy by steering home over that protocol, and `sidecars/script` is the Python way to write one: a script is one `act(observation)` function that `serve` puts behind the two requests under a name and a kind of its own. The operator is the third kind and speaks through the hub.
 
 **The arbiter**, `motherbrain`, keeps one answer per robot to who is driving. A console hands a robot to a controller by name; the operator takes over by driving, since the hub asks the arbiter whether to admit each command, joint command and heartbeat from a console, and the first admitted one makes that console the holder and remembers who held it before; releasing hands the robot back to that controller, or to nobody. One operator at a time: while a console's operator holds a robot, another console's driving is refused before any tap sees it, and a holder silent for a second, disconnected or otherwise, leaves the robot in nobody's hands. An emergency stop from a console takes the robot out of every hand, the remembered one included.
 
@@ -134,6 +134,7 @@ The control room draws the world on a canvas with the picture above it, telemetr
 | `transport/httpjson` | contract messages as JSON responses |
 | `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `fleet/` the strip of robots, `config/` the configuration page, `episodes/` the list and the replay; `app/` the pages |
 | `sidecars/arm` | the Python sidecar for a physical arm |
+| `sidecars/script` | a controller as one Python function, served the way a policy server is; `examples/` has one |
 | `scripts/` | what the make targets run |
 | `docs/` | screenshots, and the measurements under `results/` |
 

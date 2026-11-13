@@ -39,3 +39,22 @@ func TestAsksTheServer(t *testing.T) {
 		t.Fatal("a server that cannot be reached is an error, not a twist")
 	}
 }
+
+func TestAServerThatDescribesItselfIsOfferedUnderItsName(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			_, _ = w.Write([]byte(`{"id":"circle","kind":"CONTROLLER_KIND_SCRIPT","name":"Circle"}`))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+	described := New(server.URL).Describe()
+	if described.GetId() != "circle" || described.GetKind() != tourianv1.ControllerKind_CONTROLLER_KIND_SCRIPT || described.GetName() != "Circle" {
+		t.Fatalf("described as %v", described)
+	}
+	silent := New("http://127.0.0.1:1").Describe()
+	if silent.GetKind() != tourianv1.ControllerKind_CONTROLLER_KIND_POLICY || silent.GetId() != "policy@127.0.0.1:1" {
+		t.Fatalf("a silent server is a policy named by its host, got %v", silent)
+	}
+}

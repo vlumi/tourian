@@ -42,7 +42,7 @@ Lend a phone's camera:
 Hand over control:
 
 - The control panel says who holds the robot and hands it to the scripted square. Engaging takes the robot over from whoever holds it; releasing hands it back; one operator at a time.
-- `go run ./cmd/policy` is a stand-in policy server that steers home; start the platform with `-policy http://localhost:8091` to offer it.
+- Your own script is one Python function: `.venv/bin/python sidecars/script/examples/circle.py` serves one, and the platform started with `-policy http://localhost:8091` offers it by name. `-policy` may repeat. Anything that answers the same two requests in any language works the same way; `go run ./cmd/policy` is such a stand-in for a learned policy, steering home.
 
 Record:
 
@@ -54,7 +54,7 @@ More robots:
 
 - `go run ./cmd/tourian -sim -sims 3` runs three simulated robots; `go run ./cmd/zebes -id zebes-2 -y 2` adds one from another process. A fleet strip appears with more than one.
 - `go run ./cmd/rossim` runs a simulated ROS 2 robot behind the rosbridge protocol on port 9090, and `go run ./cmd/rosbridge -joints wheel_left,wheel_right` bridges it, or a real `rosbridge_server`, to the platform.
-- `cd sidecars/arm && PYTHONPATH=../../gen/python ../../.venv/bin/python -m tourian_arm` runs the arm sidecar with its stand-in arm.
+- `.venv/bin/python -m tourian_arm` runs the arm sidecar with its stand-in arm.
 
 Platform flags: `-addr` and `-https` for where it listens, `-console` for the console server it serves behind itself, `-lan` for the address phones use, `-data` for where recordings go, `-lerobot` and `-mcap` for the dataset layouts, `-policy` for a policy server, `-sim` and `-sims`, `-origins` for browser origins to let in besides the platform's own host and localhost.
 
