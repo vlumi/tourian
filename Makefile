@@ -22,8 +22,7 @@ tools:  ## Install buf, protoc-gen-go and golangci-lint into bin/ at the pinned 
 
 .PHONY: deps
 deps:  ## Install the npm packages of the console and the tooling, and the Python environment of the sidecars
-	npm ci
-	python3 -m venv .venv && .venv/bin/pip install -q -e 'sidecars/arm[dev]' -e 'sidecars/script[dev]'
+	@scripts/deps.sh
 
 ##@ Contract
 

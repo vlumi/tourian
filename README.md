@@ -54,7 +54,7 @@ More robots:
 
 - `go run ./cmd/tourian -sim -sims 3` runs three simulated robots; `go run ./cmd/zebes -id zebes-2 -y 2` adds one from another process. A fleet strip appears with more than one.
 - `go run ./cmd/rossim` runs a simulated ROS 2 robot behind the rosbridge protocol on port 9090, and `go run ./cmd/rosbridge -joints wheel_left,wheel_right` bridges it, or a real `rosbridge_server`, to the platform.
-- `cd sidecars/arm && PYTHONPATH=../../gen/python ../../.venv/bin/python -m tourian_arm` runs the arm sidecar with its stand-in arm.
+- `.venv/bin/python -m tourian_arm` runs the arm sidecar with its stand-in arm.
 
 Platform flags: `-addr` and `-https` for where it listens, `-console` for the console server it serves behind itself, `-lan` for the address phones use, `-data` for where recordings go, `-lerobot` and `-mcap` for the dataset layouts, `-policy` for a policy server, `-sim` and `-sims`, `-origins` for browser origins to let in besides the platform's own host and localhost.
 
