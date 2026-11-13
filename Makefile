@@ -36,13 +36,10 @@ generate-check:  ## Fail if the generated code in gen/ is out of date
 
 ##@ Build & test
 
-# The console inlines NEXT_PUBLIC_* at build and dev start; Next reads .env from console/, so the root .env is loaded here.
-LOAD_ENV := set -a; [ -f .env ] && . ./.env; set +a;
-
 .PHONY: build
-build:  ## Build the Go binaries and the console, with the settings in .env
+build:  ## Build the Go binaries and the console
 	go build ./...
-	@$(LOAD_ENV) npm run build --workspace console
+	npm run build --workspace console
 
 .PHONY: test
 test:  ## Run the Go, console and sidecar unit tests, Go under the race detector
@@ -60,8 +57,8 @@ run:  ## Run the platform with the simulated robot in-process
 	go run ./cmd/tourian -sim
 
 .PHONY: dev
-dev:  ## Run the console with live reload, with the settings in .env
-	@$(LOAD_ENV) npm run dev --workspace console
+dev:  ## Run the console with live reload, served behind the platform at http://localhost:8080
+	npm run dev --workspace console
 
 ##@ Quality
 

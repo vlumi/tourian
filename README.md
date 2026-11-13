@@ -25,12 +25,11 @@ Setup, once:
 
 1. `make tools` installs buf, protoc-gen-go and golangci-lint into `bin/`.
 2. `make deps` installs the npm packages and the Python environment.
-3. `cp .env.example .env`; nothing in it needs changing on one machine.
 
 Drive the simulator:
 
 1. `make run` starts the platform on port 8080 with a simulated robot in-process, and on 8443 over https with a certificate of its own.
-2. `make dev` serves the console on port 1499; open it there, or through the platform at `https://localhost:8443`.
+2. `make dev` serves the console with live reload; open it through the platform at `http://localhost:8080`, or at the laptop's address from another machine. The console's own port is 1499, where it assumes the platform on 8080.
 3. Enter engages, W, A, S, D or the arrows drive, Space is the emergency stop. On a gamepad the left stick drives, the right stick turns, Start engages, B stops. Losing the window's focus releases.
 
 Give the simulated robot eyes, or lend a phone's camera:

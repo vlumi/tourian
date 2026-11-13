@@ -146,7 +146,7 @@ func main() {
 		}
 	}
 
-	log.Printf("tourian listening on %s, phones at %s", *addr, h.LANURL)
+	log.Printf("tourian listening on %s; the console at http://localhost:%s, phones at %s", *addr, port(*addr, "8080"), h.LANURL)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
