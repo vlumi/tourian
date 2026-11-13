@@ -9,7 +9,7 @@
 //   TOUCH=1 node scripts/screenshot.mjs phone.png                 # a touch screen: no hover, coarse pointer
 import { launch, sleep } from './chrome.mjs'
 
-const [output, url = 'http://localhost:1499/'] = process.argv.slice(2)
+const [output, url = 'http://localhost:8080/'] = process.argv.slice(2)
 if (!output) {
   console.error('usage: screenshot.mjs <output.png> [url]')
   process.exit(2)

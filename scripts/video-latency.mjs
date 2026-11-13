@@ -9,7 +9,7 @@
 //   SECONDS=10 node scripts/video-latency.mjs
 import { launch, sleep } from './chrome.mjs'
 
-const [base = 'http://localhost:3100', robotId = 'zebes-1', screenshot] = process.argv.slice(2)
+const [base = 'http://localhost:8080', robotId = 'zebes-1', screenshot] = process.argv.slice(2)
 const seconds = Number(process.env.SECONDS ?? 10)
 const paths = ['webrtc', 'mjpeg']
 
