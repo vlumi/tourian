@@ -79,7 +79,7 @@ Toolchain and layout: Go module, `buf` with a first contract (velocity command, 
 ### Later
 
 - MQTT and gRPC streams as further transports, for comparison.
-- A 3D simulated world with a simulated camera.
+- A 3D simulated world with a simulated camera. Done 2026-11-13 as the console's simulated camera: the arena rendered in 3D from the robot's eyes and lent like a phone's camera, so recordings pair the picture with the state; the simulator itself stays 2D.
 - A second console, native, against the same contract.
 
 ## Known limits

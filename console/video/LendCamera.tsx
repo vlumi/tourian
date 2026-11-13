@@ -13,7 +13,11 @@ export function LendCamera({ robotId }: { robotId: string }) {
     <div className="lend">
       <QRCodeSVG value={url} size={144} bgColor="transparent" fgColor="#e6f5c8" marginSize={1} />
       <p className="video-empty">
-        No camera. Scan to lend a phone's, or open <a href={url}>{url}</a>.
+        No camera. Scan to lend a phone's, or open <a href={url}>{url}</a>, or the{' '}
+        <a href={`/camera?robot=${encodeURIComponent(robotId)}&source=world`} target="_blank" rel="noreferrer">
+          simulated camera
+        </a>
+        .
       </p>
       {lanUrl.startsWith('https:') && (
         <p className="hint">

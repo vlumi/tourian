@@ -82,6 +82,8 @@ One Protobuf package, `tourian.v1`, under `proto/tourian/v1/`:
 
 **The camera is a peer like the robot.** A phone opens the console's `/camera` page, from the QR code the console shows where the picture will be, which takes the camera and connects to the hub's `/api/camera` endpoint, announcing which robot it is the eyes of. The console's video view shows the camera of the selected robot over the path chosen.
 
+**The simulated camera** is the same page with `?source=world`: instead of a camera it follows every robot's observations as a console would and renders what the named robot sees, with three.js, in an arena the console furnishes (`world/arena.ts`: the square the simulator clamps to, walls and a few landmarks, drawn from above by the world canvas too), with the other robots in view; the canvas's stream is lent like a phone's, over either path. The simulator knows nothing of the furniture, so the robot drives through it; what this buys is pictures that match the state, so a recording of the simulator is an observation and action pair worth training on.
+
 **WebRTC is peer to peer; the platform only signals.** The console offers a receive-only connection, the hub stamps the offer with the console's id and routes it to the camera, which answers with its track; the answer and the ICE candidates route back by the same id. The platform never touches the media, so it is not recorded. A link that fails, or is not up within eight seconds, is offered again from scratch, and the console shows the link's state beside the frame rate until it is up. There are no STUN or TURN servers while everything is on one network.
 
 **MJPEG goes through the platform.** When a console asks, the camera page repaints its frames onto a canvas 640 wide, encodes each as JPEG at quality 0.7 and sends them at 15 fps as `VideoFrame` messages; the hub passes them to the consoles that asked and the camera stops when the last one has left. This path puts the frames in the platform's hands, which is what recording needs.
@@ -132,7 +134,7 @@ The control room draws the world on a canvas with the picture above it, telemetr
 | `motherbrain/` | the controller seam and the arbiter; `script/` the square, `policy/` the client of a policy server |
 | `transport/ws` | contract messages over WebSocket |
 | `transport/httpjson` | contract messages as JSON responses |
-| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the canvas, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `fleet/` the strip of robots, `config/` the configuration page, `episodes/` the list and the replay; `app/` the pages |
+| `console/` | the Next.js console: `platform/` connection and store, `drive/` inputs and latency, `world/` the arena from above and from the robot's eyes, `telemetry/` the panel, `video/` the viewers, the camera page's serving side and the clock band, `record/` the recording controls, `control/` the holder and the handover, `fleet/` the strip of robots, `config/` the configuration page, `episodes/` the list and the replay; `app/` the pages |
 | `sidecars/arm` | the Python sidecar for a physical arm |
 | `sidecars/script` | a controller as one Python function, served the way a policy server is; `examples/` has one |
 | `scripts/` | what the make targets run |
@@ -141,7 +143,8 @@ The control room draws the world on a canvas with the picture above it, telemetr
 ## Not there yet
 
 - A second transport beside WebSocket, for comparison, under `transport/`.
-- A camera on the ROS robot or the arm; the camera is a phone's.
+- A camera on the ROS robot or the arm; the camera is a phone's or the simulated robot's.
+- Contact in the simulator: the furniture the camera sees is not in the robot's way.
 - Joint controls in the console, so an arm can be driven by the operator.
 - Authentication, before the platform is reachable from anywhere but a laptop.
 

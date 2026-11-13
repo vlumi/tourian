@@ -2,6 +2,12 @@
 
 One capture per milestone, taken with `make screenshot OUT=<file>` (which builds and serves the platform with the simulator and the console, and runs [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs) against it), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates.
 
+## 2026-11-13 · Simulated camera
+
+![The simulated robot's own view](007-simulated-camera.png)
+
+The simulated robot's own view of its arena above the world, over WebRTC at the console's frame rate, while the scripted square drives it: the walls, the landmarks the console furnishes the arena with, drawn from above in the world below as well. The picture comes from the camera page with `?source=world`, rendered in the browser and lent like a phone's camera, so a recording pairs the picture with the state.
+
 ## 2026-11-10 · Real
 
 ![Three kinds of robot in the fleet](006-real.png)

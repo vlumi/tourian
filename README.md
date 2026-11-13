@@ -13,7 +13,7 @@ It is an experiment for learning the domain by building it, not a product. One P
 ## What it does
 
 - **Drive.** A simulated robot in a 2D world, from a keyboard or a gamepad, with its state streamed back and drawn live, the round trip of every command on screen, and a command timeout, a dead-man switch and an emergency stop in the robot.
-- **See.** The robot's camera over WebRTC or over MJPEG through the platform, a phone standing in for the camera, and both paths measured.
+- **See.** The robot's camera over WebRTC or over MJPEG through the platform, a phone or the simulated robot's own view of its arena standing in for the camera, and both paths measured.
 - **Record.** Episodes of synchronized observations and actions as JSONL, in the LeRobot layout and as MCAP; a flag for a bad episode; replay against the recorded pictures.
 - **Hand over.** The operator, a scripted routine or a policy server at the controls, an arbiter that says who holds each robot, and every change of hands in the recording.
 - **Many.** Several robots under one platform, a fleet view, and versioned configurations of robots and tasks.
@@ -33,7 +33,11 @@ Drive the simulator:
 2. `make dev` serves the console on port 1499; open it there, or through the platform at `https://localhost:8443`.
 3. Enter engages, W, A, S, D or the arrows drive, Space is the emergency stop. On a gamepad the left stick drives, the right stick turns, Start engages, B stops. Losing the window's focus releases.
 
-Lend a phone's camera:
+Give the simulated robot eyes, or lend a phone's camera:
+
+- Where the picture will be, the console links to the simulated camera: the robot's own view of its arena, rendered in the browser and lent like a phone's. Open it in a tab and keep the tab open.
+
+For a phone:
 
 1. The console shows a QR code where the picture will be; it opens the camera page on the platform's https address on the local network.
 2. The first time on a phone, open the certificate link beside the code, install it, and on iOS turn it on under Settings › General › About › Certificate Trust Settings. Browsers hand out the camera only to secure origins, and the platform's certificate is its own.
