@@ -39,6 +39,7 @@ type State = {
   engaged: boolean
   stopped: boolean
   input: Input
+  targets?: number[]
 
   setStatus: (status: Status) => void
   welcome: (consoleId: string, lanUrl: string) => void
@@ -55,6 +56,7 @@ type State = {
   engage: () => void
   disengage: (stopped?: boolean) => void
   setInput: (input: Input) => void
+  setTarget: (joint: number, position: number) => void
 }
 
 const idle: Input = { linear: 0, angular: 0, source: 'none' }
@@ -101,6 +103,7 @@ export const useStore = create<State>()((set) => ({
       trail: [],
       history: emptyHistory,
       latencyMs: undefined,
+      targets: undefined,
     })),
   addCamera: (announce) => set((state) => ({ cameras: { ...state.cameras, [announce.robotId]: announce } })),
   setVideoPath: (videoPath) => set({ videoPath }),
@@ -124,9 +127,13 @@ export const useStore = create<State>()((set) => ({
       if (observation.robotId !== state.selected) return { observations }
       const position = positionOf(observation)
       const trail = position ? push(state.trail, position, trailLength) : state.trail
+      const targets =
+        state.targets ??
+        (takesJoints(state.robots[observation.robotId]) ? [...(observation.joints?.position ?? [])] : undefined)
       return {
         observations,
         observation,
+        targets,
         trail,
         history: {
           ...state.history,
@@ -144,12 +151,19 @@ export const useStore = create<State>()((set) => ({
   engage: () => set({ engaged: true, stopped: false }),
   disengage: (stopped = false) => set({ engaged: false, stopped }),
   setInput: (input) => set({ input }),
+  setTarget: (joint, position) =>
+    set((state) => ({ targets: state.targets?.map((p, i) => (i === joint ? position : p)) })),
 }))
 
 function push<T>(list: T[], item: T, limit: number): T[] {
   const next = list.length >= limit ? list.slice(list.length - limit + 1) : list.slice()
   next.push(item)
   return next
+}
+
+// A robot with joints and no velocity limits, an arm, is driven by joint targets rather than a twist.
+export function takesJoints(capabilities?: Capabilities): boolean {
+  return !!capabilities && capabilities.jointNames.length > 0 && !capabilities.velocityLimits
 }
 
 export function positionOf(observation?: Observation): Point | undefined {

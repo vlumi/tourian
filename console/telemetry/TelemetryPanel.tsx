@@ -1,7 +1,8 @@
 'use client'
 
-import { batteryLabel, haltLabel, heading, useStore } from '@/platform/store'
+import { batteryLabel, haltLabel, heading, takesJoints, useStore } from '@/platform/store'
 import { ControlPanel } from '@/control/ControlPanel'
+import { JointPanel } from '@/control/JointPanel'
 import { Row } from './Row'
 import { Sparkline } from './Sparkline'
 
@@ -17,6 +18,7 @@ export function TelemetryPanel() {
 
   const halt = haltLabel(observation?.haltReason)
   const limits = robot?.velocityLimits
+  const arm = takesJoints(robot)
 
   return (
     <aside className="telemetry">
@@ -61,12 +63,15 @@ export function TelemetryPanel() {
         <Row label="battery" spark={<Sparkline values={history.battery} min={0} max={1} />}>
           {batteryLabel(observation)}
         </Row>
-        {observation?.joints?.name.map((name, i) => (
-          <Row key={name} label={name}>
-            {format(observation.joints?.velocity[i], 'rad/s')}
-          </Row>
-        ))}
+        {!arm &&
+          observation?.joints?.name.map((name, i) => (
+            <Row key={name} label={name}>
+              {format(observation.joints?.velocity[i], 'rad/s')}
+            </Row>
+          ))}
       </section>
+
+      {arm && <JointPanel />}
 
       <section>
         <h2>Link</h2>

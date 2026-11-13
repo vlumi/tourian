@@ -519,6 +519,11 @@ button.bad {
   font-size: 0.9em;
 }
 
+.joints input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
 .hint {
   margin: 0.25rem 0;
   color: var(--dim);
