@@ -42,7 +42,7 @@ Lend a phone's camera:
 Hand over control:
 
 - The control panel says who holds the robot and hands it to the scripted square. Engaging takes the robot over from whoever holds it; releasing hands it back; one operator at a time.
-- `go run ./cmd/policy` is a stand-in policy server that steers home; start the platform with `-policy http://localhost:8091` to offer it.
+- Your own script is one Python function: `.venv/bin/python sidecars/script/examples/circle.py` serves one, and the platform started with `-policy http://localhost:8091` offers it by name. `-policy` may repeat. Anything that answers the same two requests in any language works the same way; `go run ./cmd/policy` is such a stand-in for a learned policy, steering home.
 
 Record:
 
