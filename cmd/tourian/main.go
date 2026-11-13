@@ -41,7 +41,11 @@ func main() {
 	data := flag.String("data", "data", "directory the episodes are recorded under")
 	dataset := flag.String("lerobot", "tourian", "name of the LeRobot dataset written under the data directory, empty for none")
 	writeMcap := flag.Bool("mcap", true, "also write each episode as an MCAP file for Foxglove under the data directory")
-	policyURL := flag.String("policy", "", "URL of a policy server to offer as a controller, such as http://localhost:8091")
+	var policyURLs []string
+	flag.Func("policy", "URL of a policy or script server to offer as a controller, such as http://localhost:8091; may repeat", func(u string) error {
+		policyURLs = append(policyURLs, u)
+		return nil
+	})
 	origins := flag.String("origins", "", "browser origins to let in besides this host and localhost, as host patterns separated by commas, such as phone.local:*")
 	flag.Parse()
 
@@ -82,8 +86,8 @@ func main() {
 	}()
 
 	controllers := []motherbrain.Controller{script.Square{}}
-	if *policyURL != "" {
-		controllers = append(controllers, policy.New(*policyURL))
+	for _, u := range policyURLs {
+		controllers = append(controllers, policy.New(u))
 	}
 	arbiter := motherbrain.NewArbiter(h, time.Now, controllers...)
 	h.AddTap(arbiter.Tap)
