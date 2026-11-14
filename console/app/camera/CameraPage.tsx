@@ -1,8 +1,9 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { errorMessage } from '@/platform/error'
+import { FirstVisit } from './FirstVisit'
 import { serveCamera, type CameraState } from '@/video/camera'
 import { composeWithClock } from '@/video/compose'
 import { watchWorld } from '@/world/watch'
@@ -12,6 +13,11 @@ export function CameraPage() {
   const params = useSearchParams()
   const clock = params.get('clock') === '1'
   const world = params.get('source') === 'world'
+  const secure = useSyncExternalStore(
+    subscribeToNothing,
+    () => window.isSecureContext,
+    () => true,
+  )
   const [robotId, setRobotId] = useState(params.get('robot') ?? 'zebes-1')
   const [stream, setStream] = useState<MediaStream>()
   const [error, setError] = useState<string>()
@@ -58,6 +64,8 @@ export function CameraPage() {
     setStream(undefined)
   }
 
+  if (!world && !secure) return <FirstVisit />
+
   return (
     <main className="camera">
       <h1>{world ? 'tourian simulated camera' : 'tourian camera'}</h1>
@@ -94,3 +102,6 @@ export function CameraPage() {
     </main>
   )
 }
+
+// Whether the page may take the camera is known only in the browser; the server renders as if it may.
+const subscribeToNothing = () => () => {}

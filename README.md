@@ -38,9 +38,9 @@ Give the simulated robot eyes, or lend a phone's camera:
 
 For a phone:
 
-1. The console shows a QR code where the picture will be; it opens the camera page on the platform's https address on the local network.
-2. The first time on a phone, open the certificate link beside the code, install it, and on iOS turn it on under Settings › General › About › Certificate Trust Settings. Browsers hand out the camera only to secure origins, and the platform's certificate is its own.
-3. Scan the code. The console shows the picture over WebRTC or MJPEG, chosen above it.
+1. The console shows a QR code where the picture will be. Scan it.
+2. The first time, the page asks the phone to trust the platform once: tap to install the certificate, follow the phone's prompts (on iOS, install the profile under Settings, then turn it on under General › About › Certificate Trust Settings), and tap to continue. Browsers hand out the camera only over https, and the platform's certificate is its own.
+3. From then on scanning goes straight to the camera. The console shows the picture over WebRTC or MJPEG, chosen above it.
 
 Hand over control:
 

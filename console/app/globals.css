@@ -440,6 +440,17 @@ button.bad {
   text-align: right;
 }
 
+.steps {
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.steps a {
+  color: var(--accent);
+}
+
 .error {
   color: var(--danger);
 }

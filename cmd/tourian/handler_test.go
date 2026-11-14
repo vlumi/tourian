@@ -13,7 +13,7 @@ import (
 )
 
 func TestHealthz(t *testing.T) {
-	server := httptest.NewServer(newHandler(hub.New(), t.TempDir(), config.NewStore(t.TempDir(), time.Now), nil, ""))
+	server := httptest.NewServer(newHandler(hub.New(), t.TempDir(), config.NewStore(t.TempDir(), time.Now), nil, "", reach{LAN: "http://lab:8080", Secure: "https://lab:8443"}))
 	defer server.Close()
 
 	response, err := http.Get(server.URL + "/api/healthz")
@@ -24,6 +24,15 @@ func TestHealthz(t *testing.T) {
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("status = %d, want %d", response.StatusCode, http.StatusOK)
 	}
+	addresses, err := http.Get(server.URL + "/api/addresses")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = addresses.Body.Close() }()
+	body, _ := io.ReadAll(addresses.Body)
+	if string(body) != "{\"lan\":\"http://lab:8080\",\"secure\":\"https://lab:8443\"}\n" {
+		t.Fatalf("addresses = %s", body)
+	}
 }
 
 func TestTheConsoleIsServedBehindThePlatform(t *testing.T) {
@@ -32,7 +41,7 @@ func TestTheConsoleIsServedBehindThePlatform(t *testing.T) {
 	}))
 	defer console.Close()
 	target, _ := url.Parse(console.URL)
-	server := httptest.NewServer(newHandler(hub.New(), t.TempDir(), config.NewStore(t.TempDir(), time.Now), target, t.TempDir()))
+	server := httptest.NewServer(newHandler(hub.New(), t.TempDir(), config.NewStore(t.TempDir(), time.Now), target, t.TempDir(), reach{}))
 	defer server.Close()
 
 	request, _ := http.NewRequest(http.MethodGet, server.URL+"/camera?robot=r1", nil)
