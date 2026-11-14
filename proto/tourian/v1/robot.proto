@@ -18,6 +18,8 @@ message Capabilities {
   bool has_camera = 6;
   // How long the adapter drives on without a heartbeat before it stops the robot.
   google.protobuf.Duration heartbeat_timeout = 7;
+  // The platform's word that the robot has left; nothing else is set.
+  bool gone = 8;
 }
 
 message VelocityLimits {

@@ -9,6 +9,7 @@ type Addresses = { lan: string; secure?: string }
 export function FirstVisit() {
   const [secure, setSecure] = useState<string>()
   const [trusted, setTrusted] = useState<boolean>()
+  const [checked, setChecked] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -26,7 +27,7 @@ export function FirstVisit() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [checked])
 
   return (
     <main className="camera">
@@ -45,10 +46,21 @@ export function FirstVisit() {
               install it as a CA certificate under Settings › Security.
             </li>
             <li>
-              <a href={secure}>Continue to the camera</a>.
+              <button type="button" className="engaged" onClick={() => setChecked((n) => n + 1)}>
+                Continue to the camera
+              </button>
+              {checked > 0 && (
+                <p className="error">
+                  The phone does not trust the platform yet. On iOS, a downloaded profile is installed under Settings
+                  and then turned on under General › About › Certificate Trust Settings; both are needed.
+                </p>
+              )}
             </li>
           </ol>
-          <p className="hint">From then on, scanning the code goes straight to the camera.</p>
+          <p className="hint">
+            From then on, scanning the code goes straight to the camera. Or <a href={secure}>open it anyway</a> and
+            accept the browser's warning.
+          </p>
         </>
       )}
     </main>

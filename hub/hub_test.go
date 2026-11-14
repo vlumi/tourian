@@ -50,6 +50,11 @@ func TestRoutesBetweenRobotAndConsole(t *testing.T) {
 	if receive(t, ctx, robot).GetStop() == nil {
 		t.Fatal("the refused command should not have reached the robot, and a stop always does")
 	}
+
+	_ = robot.CloseNow()
+	if caps := receive(t, ctx, console).GetCapabilities(); !caps.GetGone() || caps.GetRobotId() != "r1" {
+		t.Fatalf("the console should be told the robot left, got %v", caps)
+	}
 }
 
 func TestRelaysSignalingBetweenConsoleAndCamera(t *testing.T) {
@@ -97,6 +102,11 @@ func TestRelaysSignalingBetweenConsoleAndCamera(t *testing.T) {
 	_ = console.CloseNow()
 	if request := receive(t, ctx, camera).GetVideoRequest(); request.GetEnabled() || request.GetPeerId() != offer.GetPeerId() {
 		t.Fatalf("the camera should be told the console left, got %v", request)
+	}
+
+	_ = camera.CloseNow()
+	if announce := receive(t, ctx, bystander).GetCameraAnnounce(); !announce.GetGone() || announce.GetRobotId() != "r1" {
+		t.Fatalf("every console should be told the camera left, got %v", announce)
 	}
 }
 

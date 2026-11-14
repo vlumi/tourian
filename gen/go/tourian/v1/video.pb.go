@@ -73,10 +73,12 @@ func (VideoKind) EnumDescriptor() ([]byte, []int) {
 
 // A camera announcing itself as a robot's eyes, in the first frame it sends the platform.
 type CameraAnnounce struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	RobotId       string                 `protobuf:"bytes,1,opt,name=robot_id,json=robotId,proto3" json:"robot_id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Kinds         []VideoKind            `protobuf:"varint,3,rep,packed,name=kinds,proto3,enum=tourian.v1.VideoKind" json:"kinds,omitempty"`
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	RobotId string                 `protobuf:"bytes,1,opt,name=robot_id,json=robotId,proto3" json:"robot_id,omitempty"`
+	Name    string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Kinds   []VideoKind            `protobuf:"varint,3,rep,packed,name=kinds,proto3,enum=tourian.v1.VideoKind" json:"kinds,omitempty"`
+	// The platform's word that the camera has left; nothing else is set.
+	Gone          bool `protobuf:"varint,4,opt,name=gone,proto3" json:"gone,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -130,6 +132,13 @@ func (x *CameraAnnounce) GetKinds() []VideoKind {
 		return x.Kinds
 	}
 	return nil
+}
+
+func (x *CameraAnnounce) GetGone() bool {
+	if x != nil {
+		return x.Gone
+	}
+	return false
 }
 
 // A console asking a robot's camera to start or stop a stream. WebRTC starts with an offer instead; this is for MJPEG.
@@ -436,11 +445,12 @@ var File_tourian_v1_video_proto protoreflect.FileDescriptor
 const file_tourian_v1_video_proto_rawDesc = "" +
 	"\n" +
 	"\x16tourian/v1/video.proto\x12\n" +
-	"tourian.v1\x1a\x17tourian/v1/header.proto\"l\n" +
+	"tourian.v1\x1a\x17tourian/v1/header.proto\"\x80\x01\n" +
 	"\x0eCameraAnnounce\x12\x19\n" +
 	"\brobot_id\x18\x01 \x01(\tR\arobotId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12+\n" +
-	"\x05kinds\x18\x03 \x03(\x0e2\x15.tourian.v1.VideoKindR\x05kinds\"\x87\x01\n" +
+	"\x05kinds\x18\x03 \x03(\x0e2\x15.tourian.v1.VideoKindR\x05kinds\x12\x12\n" +
+	"\x04gone\x18\x04 \x01(\bR\x04gone\"\x87\x01\n" +
 	"\fVideoRequest\x12\x19\n" +
 	"\brobot_id\x18\x01 \x01(\tR\arobotId\x12\x17\n" +
 	"\apeer_id\x18\x02 \x01(\tR\x06peerId\x12)\n" +

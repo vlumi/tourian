@@ -40,6 +40,7 @@ type State = {
   stopped: boolean
   input: Input
   targets?: number[]
+  worldCamera?: string
 
   setStatus: (status: Status) => void
   welcome: (consoleId: string, lanUrl: string) => void
@@ -57,6 +58,7 @@ type State = {
   disengage: (stopped?: boolean) => void
   setInput: (input: Input) => void
   setTarget: (joint: number, position: number) => void
+  lendWorld: (robotId?: string) => void
 }
 
 const idle: Input = { linear: 0, angular: 0, source: 'none' }
@@ -86,10 +88,17 @@ export const useStore = create<State>()((set) => ({
     ),
   welcome: (consoleId, lanUrl) => set({ consoleId, lanUrl }),
   addRobot: (capabilities) =>
-    set((state) => ({
-      robots: { ...state.robots, [capabilities.robotId]: capabilities },
-      selected: state.selected ?? capabilities.robotId,
-    })),
+    set((state) => {
+      if (capabilities.gone) {
+        const { [capabilities.robotId]: _, ...robots } = state.robots
+        const left = state.selected === capabilities.robotId
+        return { robots, ...(left ? { selected: Object.keys(robots)[0], engaged: false, targets: undefined } : {}) }
+      }
+      return {
+        robots: { ...state.robots, [capabilities.robotId]: capabilities },
+        selected: state.selected ?? capabilities.robotId,
+      }
+    }),
   // Selecting another robot starts its trail and history afresh; what the fleet already knows about it is carried over.
   select: (robotId) =>
     set((state) => ({
@@ -105,7 +114,14 @@ export const useStore = create<State>()((set) => ({
       latencyMs: undefined,
       targets: undefined,
     })),
-  addCamera: (announce) => set((state) => ({ cameras: { ...state.cameras, [announce.robotId]: announce } })),
+  addCamera: (announce) =>
+    set((state) => {
+      if (announce.gone) {
+        const { [announce.robotId]: _, ...cameras } = state.cameras
+        return { cameras }
+      }
+      return { cameras: { ...state.cameras, [announce.robotId]: announce } }
+    }),
   setVideoPath: (videoPath) => set({ videoPath }),
   setEpisode: (episode) =>
     set((state) => ({
@@ -151,6 +167,7 @@ export const useStore = create<State>()((set) => ({
   engage: () => set({ engaged: true, stopped: false }),
   disengage: (stopped = false) => set({ engaged: false, stopped }),
   setInput: (input) => set({ input }),
+  lendWorld: (worldCamera) => set({ worldCamera }),
   setTarget: (joint, position) =>
     set((state) => ({ targets: state.targets?.map((p, i) => (i === joint ? position : p)) })),
 }))

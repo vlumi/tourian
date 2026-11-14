@@ -87,6 +87,7 @@ export function startWorldView(width = 640, height = 480) {
   frame = requestAnimationFrame(paint)
 
   return {
+    canvas,
     stream: canvas.captureStream(30),
     update(pose: Pose, seen: Pose[]) {
       own = pose

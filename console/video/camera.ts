@@ -23,7 +23,7 @@ type Camera = { stop: () => void }
 export function serveCamera(
   robotId: string,
   stream: MediaStream,
-  source: HTMLVideoElement,
+  source: HTMLVideoElement | HTMLCanvasElement,
   onState: (state: CameraState) => void,
   name = 'phone',
   url = platformBase() + '/api/camera',
@@ -99,10 +99,12 @@ export function serveCamera(
 
   let encoding = false
   function sendFrame() {
-    if (encoding || source.videoWidth === 0) return
-    const scale = Math.min(1, mjpegWidth / source.videoWidth)
-    canvas.width = Math.round(source.videoWidth * scale)
-    canvas.height = Math.round(source.videoHeight * scale)
+    const [width, height] =
+      source instanceof HTMLVideoElement ? [source.videoWidth, source.videoHeight] : [source.width, source.height]
+    if (encoding || width === 0) return
+    const scale = Math.min(1, mjpegWidth / width)
+    canvas.width = Math.round(width * scale)
+    canvas.height = Math.round(height * scale)
     canvas.getContext('2d')?.drawImage(source, 0, 0, canvas.width, canvas.height)
     encoding = true
     canvas.toBlob(

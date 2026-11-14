@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from tourian.v1 import header_pb2 as tourian_dot_v1_dot_header__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16tourian/v1/video.proto\x12\ntourian.v1\x1a\x17tourian/v1/header.proto\"l\n\x0e\x43\x61meraAnnounce\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12+\n\x05kinds\x18\x03 \x03(\x0e\x32\x15.tourian.v1.VideoKindR\x05kinds\"\x87\x01\n\x0cVideoRequest\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x17\n\x07peer_id\x18\x02 \x01(\tR\x06peerId\x12)\n\x04kind\x18\x03 \x01(\x0e\x32\x15.tourian.v1.VideoKindR\x04kind\x12\x18\n\x07\x65nabled\x18\x04 \x01(\x08R\x07\x65nabled\"n\n\x12SessionDescription\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x17\n\x07peer_id\x18\x02 \x01(\tR\x06peerId\x12\x12\n\x04type\x18\x03 \x01(\tR\x04type\x12\x10\n\x03sdp\x18\x04 \x01(\tR\x03sdp\"\xa1\x01\n\x0cIceCandidate\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x17\n\x07peer_id\x18\x02 \x01(\tR\x06peerId\x12\x1c\n\tcandidate\x18\x03 \x01(\tR\tcandidate\x12\x17\n\x07sdp_mid\x18\x04 \x01(\tR\x06sdpMid\x12&\n\x0fsdp_mline_index\x18\x05 \x01(\rR\rsdpMlineIndex\"\xb1\x01\n\nVideoFrame\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\x12\x12\n\x04jpeg\x18\x04 \x01(\x0cR\x04jpeg\x12\x14\n\x05width\x18\x05 \x01(\rR\x05width\x12\x16\n\x06height\x18\x06 \x01(\rR\x06height*T\n\tVideoKind\x12\x1a\n\x16VIDEO_KIND_UNSPECIFIED\x10\x00\x12\x15\n\x11VIDEO_KIND_WEBRTC\x10\x01\x12\x14\n\x10VIDEO_KIND_MJPEG\x10\x02\x42\x9b\x01\n\x0e\x63om.tourian.v1B\nVideoProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\nTourian.V1\xca\x02\nTourian\\V1\xe2\x02\x16Tourian\\V1\\GPBMetadata\xea\x02\x0bTourian::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16tourian/v1/video.proto\x12\ntourian.v1\x1a\x17tourian/v1/header.proto\"\x80\x01\n\x0e\x43\x61meraAnnounce\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12+\n\x05kinds\x18\x03 \x03(\x0e\x32\x15.tourian.v1.VideoKindR\x05kinds\x12\x12\n\x04gone\x18\x04 \x01(\x08R\x04gone\"\x87\x01\n\x0cVideoRequest\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x17\n\x07peer_id\x18\x02 \x01(\tR\x06peerId\x12)\n\x04kind\x18\x03 \x01(\x0e\x32\x15.tourian.v1.VideoKindR\x04kind\x12\x18\n\x07\x65nabled\x18\x04 \x01(\x08R\x07\x65nabled\"n\n\x12SessionDescription\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x17\n\x07peer_id\x18\x02 \x01(\tR\x06peerId\x12\x12\n\x04type\x18\x03 \x01(\tR\x04type\x12\x10\n\x03sdp\x18\x04 \x01(\tR\x03sdp\"\xa1\x01\n\x0cIceCandidate\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x17\n\x07peer_id\x18\x02 \x01(\tR\x06peerId\x12\x1c\n\tcandidate\x18\x03 \x01(\tR\tcandidate\x12\x17\n\x07sdp_mid\x18\x04 \x01(\tR\x06sdpMid\x12&\n\x0fsdp_mline_index\x18\x05 \x01(\rR\rsdpMlineIndex\"\xb1\x01\n\nVideoFrame\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\x12\x12\n\x04jpeg\x18\x04 \x01(\x0cR\x04jpeg\x12\x14\n\x05width\x18\x05 \x01(\rR\x05width\x12\x16\n\x06height\x18\x06 \x01(\rR\x06height*T\n\tVideoKind\x12\x1a\n\x16VIDEO_KIND_UNSPECIFIED\x10\x00\x12\x15\n\x11VIDEO_KIND_WEBRTC\x10\x01\x12\x14\n\x10VIDEO_KIND_MJPEG\x10\x02\x42\x9b\x01\n\x0e\x63om.tourian.v1B\nVideoProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\nTourian.V1\xca\x02\nTourian\\V1\xe2\x02\x16Tourian\\V1\\GPBMetadata\xea\x02\x0bTourian::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,16 +33,16 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'tourian.v1.video_pb2', _glo
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\016com.tourian.v1B\nVideoProtoP\001Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\242\002\003TXX\252\002\nTourian.V1\312\002\nTourian\\V1\342\002\026Tourian\\V1\\GPBMetadata\352\002\013Tourian::V1'
-  _globals['_VIDEOKIND']._serialized_start=767
-  _globals['_VIDEOKIND']._serialized_end=851
-  _globals['_CAMERAANNOUNCE']._serialized_start=63
-  _globals['_CAMERAANNOUNCE']._serialized_end=171
-  _globals['_VIDEOREQUEST']._serialized_start=174
-  _globals['_VIDEOREQUEST']._serialized_end=309
-  _globals['_SESSIONDESCRIPTION']._serialized_start=311
-  _globals['_SESSIONDESCRIPTION']._serialized_end=421
-  _globals['_ICECANDIDATE']._serialized_start=424
-  _globals['_ICECANDIDATE']._serialized_end=585
-  _globals['_VIDEOFRAME']._serialized_start=588
-  _globals['_VIDEOFRAME']._serialized_end=765
+  _globals['_VIDEOKIND']._serialized_start=788
+  _globals['_VIDEOKIND']._serialized_end=872
+  _globals['_CAMERAANNOUNCE']._serialized_start=64
+  _globals['_CAMERAANNOUNCE']._serialized_end=192
+  _globals['_VIDEOREQUEST']._serialized_start=195
+  _globals['_VIDEOREQUEST']._serialized_end=330
+  _globals['_SESSIONDESCRIPTION']._serialized_start=332
+  _globals['_SESSIONDESCRIPTION']._serialized_end=442
+  _globals['_ICECANDIDATE']._serialized_start=445
+  _globals['_ICECANDIDATE']._serialized_end=606
+  _globals['_VIDEOFRAME']._serialized_start=609
+  _globals['_VIDEOFRAME']._serialized_end=786
 # @@protoc_insertion_point(module_scope)

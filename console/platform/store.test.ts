@@ -109,3 +109,18 @@ test("an arm's targets start where its joints are and follow the sliders", () =>
   store.observe(create(ObservationSchema, { robotId: 'r1', joints: { name: ['wheel'], position: [3] } }))
   expect(useStore.getState().targets).toBeUndefined()
 })
+
+test('a robot or camera that left is forgotten, and the selection moves on', () => {
+  const store = useStore.getState()
+  store.addRobot(create(CapabilitiesSchema, { robotId: 'r1' }))
+  store.addRobot(create(CapabilitiesSchema, { robotId: 'r2' }))
+  store.addCamera(create(CameraAnnounceSchema, { robotId: 'r1', name: 'phone' }))
+  store.select('r1')
+  store.engage()
+  store.addCamera(create(CameraAnnounceSchema, { robotId: 'r1', gone: true }))
+  expect(useStore.getState().cameras.r1).toBeUndefined()
+  store.addRobot(create(CapabilitiesSchema, { robotId: 'r1', gone: true }))
+  expect(useStore.getState().robots.r1).toBeUndefined()
+  expect(useStore.getState().selected).toBe('r2')
+  expect(useStore.getState().engaged).toBe(false)
+})
