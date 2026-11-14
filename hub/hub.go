@@ -276,12 +276,14 @@ func replace(peers map[string]*peer, id string, p *peer) {
 	peers[id] = p
 }
 
+// A robot or camera that leaves is announced gone to every console, unless another has already taken its place.
 func (h *Hub) leaveRobot(id string, p *peer) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if h.robots[id] == p {
 		delete(h.robots, id)
 		delete(h.capabilities, id)
+		h.broadcastLocked(&tourianv1.Capabilities{RobotId: id, Gone: true})
 	}
 }
 
@@ -291,6 +293,7 @@ func (h *Hub) leaveCamera(id string, p *peer) {
 	if h.cameras[id] == p {
 		delete(h.cameras, id)
 		delete(h.announces, id)
+		h.broadcastLocked(&tourianv1.CameraAnnounce{RobotId: id, Gone: true})
 	}
 }
 

@@ -16,6 +16,8 @@ message CameraAnnounce {
   string robot_id = 1;
   string name = 2;
   repeated VideoKind kinds = 3;
+  // The platform's word that the camera has left; nothing else is set.
+  bool gone = 4;
 }
 
 // A console asking a robot's camera to start or stop a stream. WebRTC starts with an offer instead; this is for MJPEG.

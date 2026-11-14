@@ -28,7 +28,7 @@ from tourian.v1 import geometry_pb2 as tourian_dot_v1_dot_geometry__pb2
 from tourian.v1 import header_pb2 as tourian_dot_v1_dot_header__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16tourian/v1/robot.proto\x12\ntourian.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19tourian/v1/geometry.proto\x1a\x17tourian/v1/header.proto\"\xce\x02\n\x0c\x43\x61pabilities\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n\x0bjoint_names\x18\x03 \x03(\tR\njointNames\x12\x43\n\x0fvelocity_limits\x18\x04 \x01(\x0b\x32\x1a.tourian.v1.VelocityLimitsR\x0evelocityLimits\x12\x42\n\x0f\x63ommand_timeout\x18\x05 \x01(\x0b\x32\x19.google.protobuf.DurationR\x0e\x63ommandTimeout\x12\x1d\n\nhas_camera\x18\x06 \x01(\x08R\thasCamera\x12\x46\n\x11heartbeat_timeout\x18\x07 \x01(\x0b\x32\x19.google.protobuf.DurationR\x10heartbeatTimeout\"P\n\x0eVelocityLimits\x12\x1d\n\nmax_linear\x18\x01 \x01(\x01R\tmaxLinear\x12\x1f\n\x0bmax_angular\x18\x02 \x01(\x01R\nmaxAngular\"\x9d\x01\n\x0fVelocityCommand\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\x12\'\n\x05twist\x18\x04 \x01(\x0b\x32\x11.tourian.v1.TwistR\x05twist\"\xb0\x01\n\nCommandAck\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\x12?\n\rcommand_stamp\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x0c\x63ommandStamp\"\xa1\x01\n\x0cJointCommand\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\x12.\n\x06target\x18\x04 \x01(\x0b\x32\x16.tourian.v1.JointStateR\x06target\"\xf5\x02\n\x0bObservation\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12$\n\x04pose\x18\x03 \x01(\x0b\x32\x10.tourian.v1.PoseR\x04pose\x12-\n\x08velocity\x18\x04 \x01(\x0b\x32\x11.tourian.v1.TwistR\x08velocity\x12.\n\x06joints\x18\x05 \x01(\x0b\x32\x16.tourian.v1.JointStateR\x06joints\x12-\n\x07\x62\x61ttery\x18\x06 \x01(\x0b\x32\x13.tourian.v1.BatteryR\x07\x62\x61ttery\x12\x32\n\x15last_command_sequence\x18\x07 \x01(\x04R\x13lastCommandSequence\x12\x37\n\x0bhalt_reason\x18\x08 \x01(\x0e\x32\x16.tourian.v1.HaltReasonR\nhaltReason\"p\n\nJointState\x12\x12\n\x04name\x18\x01 \x03(\tR\x04name\x12\x1a\n\x08position\x18\x02 \x03(\x01R\x08position\x12\x1a\n\x08velocity\x18\x03 \x03(\x01R\x08velocity\x12\x16\n\x06\x65\x66\x66ort\x18\x04 \x03(\x01R\x06\x65\x66\x66ort\"C\n\x07\x42\x61ttery\x12\x1e\n\npercentage\x18\x01 \x01(\x01R\npercentage\x12\x18\n\x07voltage\x18\x02 \x01(\x01R\x07voltage\"n\n\tHeartbeat\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\"M\n\x04Stop\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId*\x84\x01\n\nHaltReason\x12\x1b\n\x17HALT_REASON_UNSPECIFIED\x10\x00\x12\x1f\n\x1bHALT_REASON_COMMAND_TIMEOUT\x10\x01\x12\x18\n\x14HALT_REASON_DEAD_MAN\x10\x02\x12\x1e\n\x1aHALT_REASON_EMERGENCY_STOP\x10\x03\x42\x9b\x01\n\x0e\x63om.tourian.v1B\nRobotProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\nTourian.V1\xca\x02\nTourian\\V1\xe2\x02\x16Tourian\\V1\\GPBMetadata\xea\x02\x0bTourian::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16tourian/v1/robot.proto\x12\ntourian.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19tourian/v1/geometry.proto\x1a\x17tourian/v1/header.proto\"\xe2\x02\n\x0c\x43\x61pabilities\x12\x19\n\x08robot_id\x18\x01 \x01(\tR\x07robotId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n\x0bjoint_names\x18\x03 \x03(\tR\njointNames\x12\x43\n\x0fvelocity_limits\x18\x04 \x01(\x0b\x32\x1a.tourian.v1.VelocityLimitsR\x0evelocityLimits\x12\x42\n\x0f\x63ommand_timeout\x18\x05 \x01(\x0b\x32\x19.google.protobuf.DurationR\x0e\x63ommandTimeout\x12\x1d\n\nhas_camera\x18\x06 \x01(\x08R\thasCamera\x12\x46\n\x11heartbeat_timeout\x18\x07 \x01(\x0b\x32\x19.google.protobuf.DurationR\x10heartbeatTimeout\x12\x12\n\x04gone\x18\x08 \x01(\x08R\x04gone\"P\n\x0eVelocityLimits\x12\x1d\n\nmax_linear\x18\x01 \x01(\x01R\tmaxLinear\x12\x1f\n\x0bmax_angular\x18\x02 \x01(\x01R\nmaxAngular\"\x9d\x01\n\x0fVelocityCommand\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\x12\'\n\x05twist\x18\x04 \x01(\x0b\x32\x11.tourian.v1.TwistR\x05twist\"\xb0\x01\n\nCommandAck\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\x12?\n\rcommand_stamp\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x0c\x63ommandStamp\"\xa1\x01\n\x0cJointCommand\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\x12.\n\x06target\x18\x04 \x01(\x0b\x32\x16.tourian.v1.JointStateR\x06target\"\xf5\x02\n\x0bObservation\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12$\n\x04pose\x18\x03 \x01(\x0b\x32\x10.tourian.v1.PoseR\x04pose\x12-\n\x08velocity\x18\x04 \x01(\x0b\x32\x11.tourian.v1.TwistR\x08velocity\x12.\n\x06joints\x18\x05 \x01(\x0b\x32\x16.tourian.v1.JointStateR\x06joints\x12-\n\x07\x62\x61ttery\x18\x06 \x01(\x0b\x32\x13.tourian.v1.BatteryR\x07\x62\x61ttery\x12\x32\n\x15last_command_sequence\x18\x07 \x01(\x04R\x13lastCommandSequence\x12\x37\n\x0bhalt_reason\x18\x08 \x01(\x0e\x32\x16.tourian.v1.HaltReasonR\nhaltReason\"p\n\nJointState\x12\x12\n\x04name\x18\x01 \x03(\tR\x04name\x12\x1a\n\x08position\x18\x02 \x03(\x01R\x08position\x12\x1a\n\x08velocity\x18\x03 \x03(\x01R\x08velocity\x12\x16\n\x06\x65\x66\x66ort\x18\x04 \x03(\x01R\x06\x65\x66\x66ort\"C\n\x07\x42\x61ttery\x12\x1e\n\npercentage\x18\x01 \x01(\x01R\npercentage\x12\x18\n\x07voltage\x18\x02 \x01(\x01R\x07voltage\"n\n\tHeartbeat\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId\x12\x1a\n\x08sequence\x18\x03 \x01(\x04R\x08sequence\"M\n\x04Stop\x12*\n\x06header\x18\x01 \x01(\x0b\x32\x12.tourian.v1.HeaderR\x06header\x12\x19\n\x08robot_id\x18\x02 \x01(\tR\x07robotId*\x84\x01\n\nHaltReason\x12\x1b\n\x17HALT_REASON_UNSPECIFIED\x10\x00\x12\x1f\n\x1bHALT_REASON_COMMAND_TIMEOUT\x10\x01\x12\x18\n\x14HALT_REASON_DEAD_MAN\x10\x02\x12\x1e\n\x1aHALT_REASON_EMERGENCY_STOP\x10\x03\x42\x9b\x01\n\x0e\x63om.tourian.v1B\nRobotProtoP\x01Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\xa2\x02\x03TXX\xaa\x02\nTourian.V1\xca\x02\nTourian\\V1\xe2\x02\x16Tourian\\V1\\GPBMetadata\xea\x02\x0bTourian::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,26 +36,26 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'tourian.v1.robot_pb2', _glo
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\016com.tourian.v1B\nRobotProtoP\001Z4github.com/vlumi/tourian/gen/go/tourian/v1;tourianv1\242\002\003TXX\252\002\nTourian.V1\312\002\nTourian\\V1\342\002\026Tourian\\V1\\GPBMetadata\352\002\013Tourian::V1'
-  _globals['_HALTREASON']._serialized_start=1828
-  _globals['_HALTREASON']._serialized_end=1960
+  _globals['_HALTREASON']._serialized_start=1848
+  _globals['_HALTREASON']._serialized_end=1980
   _globals['_CAPABILITIES']._serialized_start=156
-  _globals['_CAPABILITIES']._serialized_end=490
-  _globals['_VELOCITYLIMITS']._serialized_start=492
-  _globals['_VELOCITYLIMITS']._serialized_end=572
-  _globals['_VELOCITYCOMMAND']._serialized_start=575
-  _globals['_VELOCITYCOMMAND']._serialized_end=732
-  _globals['_COMMANDACK']._serialized_start=735
-  _globals['_COMMANDACK']._serialized_end=911
-  _globals['_JOINTCOMMAND']._serialized_start=914
-  _globals['_JOINTCOMMAND']._serialized_end=1075
-  _globals['_OBSERVATION']._serialized_start=1078
-  _globals['_OBSERVATION']._serialized_end=1451
-  _globals['_JOINTSTATE']._serialized_start=1453
-  _globals['_JOINTSTATE']._serialized_end=1565
-  _globals['_BATTERY']._serialized_start=1567
-  _globals['_BATTERY']._serialized_end=1634
-  _globals['_HEARTBEAT']._serialized_start=1636
-  _globals['_HEARTBEAT']._serialized_end=1746
-  _globals['_STOP']._serialized_start=1748
-  _globals['_STOP']._serialized_end=1825
+  _globals['_CAPABILITIES']._serialized_end=510
+  _globals['_VELOCITYLIMITS']._serialized_start=512
+  _globals['_VELOCITYLIMITS']._serialized_end=592
+  _globals['_VELOCITYCOMMAND']._serialized_start=595
+  _globals['_VELOCITYCOMMAND']._serialized_end=752
+  _globals['_COMMANDACK']._serialized_start=755
+  _globals['_COMMANDACK']._serialized_end=931
+  _globals['_JOINTCOMMAND']._serialized_start=934
+  _globals['_JOINTCOMMAND']._serialized_end=1095
+  _globals['_OBSERVATION']._serialized_start=1098
+  _globals['_OBSERVATION']._serialized_end=1471
+  _globals['_JOINTSTATE']._serialized_start=1473
+  _globals['_JOINTSTATE']._serialized_end=1585
+  _globals['_BATTERY']._serialized_start=1587
+  _globals['_BATTERY']._serialized_end=1654
+  _globals['_HEARTBEAT']._serialized_start=1656
+  _globals['_HEARTBEAT']._serialized_end=1766
+  _globals['_STOP']._serialized_start=1768
+  _globals['_STOP']._serialized_end=1845
 # @@protoc_insertion_point(module_scope)

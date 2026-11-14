@@ -88,8 +88,10 @@ type Capabilities struct {
 	HasCamera      bool                 `protobuf:"varint,6,opt,name=has_camera,json=hasCamera,proto3" json:"has_camera,omitempty"`
 	// How long the adapter drives on without a heartbeat before it stops the robot.
 	HeartbeatTimeout *durationpb.Duration `protobuf:"bytes,7,opt,name=heartbeat_timeout,json=heartbeatTimeout,proto3" json:"heartbeat_timeout,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// The platform's word that the robot has left; nothing else is set.
+	Gone          bool `protobuf:"varint,8,opt,name=gone,proto3" json:"gone,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Capabilities) Reset() {
@@ -169,6 +171,13 @@ func (x *Capabilities) GetHeartbeatTimeout() *durationpb.Duration {
 		return x.HeartbeatTimeout
 	}
 	return nil
+}
+
+func (x *Capabilities) GetGone() bool {
+	if x != nil {
+		return x.Gone
+	}
+	return false
 }
 
 type VelocityLimits struct {
@@ -772,7 +781,7 @@ var File_tourian_v1_robot_proto protoreflect.FileDescriptor
 const file_tourian_v1_robot_proto_rawDesc = "" +
 	"\n" +
 	"\x16tourian/v1/robot.proto\x12\n" +
-	"tourian.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19tourian/v1/geometry.proto\x1a\x17tourian/v1/header.proto\"\xce\x02\n" +
+	"tourian.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19tourian/v1/geometry.proto\x1a\x17tourian/v1/header.proto\"\xe2\x02\n" +
 	"\fCapabilities\x12\x19\n" +
 	"\brobot_id\x18\x01 \x01(\tR\arobotId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
@@ -782,7 +791,8 @@ const file_tourian_v1_robot_proto_rawDesc = "" +
 	"\x0fcommand_timeout\x18\x05 \x01(\v2\x19.google.protobuf.DurationR\x0ecommandTimeout\x12\x1d\n" +
 	"\n" +
 	"has_camera\x18\x06 \x01(\bR\thasCamera\x12F\n" +
-	"\x11heartbeat_timeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\x10heartbeatTimeout\"P\n" +
+	"\x11heartbeat_timeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\x10heartbeatTimeout\x12\x12\n" +
+	"\x04gone\x18\b \x01(\bR\x04gone\"P\n" +
 	"\x0eVelocityLimits\x12\x1d\n" +
 	"\n" +
 	"max_linear\x18\x01 \x01(\x01R\tmaxLinear\x12\x1f\n" +
