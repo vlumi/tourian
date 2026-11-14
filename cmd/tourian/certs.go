@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -9,11 +10,13 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"errors"
+	"log"
 	"math/big"
 	"net"
 	"os"
 	"path/filepath"
 	"slices"
+	"sync"
 	"time"
 )
 
@@ -26,6 +29,55 @@ const (
 	certificateFile     = "cert.pem"
 	keyFile             = "key.pem"
 )
+
+// A keeper holds the server certificate and remakes it when the hosts the platform is reached by change while it runs, so a laptop that moves to another network keeps a certificate that fits.
+type keeper struct {
+	dir   string
+	hosts func() []string
+	mu    sync.RWMutex
+	cert  *tls.Certificate
+	names []string
+}
+
+func (k *keeper) refresh() error {
+	hosts := k.hosts()
+	k.mu.RLock()
+	same := slices.Equal(hosts, k.names)
+	k.mu.RUnlock()
+	if same {
+		return nil
+	}
+	cert, err := certificate(k.dir, hosts)
+	if err != nil {
+		return err
+	}
+	k.mu.Lock()
+	k.cert, k.names = &cert, hosts
+	k.mu.Unlock()
+	return nil
+}
+
+func (k *keeper) get(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+	k.mu.RLock()
+	defer k.mu.RUnlock()
+	return k.cert, nil
+}
+
+// follow refreshes every so often until ctx ends; a refresh that fails keeps the certificate in hand.
+func (k *keeper) follow(ctx context.Context, every time.Duration) {
+	ticker := time.NewTicker(every)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := k.refresh(); err != nil {
+				log.Printf("tls: %v", err)
+			}
+		}
+	}
+}
 
 // certificate returns a server certificate for hosts, signed by the authority under dir, making either as needed.
 func certificate(dir string, hosts []string) (tls.Certificate, error) {

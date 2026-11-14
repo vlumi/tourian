@@ -43,3 +43,27 @@ func TestTheAuthorityIsKeptAndTheCertificateFollowsTheHosts(t *testing.T) {
 		t.Fatalf("the certificate should name the hosts, got %v %v", leaf.DNSNames, leaf.IPAddresses)
 	}
 }
+
+func TestTheKeeperFollowsTheHosts(t *testing.T) {
+	hosts := []string{"localhost", "192.168.1.5"}
+	k := &keeper{dir: t.TempDir(), hosts: func() []string { return hosts }}
+	if err := k.refresh(); err != nil {
+		t.Fatal(err)
+	}
+	first, _ := k.get(nil)
+	if err := k.refresh(); err != nil {
+		t.Fatal(err)
+	}
+	if again, _ := k.get(nil); again != first {
+		t.Fatal("the same hosts keep the certificate in hand")
+	}
+	hosts = []string{"localhost", "10.0.0.7"}
+	if err := k.refresh(); err != nil {
+		t.Fatal(err)
+	}
+	moved, _ := k.get(nil)
+	leaf, _ := x509.ParseCertificate(moved.Certificate[0])
+	if moved == first || len(leaf.IPAddresses) != 1 || leaf.IPAddresses[0].String() != "10.0.0.7" {
+		t.Fatalf("a new address should make a new certificate, got %v", leaf.IPAddresses)
+	}
+}

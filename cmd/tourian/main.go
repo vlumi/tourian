@@ -104,14 +104,15 @@ func main() {
 	}
 	servers := []*http.Server{server}
 	if *httpsAddr != "" {
-		cert, err := certificate(certs, lanHosts())
-		if err != nil {
+		keep := &keeper{dir: certs, hosts: lanHosts}
+		if err := keep.refresh(); err != nil {
 			log.Fatalf("tls: %v", err)
 		}
+		go keep.follow(ctx, 15*time.Second)
 		secure := &http.Server{
 			Addr:              *httpsAddr,
 			Handler:           handler,
-			TLSConfig:         &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12},
+			TLSConfig:         &tls.Config{GetCertificate: keep.get, MinVersion: tls.VersionTLS12},
 			ReadHeaderTimeout: 5 * time.Second,
 			IdleTimeout:       time.Minute,
 		}
