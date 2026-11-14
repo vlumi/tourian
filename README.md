@@ -34,12 +34,12 @@ Drive the simulator:
 
 Give the simulated robot eyes, or lend a phone's camera:
 
-- Where the picture will be, the console links to the simulated camera: the robot's own view of its arena, rendered in the browser and lent like a phone's. Open it in a tab and keep the tab open.
+- Where the picture will be, a button lends the simulated camera: the robot's own view of its arena, rendered in the console's own tab and lent from it like a phone's picture, so no other tab needs to stay in front.
 
 For a phone:
 
 1. The console shows a QR code where the picture will be. Scan it.
-2. The first time, the page asks the phone to trust the platform once: tap to install the certificate, follow the phone's prompts (on iOS, install the profile under Settings, then turn it on under General › About › Certificate Trust Settings), and tap to continue. Browsers hand out the camera only over https, and the platform's certificate is its own.
+2. The first time, the page asks the phone to trust the platform once: tap to install the certificate, follow the phone's prompts (on iOS, install the profile under Settings, then turn it on under General › About › Certificate Trust Settings; both are needed), and tap to continue, which checks that the phone now trusts it and says so if not. Browsers hand out the camera only over https, and the platform's certificate is its own.
 3. From then on scanning goes straight to the camera. The console shows the picture over WebRTC or MJPEG, chosen above it.
 
 Hand over control:
