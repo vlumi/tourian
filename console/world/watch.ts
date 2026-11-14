@@ -4,7 +4,7 @@ import { openSocket, platformBase } from '@/platform/socket'
 import { startWorldView, type Pose } from './view'
 
 // Follows every robot's observations as a console would and renders what one of them sees, as a stream to lend in place of a camera's.
-export function watchWorld(robotId: string): { stream: MediaStream; stop: () => void } {
+export function watchWorld(robotId: string): { canvas: HTMLCanvasElement; stream: MediaStream; stop: () => void } {
   const view = startWorldView()
   const poses = new Map<string, Pose>()
   const socket = openSocket(platformBase() + '/api/console', {
@@ -22,6 +22,7 @@ export function watchWorld(robotId: string): { stream: MediaStream; stop: () => 
     },
   })
   return {
+    canvas: view.canvas,
     stream: view.stream,
     stop: () => {
       socket.close()

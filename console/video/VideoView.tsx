@@ -24,6 +24,8 @@ export function VideoView({ measure = false }: { measure?: boolean }) {
   const camera = useStore((s) => (s.selected ? s.cameras[s.selected] : undefined))
   const videoPath = useStore((s) => s.videoPath)
   const setVideoPath = useStore((s) => s.setVideoPath)
+  const worldCamera = useStore((s) => s.worldCamera)
+  const lendWorld = useStore((s) => s.lendWorld)
   const videoRef = useRef<HTMLVideoElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const [fps, setFps] = useState<number>()
@@ -68,6 +70,11 @@ export function VideoView({ measure = false }: { measure?: boolean }) {
       <div className="video-bar">
         <span className="label">camera</span>
         <span>{camera ? camera.name || 'camera' : 'none'}</span>
+        {worldCamera && worldCamera === robotId && (
+          <button type="button" onClick={() => lendWorld(undefined)}>
+            stop lending
+          </button>
+        )}
         <span className="video-paths">
           {paths.map(({ path, label }) => (
             <button

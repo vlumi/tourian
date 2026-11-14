@@ -8,6 +8,7 @@ import { useStore } from '@/platform/store'
 import { FleetStrip } from '@/fleet/FleetStrip'
 import { RecordControls } from '@/record/RecordControls'
 import { TelemetryPanel } from '@/telemetry/TelemetryPanel'
+import { SimulatedCamera } from '@/video/SimulatedCamera'
 import { VideoView } from '@/video/VideoView'
 import { WorldCanvas } from '@/world/WorldCanvas'
 
@@ -42,6 +43,7 @@ export function ControlRoom() {
       <div className="scene">
         <FleetStrip />
         <VideoView measure={measure} />
+        <SimulatedCamera />
         <WorldCanvas />
       </div>
       <TelemetryPanel />
