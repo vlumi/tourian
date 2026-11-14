@@ -67,7 +67,8 @@ func main() {
 	if *httpsAddr != "" {
 		certs = filepath.Join(*data, "tls")
 	}
-	h.LANURL = lanURL(*lan, *addr, *httpsAddr, console != nil)
+	reach := addresses(*lan, *addr, *httpsAddr, console != nil)
+	h.LANURL = reach.LAN
 	episodes := filepath.Join(*data, "episodes")
 	sinks := []episode.Sink{episode.NewJSONL(episodes)}
 	if *dataset != "" {
@@ -94,7 +95,7 @@ func main() {
 	h.Admit = arbiter.Admit
 	go arbiter.Run(ctx)
 
-	handler := newHandler(h, episodes, configs, console, certs)
+	handler := newHandler(h, episodes, configs, console, certs, reach)
 	server := &http.Server{
 		Addr:              *addr,
 		Handler:           handler,
@@ -158,8 +159,13 @@ func main() {
 	}
 }
 
-// lanURL is where a phone reaches the platform: over https when it serves one, else over http on the platform's port, which serves the console too when it is behind the platform, else the console's own port.
-func lanURL(host, addr, httpsAddr string, console bool) string {
+// Where a phone reaches the platform on the local network: over http, where a first visit needs no trust, and over https where it serves one. The console is served behind the platform, else the http address is the console's own.
+type reach struct {
+	LAN    string `json:"lan"`
+	Secure string `json:"secure,omitempty"`
+}
+
+func addresses(host, addr, httpsAddr string, console bool) reach {
 	if host == "" {
 		if ips := lanAddresses(); len(ips) > 0 {
 			host = ips[0].String()
@@ -167,13 +173,14 @@ func lanURL(host, addr, httpsAddr string, console bool) string {
 			host = "localhost"
 		}
 	}
-	if httpsAddr != "" {
-		return "https://" + net.JoinHostPort(host, port(httpsAddr, "8443"))
-	}
+	r := reach{LAN: "http://" + net.JoinHostPort(host, "1499")}
 	if console {
-		return "http://" + net.JoinHostPort(host, port(addr, "8080"))
+		r.LAN = "http://" + net.JoinHostPort(host, port(addr, "8080"))
 	}
-	return "http://" + net.JoinHostPort(host, "1499")
+	if httpsAddr != "" {
+		r.Secure = "https://" + net.JoinHostPort(host, port(httpsAddr, "8443"))
+	}
+	return r
 }
 
 func port(addr, fallback string) string {

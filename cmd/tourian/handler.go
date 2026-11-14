@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -12,8 +13,12 @@ import (
 )
 
 // newHandler mounts the platform's endpoints under /api and, when the console is served behind it, hands every other path to the console, so a phone needs one address and one certificate.
-func newHandler(h *hub.Hub, episodes string, configs *config.Store, console *url.URL, certs string) http.Handler {
+func newHandler(h *hub.Hub, episodes string, configs *config.Store, console *url.URL, certs string, reach reach) http.Handler {
 	api := http.NewServeMux()
+	api.HandleFunc("GET /addresses", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(reach)
+	})
 	api.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		_, _ = w.Write([]byte("ok\n"))
